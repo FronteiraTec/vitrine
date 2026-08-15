@@ -35,3 +35,12 @@ dist-ssr
 
 # Saída do teste de fumaça de renderização (npm run smoke)
 .smoke
+
+# Vinculação local com o projeto na Vercel (criada por `vercel link`).
+#
+# O `vercel link` também acrescenta aqui um `.env*` genérico. Ele foi removido
+# de propósito: como a última regra que casa é a que vale, esse padrão no fim do
+# arquivo anulava os `!.env.example` e `!.env.smoke` acima, e os dois só
+# continuavam no repositório por já estarem versionados. O bloco de variáveis de
+# ambiente lá em cima já cobre tudo que o `.env*` cobriria.
+.vercel
