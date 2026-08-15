@@ -82,17 +82,15 @@ export function ConnectSection() {
             </p>
           </div>
 
-          {/* Cartão de vidro com a marca, como no material do programa. Some no
-              celular: empilhado, seria só um bloco alto antes da chamada. */}
-          <div className="hidden lg:block">
-            <div className="flex aspect-[4/3] items-center justify-center rounded-2xl border border-white/15 bg-white/[0.06] p-10 backdrop-blur-sm">
-              <img
-                src={logoUrl}
-                alt=""
-                aria-hidden="true"
-                className="max-h-40 w-auto max-w-full object-contain"
-              />
-            </div>
+          {/* A marca sozinha, sem moldura. Some no celular: empilhada, seria
+              só um bloco alto antes da chamada. */}
+          <div className="hidden items-center justify-center lg:flex">
+            <img
+              src={logoUrl}
+              alt=""
+              aria-hidden="true"
+              className="max-h-40 w-auto max-w-full object-contain"
+            />
           </div>
         </div>
       </div>
