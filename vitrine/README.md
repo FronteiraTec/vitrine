@@ -199,11 +199,14 @@ O build é estático — funciona nos planos gratuitos de Vercel e Cloudflare Pa
 ### Vercel
 
 1. Importe o repositório.
-2. **Framework preset:** Vite · **Build command:** `npm run build` ·
+2. **Root Directory:** `vitrine` — a aplicação não fica na raiz do
+   repositório. Sem isso o build falha logo no começo, sem achar o
+   `package.json`.
+3. **Framework preset:** Vite · **Build command:** `npm run build` ·
    **Output directory:** `dist`
-3. Em **Settings → Environment Variables**, adicione `VITE_SUPABASE_URL`,
+4. Em **Settings → Environment Variables**, adicione `VITE_SUPABASE_URL`,
    `VITE_SUPABASE_ANON_KEY` e (opcional) `VITE_SITE_URL`.
-4. Deploy.
+5. Deploy.
 
 O `vercel.json` já traz o rewrite de SPA e os cabeçalhos de segurança e cache.
 
