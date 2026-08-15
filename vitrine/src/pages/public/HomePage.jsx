@@ -252,30 +252,6 @@ function NewsSection() {
   )
 }
 
-function CallToAction() {
-  return (
-    <section className="container-page py-16 sm:py-20">
-      <div className="border-border bg-card flex flex-col items-start gap-6 rounded-xl border p-8 sm:p-12 lg:flex-row lg:items-center lg:justify-between">
-        <div className="max-w-xl space-y-2.5">
-          <h2 className="font-display text-2xl sm:text-3xl">
-            Sua equipe tem uma iniciativa que ainda não está aqui?
-          </h2>
-          <p className="text-muted-foreground leading-relaxed text-pretty">
-            O cadastro é feito pela área administrativa e passa por revisão editorial antes de
-            aparecer na vitrine. Solicite acesso à coordenação responsável.
-          </p>
-        </div>
-        <Button size="lg" asChild className="shrink-0">
-          <Link to="/entrar">
-            Acessar o painel
-            <ArrowRight aria-hidden="true" />
-          </Link>
-        </Button>
-      </div>
-    </section>
-  )
-}
-
 export function HomePage() {
   useDocumentMeta({
     description:
@@ -289,7 +265,6 @@ export function HomePage() {
       <FeaturedSection />
       <ConnectSection />
       <NewsSection />
-      <CallToAction />
     </>
   )
 }
