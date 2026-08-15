@@ -1,0 +1,4 @@
+# Cloudflare Pages — fallback de SPA.
+# Sem isso, abrir /iniciativa/algum-slug direto na barra de endereços dá 404,
+# porque o arquivo não existe no disco: quem resolve a rota é o React Router.
+/*  /index.html  200

@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# A área administrativa não deve ser indexada.
+Disallow: /admin
+Disallow: /entrar
+Disallow: /criar-conta
+Disallow: /recuperar-senha
+Disallow: /redefinir-senha
+Disallow: /configuracao
+
+# Substitua pelo domínio real do deploy.
+Sitemap: https://exemplo.com/sitemap.xml

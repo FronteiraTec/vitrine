@@ -1,0 +1,37 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Variáveis de ambiente.
+# `*.local` acima já pegava .env.local, mas não .env nem .env.production —
+# justamente os nomes onde uma chave privada costuma acabar. A regra abaixo
+# ignora tudo e reabre só os dois arquivos que devem mesmo ser versionados:
+# o modelo com placeholders e as credenciais fictícias do teste de fumaça.
+.env
+.env.*
+!.env.example
+!.env.smoke
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Saída do teste de fumaça de renderização (npm run smoke)
+.smoke
