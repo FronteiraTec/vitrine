@@ -237,7 +237,7 @@ também serve para monitoramento.
 ```bash
 docker logs --tail 100 -f vitrine-api-1     # erros da API
 docker logs --tail 100 -f vitrine-web-1     # acessos do Nginx
-cat /opt/vitrine/deploys.log                # histórico: ok, falhou, revertido, restaurado
+cat /opt/vitrine/deploys.log                # histórico: ok, rollback, falhou, revertido, restaurado
 tail /opt/vitrine/backups/backup.log        # o backup da madrugada
 ```
 

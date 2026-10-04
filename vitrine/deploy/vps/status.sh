@@ -29,7 +29,7 @@ if [ -n "$atual" ]; then
 else
   echo "Versão no ar:   nenhuma — ainda não houve deploy"
 fi
-echo "Anterior:       ${anterior:+$(curto "$anterior")}${anterior:-nenhuma}"
+echo "Anterior:       $(curto_ou "$anterior" nenhuma)"
 echo
 
 echo "Containers"

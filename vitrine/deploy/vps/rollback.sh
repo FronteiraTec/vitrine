@@ -31,4 +31,5 @@ for servico in api web; do
 done
 
 log "rollback do aplicativo para $(curto "$alvo") — o banco fica como está."
-exec "$APP/deploy/vps/deploy.sh" "$alvo" --sem-pull
+# No histórico (deploys.log), fica registrado como rollback.
+VITRINE_OPERACAO=rollback exec "$APP/deploy/vps/deploy.sh" "$alvo" --sem-pull

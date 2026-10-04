@@ -53,7 +53,7 @@ main() {
     exec "$APP/deploy/vps/deploy.sh" "$@"
   fi
 
-  log "deploy de $(curto "$sha") — no ar agora: ${anterior:+$(curto "$anterior")}${anterior:-nenhuma versão}"
+  log "deploy de $(curto "$sha") — no ar agora: $(curto_ou "$anterior" "nenhuma versão")"
 
   # 3. imagens ---------------------------------------------------------------
   local api="$PREFIXO-api:$sha" web="$PREFIXO-web:$sha"
@@ -154,7 +154,7 @@ verificar() {
       aviso "a borda ($BORDA_CONTAINER) não alcança vitrine-web na versão nova: ${resposta:-sem resposta}"
       return 1
     fi
-    log "borda alcança o site na versão nova"
+    log "a borda alcança o site em $(curto "$sha")"
   else
     aviso "container da borda ($BORDA_CONTAINER) não encontrado — verificação pela borda pulada."
   fi
@@ -167,7 +167,7 @@ concluir() {
     [ -n "$anterior" ] && printf '%s\n' "$anterior" > "$ESTADO/anterior"
     printf '%s\n' "$sha" > "$ESTADO/atual"
   fi
-  registrar ok "$sha" "${anterior:+anterior $(curto "$anterior")}"
+  registrar "${VITRINE_OPERACAO:-ok}" "$sha" "${anterior:+anterior $(curto "$anterior")}"
 
   # A base de localização sobe junto quando há conta da MaxMind no .env.
   if [ -n "$(env_var GEOIP_ACCOUNT_ID)" ]; then

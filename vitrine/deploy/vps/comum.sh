@@ -61,6 +61,8 @@ trap 'printf "[%s] ERRO: falhou (%s, linha %s): %s
 " "$(date "+%H:%M:%S")" "$(basename "$0")" "$LINENO" "$BASH_COMMAND" >&2' ERR
 
 curto() { printf '%s' "${1:0:7}"; }
+# O commit curto ou, sem commit, o texto do segundo argumento.
+curto_ou() { if [ -n "$1" ]; then curto "$1"; else printf '%s' "$2"; fi; }
 commit_atual() { cat "$ESTADO/atual" 2>/dev/null || true; }
 commit_anterior() { cat "$ESTADO/anterior" 2>/dev/null || true; }
 
