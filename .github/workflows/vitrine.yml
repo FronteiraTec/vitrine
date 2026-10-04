@@ -1,0 +1,265 @@
+# =============================================================================
+# Vitrine — testes, imagens e deploy.
+#
+#   pull request      verificar + imagens (construídas e testadas, NÃO publicadas)
+#   push na main      verificar + imagens (publicadas no ghcr.io) + deploy na VPS
+#   Run workflow      sem SHA: refaz o deploy da main
+#                     com SHA: implanta de novo um commit já publicado (rollback)
+#
+# O que vai para o servidor é exatamente a imagem que passou nos testes deste
+# job — ela é construída uma vez, testada com a stack inteira e só então
+# publicada com a tag = SHA do commit.
+#
+# Configuração no GitHub (Settings → Secrets and variables → Actions):
+#   Variables:  SITE_URL, VPS_HOST, VPS_PORT, VPS_USER, VPS_KNOWN_HOSTS
+#   Environment "validacao" → Secret: VPS_SSH_KEY
+# Ver vitrine/deploy/README.md.
+# =============================================================================
+
+name: Vitrine
+
+on:
+  push:
+    branches: [main]
+    paths: ['vitrine/**', '.github/workflows/vitrine.yml']
+  pull_request:
+    paths: ['vitrine/**', '.github/workflows/vitrine.yml']
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Commit já publicado a implantar (rollback). Vazio = o último da main.'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vitrine-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  IMAGE_PREFIX: ghcr.io/fronteiratec/vitrine
+  # Rollback pelo botão: nada é reconstruído, só implantado.
+  ROLLBACK_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.sha || '' }}
+
+jobs:
+  # ---------------------------------------------------------------------------
+  verificar:
+    name: Verificar código
+    if: github.event_name != 'workflow_dispatch' || inputs.sha == ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: vitrine
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            vitrine/package-lock.json
+            vitrine/server/package-lock.json
+
+      - run: npm ci
+      - run: npm ci --prefix server
+
+      - name: Migrations lineares e imutáveis
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+        run: node scripts/migrations-check.mjs --base "$BASE"
+
+      - run: npm run lint
+      - run: npm run build:only
+      - run: npm run css
+      - run: npm run smoke
+      - run: npm run seo
+
+  # ---------------------------------------------------------------------------
+  imagens:
+    name: Imagens e integração
+    if: github.event_name != 'workflow_dispatch' || inputs.sha == ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      packages: write
+    defaults:
+      run:
+        working-directory: vitrine
+    env:
+      VITRINE_IMAGE_PREFIX: ghcr.io/fronteiratec/vitrine
+      VITRINE_TAG: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Data do build
+        id: data
+        run: echo "agora=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Construir vitrine-api
+        uses: docker/build-push-action@v6
+        with:
+          context: vitrine
+          file: vitrine/server/Dockerfile
+          load: true
+          tags: ${{ env.IMAGE_PREFIX }}-api:${{ github.sha }}
+          build-args: |
+            APP_VERSION=${{ github.sha }}
+            APP_BUILT_AT=${{ steps.data.outputs.agora }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+
+      - name: Construir vitrine-web
+        uses: docker/build-push-action@v6
+        with:
+          context: vitrine
+          file: vitrine/docker/web/Dockerfile
+          load: true
+          tags: ${{ env.IMAGE_PREFIX }}-web:${{ github.sha }}
+          build-args: |
+            APP_VERSION=${{ github.sha }}
+            APP_BUILT_AT=${{ steps.data.outputs.agora }}
+            VITE_SITE_URL=${{ vars.SITE_URL }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
+
+      - name: Subir a stack com estas imagens
+        run: |
+          {
+            echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)"
+            echo "APP_DB_PASSWORD=$(openssl rand -hex 16)"
+          } > .env
+          docker compose up -d --no-build --wait --wait-timeout 180
+
+      - name: Migrations — aplicar de novo não muda nada
+        run: |
+          docker compose run --rm --no-deps migrate
+          docker compose run --rm --no-deps migrate node server/src/migrate.js --check
+
+      - name: Teste de integração (fluxos da API)
+        run: docker compose run --rm --no-deps -e API_URL=http://web -v "$PWD/scripts:/app/scripts:ro" migrate node scripts/api-check.mjs
+
+      - name: Teste de segurança (API e banco)
+        run: docker compose run --rm --no-deps -e API_URL=http://web -v "$PWD/scripts:/app/scripts:ro" migrate node scripts/security-check.mjs
+
+      - name: Logs (em caso de falha)
+        if: failure()
+        run: docker compose logs --tail 200
+
+      - name: Publicar no GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker push --quiet "$IMAGE_PREFIX-api:$GITHUB_SHA"
+          docker push --quiet "$IMAGE_PREFIX-web:$GITHUB_SHA"
+
+      - name: Desligar a stack
+        if: always()
+        run: docker compose down -v --remove-orphans
+
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: Deploy na VPS
+    needs: [verificar, imagens]
+    # Só a main. No rollback pelo botão, os outros jobs são pulados de propósito.
+    if: >-
+      always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' &&
+      (
+        (github.event_name == 'workflow_dispatch' && inputs.sha != '') ||
+        (needs.verificar.result == 'success' && needs.imagens.result == 'success')
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
+    environment:
+      name: validacao
+      url: ${{ vars.SITE_URL }}
+    # Um deploy por vez, na ordem dos pushes; nenhum é cancelado no meio.
+    concurrency:
+      group: vitrine-deploy
+      cancel-in-progress: false
+    steps:
+      - name: Conferir configuração
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST: ${{ vars.VPS_HOST }}
+          VPS_KNOWN_HOSTS: ${{ vars.VPS_KNOWN_HOSTS }}
+        run: |
+          faltando=""
+          [ -n "$VPS_SSH_KEY" ] || faltando="$faltando secret VPS_SSH_KEY (environment validacao);"
+          [ -n "$VPS_HOST" ] || faltando="$faltando variable VPS_HOST;"
+          [ -n "$VPS_KNOWN_HOSTS" ] || faltando="$faltando variable VPS_KNOWN_HOSTS;"
+          if [ -n "$faltando" ]; then
+            echo "::error::Configuração de deploy incompleta:$faltando ver vitrine/deploy/README.md"
+            exit 1
+          fi
+          SHA="${ROLLBACK_SHA:-$GITHUB_SHA}"
+          if ! [[ $SHA =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Informe o SHA completo (40 caracteres) do commit."
+            exit 1
+          fi
+          echo "SHA=$SHA" >> "$GITHUB_ENV"
+
+      - name: Chave SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ vars.VPS_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/vitrine
+          chmod 600 ~/.ssh/vitrine
+          # Host fixado: o deploy recusa um servidor que não seja a VPS esperada.
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Implantar
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VPS_HOST: ${{ vars.VPS_HOST }}
+          VPS_PORT: ${{ vars.VPS_PORT || '22' }}
+          VPS_USER: ${{ vars.VPS_USER || 'vitrine' }}
+        run: |
+          # O token (temporário, expira com este job) vai pela entrada padrão:
+          # não aparece em log, nem na linha de comando do servidor.
+          printf '%s\n%s\n' "$TOKEN" "$GITHUB_ACTOR" | ssh -i ~/.ssh/vitrine -p "$VPS_PORT" \
+            -o BatchMode=yes -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 \
+            "$VPS_USER@$VPS_HOST" "deploy $SHA"
+
+      - name: Conferir de fora (HTTPS)
+        if: vars.SITE_URL != ''
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          for tentativa in 1 2 3 4 5 6; do
+            versao=$(curl -fsS --max-time 10 "$SITE_URL/version.json" || true)
+            if [[ $versao == *"$SHA"* ]]; then
+              echo "No ar: $SITE_URL na versão ${SHA:0:7}"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::warning::$SITE_URL não respondeu na versão ${SHA:0:7} (DNS ou borda?). O deploy na VPS foi concluído — confira com o status.sh."
+
+      - name: Resumo
+        if: always()
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          {
+            echo "### Vitrine — deploy ${SHA:0:7}"
+            echo
+            echo "- Commit: \`$SHA\`"
+            echo "- Endereço: ${SITE_URL:-(SITE_URL não configurada)}"
+            echo "- Resultado: ${{ job.status }}"
+          } >> "$GITHUB_STEP_SUMMARY"

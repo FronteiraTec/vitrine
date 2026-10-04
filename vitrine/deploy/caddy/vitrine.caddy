@@ -1,0 +1,26 @@
+# >>> VITRINE — gerenciado por /opt/vitrine/app/vitrine/deploy/vps/borda.sh. Não edite aqui:
+# edite deploy/caddy/vitrine.caddy no repositório da Vitrine e rode o borda.sh.
+#
+# Vitrine de iniciativas e notícias da incubadora (stack em /opt/vitrine). O
+# Nginx dela entra nesta rede com o apelido `vitrine-web`.
+#
+# Sem `import seguranca`: a CSP daquele bloco (`script-src 'self'`) quebraria a
+# Vitrine, que tem script inline no index.html (preferências de acessibilidade
+# antes da primeira pintura) e carrega o VLibras do governo. Os demais
+# cabeçalhos de segurança o Nginx da Vitrine já envia.
+{$DOMINIO_VITRINE:__DOMINIO__} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		# Ambiente de validação: buscador não indexa. Remova esta linha quando a
+		# Vitrine for para o domínio definitivo.
+		X-Robots-Tag "noindex, nofollow"
+		-Server
+	}
+
+	reverse_proxy vitrine-web:80 {
+		header_up X-Forwarded-Proto {scheme}
+	}
+}
+# <<< VITRINE

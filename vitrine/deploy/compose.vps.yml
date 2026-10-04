@@ -1,0 +1,31 @@
+# =============================================================================
+# Ajustes da Vitrine NO SERVIDOR, aplicados por cima do docker-compose.yml.
+#
+#   • imagens só do registry: nada é construído na VPS (1 vCPU, 2 GB — um build
+#     de Vite ali disputaria memória com os outros sistemas);
+#   • nenhuma porta publicada: quem fala com a internet é a borda Caddy
+#     compartilhada da VPS, pela rede `quiron-borda`, procurando o `web` pelo
+#     apelido `vitrine-web`.
+#
+# Os scripts de deploy/vps/ usam este arquivo sempre; você não precisa
+# lembrar dele.
+# =============================================================================
+
+services:
+  migrate:
+    pull_policy: never
+  api:
+    pull_policy: never
+  web:
+    pull_policy: never
+    ports: !reset []
+    networks:
+      default:
+      borda:
+        aliases:
+          - vitrine-web
+
+networks:
+  borda:
+    external: true
+    name: ${BORDA_REDE:-quiron-borda}
