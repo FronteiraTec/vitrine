@@ -144,7 +144,8 @@ dig +short vitrine.fronteiratec.com    # precisa responder o IP da VPS
 ### 3.3 Borda HTTPS (root, depois do DNS)
 
 ```bash
-/opt/vitrine/app/vitrine/deploy/vps/borda.sh
+/opt/vitrine/app/vitrine/deploy/vps/borda.sh --simular   # mostra o que muda e valida; não toca em nada
+/opt/vitrine/app/vitrine/deploy/vps/borda.sh             # aplica
 ```
 
 Acrescenta o bloco de `deploy/caddy/vitrine.caddy` ao Caddyfile da borda e
@@ -152,8 +153,10 @@ recarrega o Caddy a quente; os outros sites não piscam. O Caddy emite o
 certificado do Let's Encrypt sozinho. O script:
 
 - confere o DNS antes;
-- guarda uma cópia (`Caddyfile.bak-vitrine-<data>`);
-- valida o arquivo e devolve o original se for inválido.
+- valida o arquivo novo dentro da própria borda, numa cópia temporária, antes
+  de substituir o que está em uso;
+- guarda uma cópia do anterior em `/opt/vitrine/backups/Caddyfile-borda-<data>`;
+- devolve o original se o Caddy recusar a recarga.
 
 Rodar de novo substitui o bloco, nunca o duplica.
 
