@@ -68,23 +68,91 @@ escritas). O controle das migrations aplicadas fica em `app.schema_migrations`.
 
 ---
 
-## 2. Aplicar as migrations
+## 2. Migrations
 
-O container `migrate` aplica o que falta a cada `docker compose up`, em ordem,
-cada arquivo numa transação, e define a senha do `authenticator`:
+`db/migrations/` é o changelog do banco. Cada arquivo roda **uma vez**, em
+ordem, e fica registrado em `app.schema_migrations` com o checksum do
+conteúdo, a duração e o commit que o aplicou. Quem executa é
+`server/src/migrate.js`, no container `migrate`, que também define a senha do
+`authenticator`.
 
 ```bash
-docker compose run --rm migrate
+docker compose run --rm migrate                                       # aplica o que falta
+docker compose run --rm migrate node server/src/migrate.js --status   # aplicadas, pendentes, problemas
+docker compose run --rm migrate node server/src/migrate.js --check    # só confere: 0 em dia, 10 há pendentes, 1 história quebrada
 ```
 
-Em desenvolvimento, com o banco do `docker-compose.dev.yml` e o
-`server/.env` preenchido: `npm run db:migrate`.
+Em desenvolvimento, com o banco do `docker-compose.dev.yml` e o `server/.env`
+preenchido: `npm run db:migrate` e `npm run db:status`.
 
-**Para criar uma migration:** `AAAAMMDDNNNNNN_descricao.sql`, idempotente como as
-demais (`if not exists`, `create or replace`, `drop policy if exists`). Lembre
-da [seção 7](#permissões-de-funções--a-armadilha-do-execute): função nova nasce
-sem EXECUTE para ninguém, e tabela nova sem grant para ninguém — conceda
-explicitamente.
+**Tudo ou nada.** As pendentes rodam numa transação só: se a terceira de três
+falha, as duas primeiras são desfeitas junto e o banco fica como estava. Uma
+trava (`pg_advisory_lock`) impede duas execuções ao mesmo tempo. Antes de
+aplicar qualquer coisa, o executor confere a história. Se um arquivo já
+aplicado mudou, sumiu ou se uma migration nova tem data anterior à última
+aplicada, **nada roda**.
+
+No servidor, o deploy faz backup do banco antes de aplicar e só troca o app
+depois que as migrations entraram ([`deploy/README.md`](../deploy/README.md#5-migrations-no-deploy)).
+
+### Como escrever uma migration
+
+```bash
+npm run db:new -- "adiciona idioma em noticias"
+#   Criada: db/migrations/20261005143000_adiciona_idioma_em_noticias.sql
+npm run db:check        # as mesmas regras que a CI confere, contra a origin/main
+```
+
+O arquivo nasce com as regras num comentário. São seis, e a CI recusa o
+pull request que quebra qualquer uma delas:
+
+1. **Linear.** A data e hora (UTC) no nome definem a ordem, e uma migration
+   nova vem sempre depois da última; o `db:new` garante isso. Uma migration
+   com data no meio da história é recusada: o servidor já aplicou as que vêm
+   depois dela.
+
+2. **Imutável.** Depois que foi para a main, o arquivo não muda mais. O
+   checksum gravado no servidor deixaria de bater, e o deploy para. Errou?
+   Crie outra migration que corrige. Apagar ou renomear um arquivo também é
+   recusado.
+
+3. **Compatível com a versão anterior do app** (*expandir/contrair*). Um
+   rollback volta o código, não o banco. Por isso cada migration precisa
+   funcionar com o app de antes dela:
+   - **expandir** (pode a qualquer hora): tabela nova, coluna anulável ou com
+     `default`, índice, função nova;
+   - **contrair** (remover ou renomear o que o código usa): só numa versão
+     *seguinte*, quando nenhuma versão em uso depende mais daquilo.
+
+   Renomear `title` para `headline`, por exemplo, são duas entregas:
+   - **1ª:** cria `headline`, copia os dados e passa o código a usar
+     `headline`;
+   - **2ª**, quando a 1ª estiver estável: remove `title`.
+
+4. **Destrutiva, declarada.** Uma migration destrutiva exige uma linha
+   `-- destrutiva: <motivo>`. Contam como destrutivas:
+   - `drop table`, `column`, `schema`, `type` ou `view`;
+   - troca de tipo de coluna;
+   - `rename`;
+   - `truncate`;
+   - `delete from`.
+
+   A linha não proíbe nada. Ela obriga a decisão a aparecer na revisão. As 16
+   migrations anteriores a esta regra ficam de fora dela.
+
+5. **Permissões explícitas.** Tabela nova em `public` nasce sem grant para
+   ninguém, e precisa de RLS ligado. Função nova nasce sem EXECUTE. Conceda
+   explicitamente: veja a [seção 7](#permissões-de-funções--a-armadilha-do-execute).
+
+6. **Sem transação, só quando não há outro jeito.** O
+   `create index concurrently` não roda em transação: marque o arquivo com
+   `-- migrate:no-transaction`. Havendo um desses entre as pendentes, cada
+   arquivo vira a sua própria etapa.
+
+Escrever de forma idempotente (`if not exists`, `create or replace`,
+`drop policy if exists`) continua sendo boa prática. Mas não é isso que
+impede uma migration de rodar duas vezes: quem impede é o registro em
+`app.schema_migrations`.
 
 Para abrir um `psql`:
 

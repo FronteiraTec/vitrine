@@ -153,9 +153,10 @@ domínio).
 ## 5. Banco: migrations e dados de demonstração
 
 As migrations ficam em `db/migrations/` e são aplicadas pelo container
-`migrate` a cada `docker compose up`, em ordem, cada uma numa transação. O que
-já foi aplicado fica em `app.schema_migrations`; rodar de novo só aplica o que
-for novo.
+`migrate` a cada `docker compose up`, em ordem. Todas as pendentes entram
+numa transação só: ou entram todas, ou nenhuma. O que já foi aplicado fica
+em `app.schema_migrations`, com o checksum de cada arquivo. Rodar de novo só
+aplica o que for novo.
 
 ```bash
 docker compose run --rm migrate                     # aplicar à mão
@@ -170,11 +171,13 @@ O seed cria 8 categorias, 20 tags, 16 pessoas fictícias e 22 iniciativas em
 todos os status do fluxo editorial, oito notícias (`seed-noticias.sql`) e as
 versões em inglês e espanhol de duas delas (`seed-traducoes.sql`).
 
-**Migration nova:** um arquivo `AAAAMMDDNNNNNN_nome.sql` em `db/migrations/`,
-idempotente como as demais (`if not exists`, `create or replace`, `drop policy
-if exists`). A 0008 nega EXECUTE por padrão em toda função nova de `public`:
-conceda explicitamente a quem precisa. Detalhes em
-[`db/README.md`](./db/README.md).
+**Migration nova:** `npm run db:new -- "o que ela faz"`. A história é
+**linear e imutável**: depois que um arquivo vai para a main, ele não muda
+mais (errou? outra migration corrige), e uma migration nova vem sempre depois
+da última. Cada uma precisa funcionar com a versão anterior do app, para que
+o rollback seja possível. `npm run db:check` confere as regras, as mesmas que
+a CI aplica. Detalhes em
+[`db/README.md`](./db/README.md#como-escrever-uma-migration).
 
 ---
 
@@ -340,7 +343,30 @@ Cloudflare. Três ajustes quando há um proxy no caminho:
 Se o proxy roda na mesma máquina, `HTTP_BIND=127.0.0.1` deixa a porta
 acessível só para ele.
 
-### 9.2 Atualizar
+### 9.2 VPS de validação — deploy automático
+
+A versão em validação roda numa VPS compartilhada com outros sistemas e se
+atualiza sozinha:
+
+```
+git push origin main  →  GitHub Actions: testes → imagens → deploy  →  https://vitrine.fronteiratec.com
+```
+
+- **Imagens testadas.** O Actions constrói as imagens uma vez e as testa com
+  a stack inteira (integração e segurança). Depois as publica no `ghcr.io`
+  com a tag do commit.
+- **Deploy na VPS.** A VPS baixa as imagens, faz backup e aplica as
+  migrations. Depois troca o app e confere a saúde; se a versão nova não fica
+  saudável, volta sozinha para a anterior.
+- **Isolamento.** A Vitrine não publica porta no host. Ela entra pela borda
+  HTTPS (Caddy) que a VPS já tinha.
+
+Configuração, rollback, restore, backups e problemas conhecidos estão em
+[`deploy/README.md`](./deploy/README.md).
+
+### 9.3 Outro servidor — atualizar à mão
+
+Num servidor sem o GitHub Actions, com o `.env` preenchido:
 
 ```bash
 git pull
@@ -352,7 +378,7 @@ ficam nos volumes `db-data` (banco), `arquivos` (imagens) e `geoip` (base de
 localização), que sobrevivem a rebuild e a `docker compose down`. **Só
 `docker compose down -v` apaga os volumes** — não use em produção.
 
-### 9.3 Backup
+#### Backup
 
 O que precisa de backup são os dois primeiros volumes:
 
@@ -374,12 +400,14 @@ docker run --rm -v vitrine_arquivos:/dados -v "$PWD":/backup alpine \
 docker compose run --rm migrate      # redefine a senha do authenticator
 ```
 
-### 9.4 Logs e saúde
+#### Logs e saúde
 
 ```bash
 docker compose ps                  # saúde de cada container
 docker compose logs -f api web     # erros da API, acessos do Nginx
-curl -s http://localhost:8080/api/health
+curl -s http://localhost:8080/api/health          # a API está viva
+curl -s http://localhost:8080/api/health/ready    # banco ok e migrations em dia (503 se não)
+curl -s http://localhost:8080/version.json        # o commit que está sendo servido
 ```
 
 A API registra no log: falha de envio de e-mail, falha ao registrar acesso e
@@ -452,7 +480,8 @@ vitrine/
 │       ├── index.js · app.js   subida, rotas, CSRF
 │       ├── config.js           variáveis de ambiente
 │       ├── db.js               conexão e troca de papel por requisição
-│       ├── migrate.js          aplica db/migrations
+│       ├── migrate.js          aplica db/migrations (migrations.js: as regras)
+│       ├── health.js           /api/health e /api/health/ready
 │       ├── auth/               sessão, senha, e-mail, contas
 │       ├── routes/             iniciativas, notícias, catálogo, painel, arquivos
 │       ├── analytics/          registro de acessos, localização, canal, relatório
@@ -462,8 +491,10 @@ vitrine/
 │   ├── migrations/             0000 (base) a 0015 (audiência)
 │   ├── seed*.sql               dados de demonstração
 │   └── README.md               guia do banco
+├── deploy/                     VPS: compose do servidor, borda Caddy, scripts
+│   └── README.md               guia de deploy e operação
 ├── public/                     favicon, robots.txt
-├── scripts/                    smoke, seo, security, css, robots
+├── scripts/                    smoke, seo, security, css, robots, api-check, migrations
 └── src/
     ├── i18n/                   idiomas, rotas por idioma — cliente E servidor
     ├── components/
