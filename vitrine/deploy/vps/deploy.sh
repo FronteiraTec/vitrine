@@ -41,7 +41,6 @@ main() {
 
   local anterior
   anterior=$(commit_atual)
-  log "deploy de $(curto "$sha") — no ar agora: ${anterior:+$(curto "$anterior")}${anterior:-nenhuma versão}"
 
   # 2. código ----------------------------------------------------------------
   # O repositório é público: o clone busca sem credencial. Trocar de commit
@@ -53,6 +52,8 @@ main() {
     exec 9>&-
     exec "$APP/deploy/vps/deploy.sh" "$@"
   fi
+
+  log "deploy de $(curto "$sha") — no ar agora: ${anterior:+$(curto "$anterior")}${anterior:-nenhuma versão}"
 
   # 3. imagens ---------------------------------------------------------------
   local api="$PREFIXO-api:$sha" web="$PREFIXO-web:$sha"

@@ -29,6 +29,11 @@ ESTADO="$RAIZ/estado"
 BACKUPS="$RAIZ/backups"
 HISTORICO="$RAIZ/deploys.log"
 
+# Sempre a partir da pasta do sistema: chamado via sudo, o diretório atual
+# seria o de quem chamou (/root), que o usuário vitrine nem consegue ler — e o
+# docker compose falha ao validar o projeto.
+cd "$RAIZ" 2>/dev/null || cd /
+
 # Lê uma variável do .env de produção sem executar o arquivo.
 env_var() {
   local nome=$1 padrao=${2:-}
