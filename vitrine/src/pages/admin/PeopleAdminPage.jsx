@@ -88,9 +88,9 @@ function PersonForm({ person, onOpenChange, onSaved }) {
         </DialogDescription>
       </DialogHeader>
 
-      <DialogBody className="space-y-5">
+      <DialogBody className="space-y-3">
         {error ? (
-          <p role="alert" className="text-destructive text-sm font-medium">
+          <p role="alert" className="text-danger fs-7 fw-medium">
             {error}
           </p>
         ) : null}
@@ -101,7 +101,7 @@ function PersonForm({ person, onOpenChange, onSaved }) {
           )}
         </Field>
 
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="d-grid gap-3 grid-cols-sm-2">
           <Field id="p-role" label="Cargo ou titulação">
             {(props) => (
               <Input
@@ -126,8 +126,8 @@ function PersonForm({ person, onOpenChange, onSaved }) {
           bucket={BUCKETS.INITIATIVES}
           folder="pessoas"
           label="Foto (opcional)"
-          ratio="aspect-square"
-          className="max-w-48"
+          ratio="ratio-1x1"
+          className="max-w-fx-48"
         />
       </DialogBody>
 
@@ -208,12 +208,12 @@ export function PeopleAdminPage() {
         }
       />
 
-      <div className="relative mb-5 max-w-md">
-        <label htmlFor="busca-pessoas" className="sr-only">
+      <div className="position-relative mb-3 mw-md">
+        <label htmlFor="busca-pessoas" className="visually-hidden">
           Buscar pessoas
         </label>
         <Search
-          className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+          className="text-body-secondary pe-none position-absolute top-50 start-0 icon translate-middle-y"
           aria-hidden="true"
         />
         <Input
@@ -222,16 +222,16 @@ export function PeopleAdminPage() {
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Buscar pelo nome…"
-          className="pl-9"
+          className="ps-5"
         />
       </div>
 
       {isError ? (
         <ErrorState description={error?.message} onRetry={() => refetch()} />
       ) : isPending ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="d-grid gap-2 grid-cols-sm-2 grid-cols-lg-3">
           {Array.from({ length: 6 }, (_, index) => (
-            <Skeleton key={index} className="h-20" />
+            <Skeleton key={index} className="h-fx-20" />
           ))}
         </div>
       ) : data.length === 0 ? (
@@ -243,26 +243,26 @@ export function PeopleAdminPage() {
               ? 'Tente outro termo de busca.'
               : 'Cadastre as pessoas responsáveis pelas iniciativas do catálogo.'
           }
-          className="bg-card"
+          className="bg-body"
         />
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="d-grid gap-2 grid-cols-sm-2 grid-cols-lg-3">
           {data.map((person) => (
             <li
               key={person.id}
-              className="border-border bg-card flex items-center gap-3 rounded-lg border p-4"
+              className="border bg-body d-flex align-items-center gap-2 rounded-3 p-3"
             >
               <Avatar src={person.photo_url} name={person.name} size="md" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">{person.name}</p>
+              <div className="min-w-0 flex-grow-1">
+                <p className="text-truncate fw-medium">{person.name}</p>
                 {person.role ? (
-                  <p className="text-muted-foreground truncate text-sm">{person.role}</p>
+                  <p className="text-body-secondary text-truncate fs-7">{person.role}</p>
                 ) : null}
                 {person.email ? (
-                  <p className="text-muted-foreground truncate text-xs">{person.email}</p>
+                  <p className="text-body-secondary text-truncate fs-8">{person.email}</p>
                 ) : null}
               </div>
-              <div className="flex shrink-0 gap-0.5">
+              <div className="d-flex flex-shrink-0 gap-1">
                 <Button
                   variant="ghost"
                   size="icon-sm"
@@ -280,7 +280,7 @@ export function PeopleAdminPage() {
                     size="icon-sm"
                     onClick={() => setToDelete(person)}
                     aria-label={`Excluir ${person.name}`}
-                    className="text-muted-foreground hover:text-destructive"
+                    className="text-body-secondary"
                   >
                     <Trash2 />
                   </Button>

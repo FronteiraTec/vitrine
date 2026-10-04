@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-# A área administrativa não deve ser indexada.
+# Área administrativa e telas de autenticação.
 Disallow: /admin
 Disallow: /entrar
 Disallow: /criar-conta
@@ -9,5 +9,12 @@ Disallow: /recuperar-senha
 Disallow: /redefinir-senha
 Disallow: /configuracao
 
-# Substitua pelo domínio real do deploy.
-Sitemap: https://exemplo.com/sitemap.xml
+# ---------------------------------------------------------------------------
+# Este arquivo é o de DESENVOLVIMENTO. No build, `scripts/generate-robots.mjs`
+# o reescreve em dist/ acrescentando as linhas `Sitemap:` com o domínio de
+# VITE_SITE_URL.
+#
+# Não existe grupo `User-agent: Googlebot-News` de propósito: um grupo
+# específico faz o robô ignorar o `*` inteiro — inclusive os `Disallow` acima.
+# O `*` com `Allow: /` já libera todos os rastreadores legítimos.
+# ---------------------------------------------------------------------------

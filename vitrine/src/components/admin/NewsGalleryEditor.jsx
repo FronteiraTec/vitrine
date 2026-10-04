@@ -63,7 +63,7 @@ export function NewsGalleryEditor({ value, onChange, max = 12, disabled = false 
           continue
         }
         const { url } = await uploadImage({ bucket: BUCKETS.NEWS, folder: 'galeria', file })
-        uploaded.push({ url, caption: '', credit: '' })
+        uploaded.push({ url, alt: '', caption: '', credit: '' })
       }
       if (uploaded.length) onChange([...items, ...uploaded])
     } catch (uploadError) {
@@ -74,11 +74,11 @@ export function NewsGalleryEditor({ value, onChange, max = 12, disabled = false 
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
+    <div className="space-y-3">
+      <div className="d-flex align-items-start justify-content-between gap-2">
         <div>
-          <p className="text-sm font-medium">Galeria</p>
-          <p className="text-muted-foreground text-xs">
+          <p className="fs-7 fw-medium">Galeria</p>
+          <p className="text-body-secondary fs-8">
             Até {max} imagens no corpo da notícia · {items.length} adicionada
             {items.length === 1 ? '' : 's'}
           </p>
@@ -97,21 +97,33 @@ export function NewsGalleryEditor({ value, onChange, max = 12, disabled = false 
       </div>
 
       {items.length ? (
-        <ol className="space-y-3">
+        <ol className="space-y-2">
           {items.map((item, index) => (
             <li
               key={item.url}
-              className="border-border bg-muted/30 grid gap-4 rounded-lg border p-3 sm:grid-cols-[10rem_minmax(0,1fr)]"
+              className="border bg-body-tertiary d-grid gap-3 rounded-3 p-2 d-grid grid-media"
             >
               <Image
                 src={item.url}
                 alt=""
-                ratio="aspect-[16/10]"
-                wrapperClassName="border-border rounded-md border"
+                ratio="ratio-16x10"
+                wrapperClassName="border rounded-2 border"
               />
 
-              <div className="space-y-3">
-                <div className="space-y-1.5">
+              <div className="space-y-2">
+                <div className="space-y-1">
+                  <Label htmlFor={`${inputId}-alt-${index}`}>Texto alternativo</Label>
+                  <Input
+                    id={`${inputId}-alt-${index}`}
+                    value={item.alt ?? ''}
+                    onChange={(event) => update(index, { alt: event.target.value })}
+                    placeholder="Descrição para quem não vê a imagem"
+                    maxLength={200}
+                    disabled={disabled}
+                  />
+                </div>
+
+                <div className="space-y-1">
                   <Label htmlFor={`${inputId}-caption-${index}`}>Legenda</Label>
                   <Input
                     id={`${inputId}-caption-${index}`}
@@ -123,7 +135,7 @@ export function NewsGalleryEditor({ value, onChange, max = 12, disabled = false 
                   />
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   <Label htmlFor={`${inputId}-credit-${index}`}>Crédito</Label>
                   <Input
                     id={`${inputId}-credit-${index}`}
@@ -135,7 +147,7 @@ export function NewsGalleryEditor({ value, onChange, max = 12, disabled = false 
                   />
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="d-flex align-items-center gap-1">
                   <Button
                     type="button"
                     variant="subtle"
@@ -162,7 +174,7 @@ export function NewsGalleryEditor({ value, onChange, max = 12, disabled = false 
                     size="sm"
                     onClick={() => handleRemove(index)}
                     disabled={disabled}
-                    className="text-destructive hover:bg-destructive hover:text-destructive-foreground ml-auto"
+                    className="text-danger ms-auto"
                   >
                     <Trash2 aria-hidden="true" />
                     Remover
@@ -177,9 +189,9 @@ export function NewsGalleryEditor({ value, onChange, max = 12, disabled = false 
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={disabled}
-          className="border-border text-muted-foreground hover:bg-muted/60 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed px-6 py-8 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent"
+          className="border text-body-secondary d-flex w-100 align-items-center justify-content-center gap-2 rounded-3 border-2 border-dashed px-4 py-5 fs-7"
         >
-          <ImagePlus className="size-4" aria-hidden="true" />
+          <ImagePlus className="icon" aria-hidden="true" />
           {disabled ? 'Nenhuma imagem na galeria' : 'Nenhuma imagem — clique para adicionar'}
         </button>
       )}
@@ -189,7 +201,7 @@ export function NewsGalleryEditor({ value, onChange, max = 12, disabled = false 
         type="file"
         accept="image/jpeg,image/png,image/webp,image/avif"
         multiple
-        className="sr-only"
+        className="visually-hidden"
         onChange={(event) => {
           if (event.target.files?.length) handleFiles(event.target.files)
           event.target.value = ''
@@ -197,12 +209,12 @@ export function NewsGalleryEditor({ value, onChange, max = 12, disabled = false 
       />
 
       {error ? (
-        <p role="alert" className="text-destructive flex items-start gap-1.5 text-xs font-medium">
-          <AlertCircle className="mt-px size-3.5 shrink-0" aria-hidden="true" />
+        <p role="alert" className="text-danger d-flex align-items-start gap-1 fs-8 fw-medium">
+          <AlertCircle className="mt-1 icon-sm flex-shrink-0" aria-hidden="true" />
           {error}
         </p>
       ) : (
-        <p className="text-muted-foreground text-xs">
+        <p className="text-body-secondary fs-8">
           JPG, PNG, WebP ou AVIF · até {Math.round(MAX_IMAGE_BYTES / 1024 / 1024)} MB por imagem
         </p>
       )}

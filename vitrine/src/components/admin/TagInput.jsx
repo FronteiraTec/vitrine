@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { fieldBase } from '@/components/ui/input'
+
 import { useTags } from '@/hooks/use-queries'
 import { cn, normalizeSearch } from '@/lib/utils'
 
@@ -50,17 +50,17 @@ export function TagInput({ value = [], onChange, id = 'tags', describedBy }) {
   }
 
   return (
-    <div className="relative">
+    <div className="position-relative">
       <div
         className={cn(
-          fieldBase,
-          'flex min-h-10 flex-wrap items-center gap-1.5 p-1.5',
-          focused && 'border-ring ring-ring/25 ring-2',
+          'form-control',
+          'd-flex min-h-fx-10 flex-wrap align-items-center gap-1 p-1',
+          focused && 'border-primary',
         )}
         onClick={() => inputRef.current?.focus()}
       >
         {value.map((name) => (
-          <Badge key={name} variant="brand" size="sm" className="gap-1 pr-1">
+          <Badge key={name} variant="brand" size="sm" className="gap-1 pe-1">
             {name}
             <button
               type="button"
@@ -68,10 +68,10 @@ export function TagInput({ value = [], onChange, id = 'tags', describedBy }) {
                 event.stopPropagation()
                 remove(name)
               }}
-              className="hover:bg-brand/20 rounded-full p-0.5 transition-colors"
+              className="rounded-pill p-1"
               aria-label={`Remover tag ${name}`}
             >
-              <X className="size-3" />
+              <X className="icon-sm" />
             </button>
           </Badge>
         ))}
@@ -89,19 +89,19 @@ export function TagInput({ value = [], onChange, id = 'tags', describedBy }) {
             setTimeout(() => setFocused(false), 120)
           }}
           placeholder={value.length ? '' : 'Digite e pressione Enter…'}
-          className="placeholder:text-muted-foreground/70 min-w-32 flex-1 bg-transparent px-1.5 py-1 text-sm outline-none"
+          className="min-w-fx-32 flex-grow-1 bg-transparent px-1 py-1 fs-7"
         />
       </div>
 
       {focused && suggestions.length > 0 ? (
-        <ul className="bg-popover shadow-float absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-md border p-1">
+        <ul className="bg-body shadow position-absolute z-3 mt-1 max-h-fx-52 w-100 overflow-y-auto rounded-2 border p-1">
           {suggestions.map((tag) => (
             <li key={tag.id}>
               <button
                 type="button"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => add(tag.name)}
-                className="hover:bg-muted w-full rounded-sm px-2.5 py-2 text-left text-sm transition-colors"
+                className="w-100 rounded-1 px-2 py-2 text-start fs-7"
               >
                 {tag.name}
               </button>

@@ -4,15 +4,12 @@ import { cn } from '@/lib/utils'
 export function Label({ className, required, children, ...props }) {
   return (
     <LabelPrimitive.Root
-      className={cn(
-        'text-foreground flex items-center gap-1 text-sm font-medium peer-disabled:opacity-60',
-        className,
-      )}
+      className={cn('form-label d-flex align-items-center gap-1', className)}
       {...props}
     >
       {children}
       {required ? (
-        <span className="text-destructive" aria-hidden="true">
+        <span className="text-danger" aria-hidden="true">
           *
         </span>
       ) : null}
@@ -21,19 +18,25 @@ export function Label({ className, required, children, ...props }) {
 }
 
 /**
- * Campo de formulário completo: rótulo, dica, mensagem de erro e vínculo
- * acessível (aria-describedby / aria-invalid) com o controle filho.
+ * Campo completo: rótulo, dica, mensagem de erro e o vínculo acessível
+ * (`aria-describedby` / `aria-invalid`) com o controle filho.
+ *
+ * A mensagem de erro usa `invalid-feedback d-block`, e não só `text-danger`: é
+ * a classe que o Bootstrap associa a campo inválido, e o `d-block` a torna
+ * visível sem depender da validação nativa do formulário, que não é usada aqui.
  */
 export function Field({ id, label, hint, error, required, className, children }) {
   const hintId = hint ? `${id}-hint` : undefined
   const errorId = error ? `${id}-error` : undefined
+
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn('mb-3', className)}>
       {label ? (
         <Label htmlFor={id} required={required}>
           {label}
         </Label>
       ) : null}
+
       {typeof children === 'function'
         ? children({
             id,
@@ -41,15 +44,17 @@ export function Field({ id, label, hint, error, required, className, children })
             'aria-invalid': error ? true : undefined,
           })
         : children}
+
       {hint && !error ? (
-        <p id={hintId} className="text-muted-foreground text-xs">
+        <div id={hintId} className="form-text">
           {hint}
-        </p>
+        </div>
       ) : null}
+
       {error ? (
-        <p id={errorId} className="text-destructive text-xs font-medium">
+        <div id={errorId} className="invalid-feedback d-block fw-medium">
           {error}
-        </p>
+        </div>
       ) : null}
     </div>
   )

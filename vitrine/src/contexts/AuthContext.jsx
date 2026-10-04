@@ -1,147 +1,140 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { friendlyError, isSupabaseConfigured, supabase } from '@/lib/supabase'
+import { useQueryClient } from '@tanstack/react-query'
+import { api, UNAUTHORIZED_EVENT } from '@/lib/api'
 import { ROLE } from '@/lib/constants'
 
 const AuthContext = createContext(null)
 
+const SIGNED_OUT = { user: null, profile: null }
+
+/** Resposta de `/api/auth/*` → estado. Sempre os dois campos, nunca `undefined`. */
+function toState(data) {
+  return data?.user ? { user: data.user, profile: data.profile ?? null } : SIGNED_OUT
+}
+
+/**
+ * Sessão do painel.
+ *
+ * O cookie de sessão é `httpOnly`: o JavaScript não o lê. Para saber se há
+ * alguém logado, a página pergunta à API (`/api/auth/session`) ao abrir, e
+ * cada ação de login ou logout devolve o estado novo na própria resposta.
+ */
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(null)
-  /*
-   * O perfil é guardado junto do id do usuário a que pertence. Assim o estado
-   * derivado abaixo descarta sozinho o perfil de uma sessão anterior, sem
-   * precisar de um efeito de limpeza que sincronize `profile` com `session`.
-   */
-  const [profileEntry, setProfileEntry] = useState(null)
-  // `initializing` cobre a restauração da sessão; o carregamento do perfil é
-  // derivado. Guardas de rota precisam esperar os dois antes de decidir.
-  const [initializing, setInitializing] = useState(isSupabaseConfigured)
+  const queryClient = useQueryClient()
+  const [state, setState] = useState(SIGNED_OUT)
+  // Guardas de rota precisam esperar a primeira resposta antes de decidir.
+  const [initializing, setInitializing] = useState(true)
   const mounted = useRef(true)
 
-  useEffect(() => {
-    mounted.current = true
-    return () => {
-      mounted.current = false
-    }
+  const apply = useCallback((next) => {
+    if (mounted.current) setState(next)
   }, [])
 
   useEffect(() => {
-    if (!supabase) return undefined
+    mounted.current = true
 
-    supabase.auth
-      .getSession()
-      .then(({ data }) => {
-        if (!mounted.current) return
-        setSession(data.session ?? null)
-      })
+    api
+      .get('/auth/session')
+      .then((data) => apply(toState(data)))
+      .catch(() => apply(SIGNED_OUT))
       .finally(() => {
         if (mounted.current) setInitializing(false)
       })
 
-    // O callback do Supabase roda dentro de um lock interno: qualquer consulta
-    // ao banco aqui pode travar. Guardamos apenas a sessão e buscamos o perfil
-    // no efeito seguinte.
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      if (!mounted.current) return
-      setSession(nextSession ?? null)
-      setInitializing(false)
-    })
+    // Qualquer 401 da API — sessão expirada, encerrada em outro dispositivo,
+    // senha trocada — derruba o estado aqui, e as guardas levam ao login.
+    const onUnauthorized = () => apply(SIGNED_OUT)
+    window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
 
-    return () => subscription.subscription.unsubscribe()
-  }, [])
+    return () => {
+      mounted.current = false
+      window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
+    }
+  }, [apply])
 
-  const userId = session?.user?.id ?? null
+  const userId = state.user?.id ?? null
 
-  const loadProfile = useCallback(async (id) => {
-    if (!supabase || !id) return
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, name, email, role, avatar_url, is_active, created_at')
-      .eq('id', id)
-      .maybeSingle()
+  const refreshProfile = useCallback(async () => {
+    apply(toState(await api.get('/auth/session')))
+  }, [apply])
 
-    if (!mounted.current) return
-    if (error) console.error('Falha ao carregar o perfil:', error.message)
-    setProfileEntry({ userId: id, data: error ? null : (data ?? null) })
-  }, [])
+  const signIn = useCallback(
+    async (email, password) => {
+      apply(toState(await api.post('/auth/login', { email, password })))
+    },
+    [apply],
+  )
 
-  useEffect(() => {
-    if (!userId) return
-    loadProfile(userId)
-  }, [userId, loadProfile])
-
-  // Só vale o perfil que pertence à sessão atual.
-  const profile = profileEntry?.userId === userId ? profileEntry.data : null
-  const profileLoading = Boolean(userId) && profileEntry?.userId !== userId
-
-  const signIn = useCallback(async (email, password) => {
-    if (!supabase) throw new Error('Supabase não configurado.')
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) throw new Error(friendlyError(error))
-  }, [])
-
-  const signUp = useCallback(async (email, password, name) => {
-    if (!supabase) throw new Error('Supabase não configurado.')
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name } },
-    })
-    if (error) throw new Error(friendlyError(error))
-  }, [])
+  /** Cadastro da primeira conta da instalação, que já entra logada. */
+  const signUp = useCallback(
+    async (email, password, name) => {
+      apply(toState(await api.post('/auth/signup', { email, password, name })))
+    },
+    [apply],
+  )
 
   const signOut = useCallback(async () => {
-    if (!supabase) return
-    await supabase.auth.signOut()
-    setProfileEntry(null)
-  }, [])
+    try {
+      await api.post('/auth/logout')
+    } finally {
+      apply(SIGNED_OUT)
+      // O que a equipe viu no painel não fica no cache da aba para o próximo
+      // que usar o computador.
+      queryClient.clear()
+    }
+  }, [apply, queryClient])
 
   const requestPasswordReset = useCallback(async (email) => {
-    if (!supabase) throw new Error('Supabase não configurado.')
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/redefinir-senha`,
-    })
-    if (error) throw new Error(friendlyError(error))
+    await api.post('/auth/password/forgot', { email })
   }, [])
 
-  const updatePassword = useCallback(async (password) => {
-    if (!supabase) throw new Error('Supabase não configurado.')
-    const { error } = await supabase.auth.updateUser({ password })
-    if (error) throw new Error(friendlyError(error))
+  /** Destino do link do e-mail: troca a senha e já entra. */
+  const resetPassword = useCallback(
+    async (token, password) => {
+      apply(toState(await api.post('/auth/password/reset', { token, password })))
+    },
+    [apply],
+  )
+
+  /** Troca de senha de quem está logado. As outras sessões da conta caem. */
+  const updatePassword = useCallback(async (password, currentPassword) => {
+    await api.post('/auth/password', { password, currentPassword })
   }, [])
 
   const value = useMemo(() => {
+    const { user, profile } = state
     const role = profile?.role ?? null
     const active = Boolean(profile?.is_active)
     return {
-      configured: isSupabaseConfigured,
-      session,
-      user: session?.user ?? null,
+      session: user ? { user } : null,
+      user,
       profile,
       role,
-      loading: initializing || profileLoading,
-      isAuthenticated: Boolean(session?.user),
+      loading: initializing,
+      isAuthenticated: Boolean(user),
       isStaff: active,
       isAdmin: active && role === ROLE.ADMIN,
       canReview: active && (role === ROLE.ADMIN || role === ROLE.REVIEWER),
       canManageCategories: active && role === ROLE.ADMIN,
-      refreshProfile: () => loadProfile(userId),
+      userId,
+      refreshProfile,
       signIn,
       signUp,
       signOut,
       requestPasswordReset,
+      resetPassword,
       updatePassword,
     }
   }, [
-    session,
-    profile,
+    state,
     initializing,
-    profileLoading,
     userId,
-    loadProfile,
+    refreshProfile,
     signIn,
     signUp,
     signOut,
     requestPasswordReset,
+    resetPassword,
     updatePassword,
   ])
 

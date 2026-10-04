@@ -84,9 +84,9 @@ function CategoryForm({ category, onOpenChange }) {
         </DialogDescription>
       </DialogHeader>
 
-      <DialogBody className="space-y-5">
+      <DialogBody className="space-y-3">
         {error ? (
-          <p role="alert" className="text-destructive text-sm font-medium">
+          <p role="alert" className="text-danger fs-7 fw-medium">
             {error}
           </p>
         ) : null}
@@ -126,15 +126,15 @@ function CategoryForm({ category, onOpenChange }) {
           bucket={BUCKETS.CATEGORIES}
           label="Imagem de capa"
           hint="Aparece no cartão da categoria, na home e na página de categorias. Também é a prévia ao compartilhar o link. Proporção 16:9."
-          ratio="aspect-[16/9]"
+          ratio="ratio-16x9"
         />
 
         <fieldset className="space-y-2">
-          <legend className="text-sm font-medium">Ícone</legend>
-          <p className="text-muted-foreground text-xs">
+          <legend className="fs-7 fw-medium">Ícone</legend>
+          <p className="text-body-secondary fs-8">
             Usado no menu e como reserva no cartão, quando não há imagem de capa.
           </p>
-          <div className="grid grid-cols-7 gap-2 sm:grid-cols-11">
+          <div className="d-grid grid-cols-7 gap-2 grid-cols-sm-11">
             {ICON_OPTIONS.map(({ value, label, Icon }) => (
               <button
                 key={value}
@@ -143,14 +143,14 @@ function CategoryForm({ category, onOpenChange }) {
                 aria-pressed={values.icon === value}
                 title={label}
                 className={cn(
-                  'flex aspect-square items-center justify-center rounded-md border transition-colors',
+                  'd-flex ratio-1x1 align-items-center justify-content-center rounded-2 border',
                   values.icon === value
-                    ? 'border-brand bg-accent text-accent-foreground'
-                    : 'border-border text-muted-foreground hover:bg-muted',
+                    ? 'border-primary bg-primary-subtle text-primary-emphasis'
+                    : 'border text-body-secondary',
                 )}
               >
-                <Icon className="size-4" aria-hidden="true" />
-                <span className="sr-only">{label}</span>
+                <Icon className="icon" aria-hidden="true" />
+                <span className="visually-hidden">{label}</span>
               </button>
             ))}
           </div>
@@ -245,9 +245,9 @@ export function CategoriesAdminPage() {
       {isError ? (
         <ErrorState description={error?.message} onRetry={() => refetch()} />
       ) : isPending ? (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {Array.from({ length: 5 }, (_, index) => (
-            <Skeleton key={index} className="h-20" />
+            <Skeleton key={index} className="h-fx-20" />
           ))}
         </div>
       ) : data.length === 0 ? (
@@ -261,23 +261,23 @@ export function CategoriesAdminPage() {
               Criar primeira categoria
             </Button>
           }
-          className="bg-card"
+          className="bg-body"
         />
       ) : (
-        <ul className={cn('space-y-3', reorder.isPending && 'opacity-70')}>
+        <ul className={cn('space-y-2', reorder.isPending && 'opacity-75')}>
           {data.map((category, index) => (
             <li
               key={category.id}
-              className="border-border bg-card flex items-center gap-4 rounded-lg border p-4"
+              className="border bg-body d-flex align-items-center gap-3 rounded-3 p-3"
             >
-              <div className="flex flex-col gap-0.5">
+              <div className="d-flex flex-column gap-1">
                 <Button
                   variant="ghost"
                   size="icon-sm"
                   onClick={() => move(index, -1)}
                   disabled={index === 0 || reorder.isPending}
                   aria-label={`Mover ${category.name} para cima`}
-                  className="size-6"
+                  className="icon-xl"
                 >
                   <ChevronUp />
                 </Button>
@@ -287,28 +287,28 @@ export function CategoriesAdminPage() {
                   onClick={() => move(index, 1)}
                   disabled={index === data.length - 1 || reorder.isPending}
                   aria-label={`Mover ${category.name} para baixo`}
-                  className="size-6"
+                  className="icon-xl"
                 >
                   <ChevronDown />
                 </Button>
               </div>
 
-              <span className="bg-accent text-accent-foreground flex size-10 shrink-0 items-center justify-center rounded-md">
-                <CategoryIcon name={category.icon} className="size-5" />
+              <span className="bg-primary-subtle text-primary-emphasis d-flex h-fx-10 w-fx-10 flex-shrink-0 align-items-center justify-content-center rounded-2">
+                <CategoryIcon name={category.icon} className="icon-lg" />
               </span>
 
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">{category.name}</p>
-                <p className="text-muted-foreground truncate text-sm">
-                  {category.description || <span className="italic">Sem descrição</span>}
+              <div className="min-w-0 flex-grow-1">
+                <p className="text-truncate fw-medium">{category.name}</p>
+                <p className="text-body-secondary text-truncate fs-7">
+                  {category.description || <span className="fst-italic">Sem descrição</span>}
                 </p>
-                <p className="text-muted-foreground mt-0.5 text-xs tabular-nums">
+                <p className="text-body-secondary mt-1 fs-8 tabular-nums">
                   /{category.slug} · {category.published_count} publicada
                   {category.published_count === 1 ? '' : 's'}
                 </p>
               </div>
 
-              <div className="flex shrink-0 gap-1">
+              <div className="d-flex flex-shrink-0 gap-1">
                 <Button
                   variant="ghost"
                   size="icon-sm"
@@ -322,7 +322,7 @@ export function CategoriesAdminPage() {
                   size="icon-sm"
                   onClick={() => setToDelete(category)}
                   aria-label={`Excluir ${category.name}`}
-                  className="text-muted-foreground hover:text-destructive"
+                  className="text-body-secondary"
                 >
                   <Trash2 />
                 </Button>

@@ -35,8 +35,8 @@ export function ColorInput({ label, hint, value, onChange, fallback = '#000000',
   }
 
   return (
-    <div className={cn('space-y-2', className)}>
-      <div className="flex items-center justify-between gap-2">
+    <div className={cn('mb-3', className)}>
+      <div className="d-flex align-items-center justify-content-between gap-2">
         <Label htmlFor={id}>{label}</Label>
         {custom ? (
           <button
@@ -45,16 +45,16 @@ export function ColorInput({ label, hint, value, onChange, fallback = '#000000',
               setDraft(null)
               onChange(null)
             }}
-            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs transition-colors"
+            className="btn btn-link btn-sm p-0 text-body-secondary text-decoration-none d-inline-flex align-items-center gap-1"
           >
-            <RotateCcw className="size-3" aria-hidden="true" />
+            <RotateCcw className="icon-sm" aria-hidden="true" />
             Usar padrão
           </button>
         ) : null}
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className="border-input relative size-10 shrink-0 overflow-hidden rounded-md border shadow-subtle">
+      <div className="d-flex align-items-center gap-2">
+        <span className="color-swatch">
           <input
             type="color"
             value={custom ? value : fallback}
@@ -63,7 +63,6 @@ export function ColorInput({ label, hint, value, onChange, fallback = '#000000',
               onChange(event.target.value.toLowerCase())
             }}
             aria-label={`${label} — seletor de cor`}
-            className="absolute -inset-2 size-[calc(100%+1rem)] cursor-pointer border-0 bg-transparent p-0"
           />
         </span>
 
@@ -78,11 +77,11 @@ export function ColorInput({ label, hint, value, onChange, fallback = '#000000',
             commit(event.target.value)
           }}
           onBlur={() => setDraft(null)}
-          className="font-mono text-sm"
+          className="font-monospace"
         />
       </div>
 
-      {hint ? <p className="text-muted-foreground text-xs">{hint}</p> : null}
+      {hint ? <div className="form-text">{hint}</div> : null}
     </div>
   )
 }

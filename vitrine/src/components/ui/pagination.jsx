@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useLocale } from '@/contexts/LocaleContext'
 import { cn } from '@/lib/utils'
-import { Button } from './button'
 
 /**
  * Constrói a régua de páginas com elipses: 1 … 4 5 6 … 20
@@ -23,57 +23,62 @@ function buildRange(current, total) {
   return result
 }
 
+/**
+ * Paginação sobre a marcação do Bootstrap (`.pagination` / `.page-item` /
+ * `.page-link`), que já traz o estado ativo e o desabilitado prontos.
+ */
 export function Pagination({ page, pageCount, onPageChange, className }) {
+  const { t } = useLocale()
   if (pageCount <= 1) return null
   const range = buildRange(page, pageCount)
 
   return (
-    <nav
-      className={cn('flex items-center justify-center gap-1', className)}
-      aria-label="Paginação de resultados"
-    >
-      <Button
-        variant="outline"
-        size="icon-sm"
-        onClick={() => onPageChange(page - 1)}
-        disabled={page <= 1}
-        aria-label="Página anterior"
-      >
-        <ChevronLeft aria-hidden="true" />
-      </Button>
+    <nav aria-label={t('pagination.label')} className={cn('d-flex justify-content-center', className)}>
+      <ul className="pagination mb-0">
+        <li className={cn('page-item', page <= 1 && 'disabled')}>
+          <button
+            type="button"
+            className="page-link"
+            onClick={() => onPageChange(page - 1)}
+            disabled={page <= 1}
+            aria-label={t('pagination.previous')}
+          >
+            <ChevronLeft className="icon" aria-hidden="true" />
+          </button>
+        </li>
 
-      <ul className="flex items-center gap-1">
         {range.map((item) =>
           typeof item === 'string' ? (
-            <li key={item} className="text-muted-foreground px-1.5 text-sm" aria-hidden="true">
-              …
+            <li key={item} className="page-item disabled" aria-hidden="true">
+              <span className="page-link">…</span>
             </li>
           ) : (
-            <li key={item}>
-              <Button
-                variant={item === page ? 'primary' : 'ghost'}
-                size="icon-sm"
+            <li key={item} className={cn('page-item', item === page && 'active')}>
+              <button
+                type="button"
+                className="page-link font-monospace"
                 onClick={() => onPageChange(item)}
-                aria-label={`Página ${item}`}
+                aria-label={t('pagination.page', { page: item })}
                 aria-current={item === page ? 'page' : undefined}
-                className="tabular-nums"
               >
                 {item}
-              </Button>
+              </button>
             </li>
           ),
         )}
-      </ul>
 
-      <Button
-        variant="outline"
-        size="icon-sm"
-        onClick={() => onPageChange(page + 1)}
-        disabled={page >= pageCount}
-        aria-label="Próxima página"
-      >
-        <ChevronRight aria-hidden="true" />
-      </Button>
+        <li className={cn('page-item', page >= pageCount && 'disabled')}>
+          <button
+            type="button"
+            className="page-link"
+            onClick={() => onPageChange(page + 1)}
+            disabled={page >= pageCount}
+            aria-label={t('pagination.next')}
+          >
+            <ChevronRight className="icon" aria-hidden="true" />
+          </button>
+        </li>
+      </ul>
     </nav>
   )
 }

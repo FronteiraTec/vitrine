@@ -8,51 +8,51 @@ import { Logo } from '@/components/layout/Logo'
  */
 export function AuthShell({ title, description, children, footer }) {
   return (
-    <div className="grid min-h-dvh lg:grid-cols-2">
-      <aside className="bg-primary text-primary-foreground relative hidden flex-col justify-between p-12 lg:flex">
-        <Logo to="/" inverted className="text-primary-foreground" />
+    <div className="d-grid min-vh-100 grid-cols-lg-2">
+      <aside className="bg-primary text-white position-relative d-none flex-column justify-content-between p-5 d-lg-flex">
+        <Logo to="/" inverted className="text-white" />
 
-        <div className="max-w-md space-y-5">
-          <p className="font-display text-4xl leading-[1.15] text-balance-title">
+        <div className="mw-md space-y-3">
+          <p className="fw-bold fs-2 text-balance">
             Cada iniciativa da instituição, reunida em um só catálogo.
           </p>
-          <p className="text-sm leading-relaxed opacity-70">
+          <p className="fs-7 lh-base opacity-75">
             A área administrativa é onde as equipes cadastram projetos, laboratórios e programas,
             enviam para revisão e publicam na vitrine pública.
           </p>
         </div>
 
-        <p className="text-xs opacity-50">© {new Date().getFullYear()} Vitrine Institucional</p>
+        <p className="fs-8 opacity-50">© {new Date().getFullYear()} Vitrine Institucional</p>
 
         <div
-          className="pointer-events-none absolute inset-y-0 right-0 w-px bg-white/10"
+          className="pe-none position-absolute top-0 bottom-0 end-0 vr bg-white opacity-25"
           aria-hidden="true"
         />
       </aside>
 
-      <main className="flex flex-col justify-center px-5 py-12 sm:px-10">
-        <div className="mx-auto w-full max-w-sm space-y-8">
-          <div className="space-y-6">
-            <div className="lg:hidden">
+      <main className="d-flex flex-column justify-content-center px-3 py-5 px-sm-5">
+        <div className="mx-auto w-100 mw-sm space-y-5">
+          <div className="space-y-4">
+            <div className="d-lg-none">
               <Logo to="/" />
             </div>
             <div className="space-y-2">
-              <h1 className="font-display text-3xl">{title}</h1>
+              <h1 className="fw-bold fs-3">{title}</h1>
               {description ? (
-                <p className="text-muted-foreground text-sm text-pretty">{description}</p>
+                <p className="text-body-secondary fs-7 text-pretty">{description}</p>
               ) : null}
             </div>
           </div>
 
           {children}
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {footer}
             <Link
               to="/"
-              className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
+              className="text-body-secondary d-inline-flex align-items-center gap-1 fs-7"
             >
-              <ArrowLeft className="size-4" aria-hidden="true" />
+              <ArrowLeft className="icon" aria-hidden="true" />
               Voltar para a vitrine
             </Link>
           </div>

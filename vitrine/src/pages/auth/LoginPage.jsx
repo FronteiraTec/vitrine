@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field } from '@/components/ui/label'
 import { useAuth } from '@/contexts/AuthContext'
-import { useDocumentMeta } from '@/hooks/use-utils'
+import { useDocumentMeta } from '@/hooks/use-seo'
+import { PRIVATE_ROBOTS } from '@/lib/seo'
 
 export function LoginPage() {
   const { signIn } = useAuth()
@@ -19,7 +20,11 @@ export function LoginPage() {
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
-  useDocumentMeta({ title: 'Entrar', description: 'Acesso à área administrativa da Vitrine.' })
+  useDocumentMeta({
+    title: 'Entrar',
+    description: 'Acesso à área administrativa da Vitrine.',
+    robots: PRIVATE_ROBOTS,
+  })
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -42,19 +47,19 @@ export function LoginPage() {
       footer={
         // Sem link para /criar-conta: o cadastro é fechado, e oferecer o
         // caminho só levaria a pessoa até uma porta trancada.
-        <p className="text-muted-foreground text-sm text-pretty">
+        <p className="text-body-secondary fs-7 text-pretty">
           As contas de acesso são criadas por um administrador. Precisa de acesso? Fale com a
           coordenação responsável.
         </p>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+      <form onSubmit={handleSubmit} className="space-y-3" noValidate>
         {error ? (
           <div
             role="alert"
-            className="border-destructive/25 bg-destructive/5 text-destructive flex items-start gap-2.5 rounded-md border p-3 text-sm"
+            className="border-danger bg-danger-subtle text-danger d-flex align-items-start gap-2 rounded-2 border p-2 fs-7"
           >
-            <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <AlertCircle className="mt-1 icon flex-shrink-0" aria-hidden="true" />
             <span>{error}</span>
           </div>
         ) : null}
@@ -76,7 +81,7 @@ export function LoginPage() {
 
         <Field id="password" label="Senha" required>
           {(props) => (
-            <div className="relative">
+            <div className="position-relative">
               <Input
                 {...props}
                 type={showPassword ? 'text' : 'password'}
@@ -85,30 +90,30 @@ export function LoginPage() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 required
-                className="pr-11"
+                className="pe-5"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((current) => !current)}
-                className="text-muted-foreground hover:text-foreground absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-r-md transition-colors"
+                className="text-body-secondary position-absolute top-0 bottom-0 end-0 d-flex w-fx-10 align-items-center justify-content-center rounded-end"
                 aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
               >
-                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                {showPassword ? <EyeOff className="icon" /> : <Eye className="icon" />}
               </button>
             </div>
           )}
         </Field>
 
-        <div className="flex justify-end">
+        <div className="d-flex justify-content-end">
           <Link
             to="/recuperar-senha"
-            className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+            className="text-body-secondary fs-7"
           >
             Esqueci minha senha
           </Link>
         </div>
 
-        <Button type="submit" size="lg" className="w-full" loading={submitting}>
+        <Button type="submit" size="lg" className="w-100" loading={submitting}>
           Entrar
         </Button>
       </form>

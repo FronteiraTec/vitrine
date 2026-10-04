@@ -20,7 +20,7 @@ export function ImageUploader({
   folder = '',
   label = 'Imagem',
   hint,
-  ratio = 'aspect-[16/10]',
+  ratio = 'ratio-16x10',
   maxBytes = MAX_IMAGE_BYTES,
   className,
 }) {
@@ -78,12 +78,12 @@ export function ImageUploader({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <div className="flex items-center justify-between gap-2">
-        <label htmlFor={inputId} className="text-sm font-medium">
+      <div className="d-flex align-items-center justify-content-between gap-2">
+        <label htmlFor={inputId} className="fs-7 fw-medium">
           {label}
         </label>
         {value && !uploading ? (
-          <Button variant="subtle" size="sm" onClick={handleRemove} type="button" className="-mr-2">
+          <Button variant="subtle" size="sm" onClick={handleRemove} type="button" className="me-0">
             <Trash2 aria-hidden="true" />
             Remover
           </Button>
@@ -98,23 +98,23 @@ export function ImageUploader({
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         className={cn(
-          'border-border relative overflow-hidden rounded-lg border-2 border-dashed transition-colors',
-          dragging && 'border-brand bg-accent',
+          'border position-relative overflow-hidden rounded-3 border-2 border-dashed',
+          dragging && 'border-primary bg-primary-subtle',
           displayed && 'border-solid',
         )}
       >
         {displayed ? (
-          <div className="group relative">
+          <div className="position-relative">
             <Image src={displayed} alt="" ratio={ratio} eager />
             {uploading ? (
-              <div className="absolute inset-0 grid place-items-center bg-slate-950/50">
-                <div className="flex items-center gap-2 rounded-md bg-white/95 px-3 py-2 text-sm font-medium">
-                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              <div className="position-absolute top-0 start-0 w-100 h-100 d-grid place-items-center bg-slate-950/50">
+                <div className="d-flex align-items-center gap-2 rounded-2 bg-white px-2 py-2 fs-7 fw-medium">
+                  <Loader2 className="icon spinner-border spinner-border-sm" aria-hidden="true" />
                   Enviando…
                 </div>
               </div>
             ) : (
-              <div className="absolute inset-0 grid place-items-center bg-slate-950/0 opacity-0 transition-all group-hover:bg-slate-950/40 group-hover:opacity-100">
+              <div className="position-absolute top-0 start-0 w-100 h-100 d-grid place-items-center bg-slate-950/0 opacity-0">
                 <Button type="button" variant="secondary" size="sm" onClick={() => inputRef.current?.click()}>
                   <Upload aria-hidden="true" />
                   Substituir
@@ -127,15 +127,15 @@ export function ImageUploader({
             type="button"
             onClick={() => inputRef.current?.click()}
             className={cn(
-              'hover:bg-muted/60 flex w-full flex-col items-center justify-center gap-2 px-6 py-10 text-center transition-colors',
+              '-tertiary d-flex w-100 flex-column align-items-center justify-content-center gap-2 px-4 py-5 text-center ',
               ratio,
             )}
           >
-            <span className="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-full">
-              <ImagePlus className="size-5" aria-hidden="true" />
+            <span className="bg-body-secondary text-body-secondary d-flex h-fx-10 w-fx-10 align-items-center justify-content-center rounded-pill">
+              <ImagePlus className="icon-lg" aria-hidden="true" />
             </span>
-            <span className="text-sm font-medium">Arraste uma imagem ou clique para escolher</span>
-            <span className="text-muted-foreground text-xs">
+            <span className="fs-7 fw-medium">Arraste uma imagem ou clique para escolher</span>
+            <span className="text-body-secondary fs-8">
               JPG, PNG, WebP ou AVIF · até {Math.round(maxBytes / 1024 / 1024)} MB
             </span>
           </button>
@@ -147,7 +147,7 @@ export function ImageUploader({
         id={inputId}
         type="file"
         accept="image/jpeg,image/png,image/webp,image/avif"
-        className="sr-only"
+        className="visually-hidden"
         onChange={(event) => {
           const file = event.target.files?.[0]
           if (file) handleFile(file)
@@ -157,12 +157,12 @@ export function ImageUploader({
       />
 
       {error ? (
-        <p role="alert" className="text-destructive flex items-start gap-1.5 text-xs font-medium">
-          <AlertCircle className="mt-px size-3.5 shrink-0" aria-hidden="true" />
+        <p role="alert" className="text-danger d-flex align-items-start gap-1 fs-8 fw-medium">
+          <AlertCircle className="mt-1 icon-sm flex-shrink-0" aria-hidden="true" />
           {error}
         </p>
       ) : hint ? (
-        <p className="text-muted-foreground text-xs">{hint}</p>
+        <p className="text-body-secondary fs-8">{hint}</p>
       ) : null}
     </div>
   )
@@ -208,11 +208,11 @@ export function GalleryUploader({ value = [], onChange, bucket = BUCKETS.INITIAT
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
+    <div className="space-y-2">
+      <div className="d-flex align-items-center justify-content-between gap-2">
         <div>
-          <p className="text-sm font-medium">Galeria</p>
-          <p className="text-muted-foreground text-xs">
+          <p className="fs-7 fw-medium">Galeria</p>
+          <p className="text-body-secondary fs-8">
             Até {max} imagens complementares · {value.length} adicionada
             {value.length === 1 ? '' : 's'}
           </p>
@@ -231,22 +231,22 @@ export function GalleryUploader({ value = [], onChange, bucket = BUCKETS.INITIAT
       </div>
 
       {value.length ? (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <ul className="d-grid grid-cols-2 gap-2 grid-cols-sm-3 grid-cols-lg-4">
           {value.map((url) => (
-            <li key={url} className="group relative">
+            <li key={url} className="position-relative">
               <Image
                 src={url}
                 alt=""
-                ratio="aspect-square"
-                wrapperClassName="rounded-md border border-border"
+                ratio="ratio-1x1"
+                wrapperClassName="rounded-2 border border"
               />
               <button
                 type="button"
                 onClick={() => handleRemove(url)}
-                className="bg-card/95 text-destructive hover:bg-destructive hover:text-destructive-foreground absolute top-2 right-2 rounded-md p-1.5 opacity-0 shadow-sm transition-all group-focus-within:opacity-100 group-hover:opacity-100"
+                className="bg-body text-danger position-absolute top-0 end-0 rounded-2 p-1 opacity-0 shadow-sm"
                 aria-label="Remover imagem da galeria"
               >
-                <Trash2 className="size-3.5" />
+                <Trash2 className="icon-sm" />
               </button>
             </li>
           ))}
@@ -255,9 +255,9 @@ export function GalleryUploader({ value = [], onChange, bucket = BUCKETS.INITIAT
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="border-border text-muted-foreground hover:bg-muted/60 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed px-6 py-8 text-sm transition-colors"
+          className="border text-body-secondary d-flex w-100 align-items-center justify-content-center gap-2 rounded-3 border-2 border-dashed px-4 py-5 fs-7"
         >
-          <ImagePlus className="size-4" aria-hidden="true" />
+          <ImagePlus className="icon" aria-hidden="true" />
           Nenhuma imagem na galeria — clique para adicionar
         </button>
       )}
@@ -267,7 +267,7 @@ export function GalleryUploader({ value = [], onChange, bucket = BUCKETS.INITIAT
         type="file"
         accept="image/jpeg,image/png,image/webp,image/avif"
         multiple
-        className="sr-only"
+        className="visually-hidden"
         onChange={(event) => {
           if (event.target.files?.length) handleFiles(event.target.files)
           event.target.value = ''
@@ -275,8 +275,8 @@ export function GalleryUploader({ value = [], onChange, bucket = BUCKETS.INITIAT
       />
 
       {error ? (
-        <p role="alert" className="text-destructive flex items-start gap-1.5 text-xs font-medium">
-          <AlertCircle className="mt-px size-3.5 shrink-0" aria-hidden="true" />
+        <p role="alert" className="text-danger d-flex align-items-start gap-1 fs-8 fw-medium">
+          <AlertCircle className="mt-1 icon-sm flex-shrink-0" aria-hidden="true" />
           {error}
         </p>
       ) : null}

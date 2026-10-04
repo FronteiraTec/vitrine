@@ -2,45 +2,45 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/empty-state'
 import { CategoryCard } from '@/components/categories/CategoryCard'
 import { useCategoriesWithCounts } from '@/hooks/use-queries'
-import { useDocumentMeta } from '@/hooks/use-utils'
+import { useDocumentMeta } from '@/hooks/use-seo'
+import { useLocale } from '@/contexts/LocaleContext'
 
 export function CategoriesPage() {
   const { data, isPending, isError, error, refetch } = useCategoriesWithCounts()
+  const { t } = useLocale()
 
   useDocumentMeta({
-    title: 'Categorias',
-    description:
-      'Navegue pelo catálogo por categoria: pesquisa, tecnologia, extensão, empreendedorismo e mais.',
+    title: t('categories.title'),
+    description: t('categories.metaDescription'),
   })
 
   return (
     <>
-      <div className="border-border bg-muted/40 border-b">
-        <div className="container-page py-12 sm:py-16">
-          <h1 className="font-display text-3xl sm:text-4xl">Categorias</h1>
-          <p className="text-muted-foreground mt-3 max-w-2xl leading-relaxed text-pretty">
-            As categorias organizam o catálogo por natureza da iniciativa. Elas são definidas pela
-            administração da plataforma e podem mudar conforme a instituição evolui.
+      <div className="border bg-body-tertiary border-bottom">
+        <div className="container py-5 py-sm-5">
+          <h1 className="fw-bold fs-3 fs-sm-2">{t('categories.title')}</h1>
+          <p className="text-body-secondary mt-2 mw-2xl lh-base text-pretty">
+            {t('categories.description')}
           </p>
         </div>
       </div>
 
-      <div className="container-page py-12">
+      <div className="container py-5">
         {isError ? (
           <ErrorState description={error?.message} onRetry={() => refetch()} />
         ) : isPending ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="d-grid grid-cols-1 gap-3 grid-cols-sm-2 grid-cols-lg-3">
             {Array.from({ length: 8 }, (_, index) => (
-              <Skeleton key={index} className="h-80" />
+              <Skeleton key={index} className="h-fx-80" />
             ))}
           </div>
         ) : data.length === 0 ? (
           <EmptyState
-            title="Nenhuma categoria cadastrada"
-            description="Assim que a administração criar as primeiras categorias, elas aparecerão aqui."
+            title={t('categories.emptyTitle')}
+            description={t('categories.emptyDescription')}
           />
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="d-grid grid-cols-1 gap-3 grid-cols-sm-2 grid-cols-lg-3">
             {data.map((category) => (
               <CategoryCard key={category.id} category={category} />
             ))}

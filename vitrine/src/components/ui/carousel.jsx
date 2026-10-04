@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
+import { useLocale } from '@/contexts/LocaleContext'
 import { cn } from '@/lib/utils'
 
 /*
@@ -65,6 +66,7 @@ export function Carousel({
   autoPlay = false,
   interval = 5000,
 }) {
+  const { t } = useLocale()
   const trackRef = useRef(null)
   const [overflows, setOverflows] = useState(false)
   const [atStart, setAtStart] = useState(true)
@@ -182,7 +184,7 @@ export function Carousel({
           lastInteraction.current = Date.now()
         }}
         className={cn(
-          'scrollbar-none flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth',
+          'scrollbar-none d-flex   gap-4 overflow-x-auto ',
           // Espaço para a sombra e o anel de foco dos cartões não serem
           // cortados pelo `overflow` do trilho.
           '-mx-1 px-1 py-1',
@@ -193,21 +195,21 @@ export function Carousel({
       </div>
 
       {overflows ? (
-        <div className="mt-4 flex items-center justify-end gap-2">
+        <div className="mt-4 d-flex align-items-center justify-content-end gap-2">
           {showPause ? (
             <button
               type="button"
               onClick={() => setUserPaused((paused) => !paused)}
               aria-pressed={userPaused}
-              className="border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground hover:border-brand/35 focus-visible:ring-ring/30 mr-auto flex h-9 items-center gap-2 rounded-md border px-3 text-xs font-medium shadow-subtle transition-colors focus-visible:ring-2 focus-visible:outline-none"
+              className="border bg-body text-body-secondary me-auto d-flex h-fx-9 align-items-center gap-2 rounded-2 border px-3 fs-8 fw-medium shadow-sm"
             >
               {userPaused ? (
-                <Play className="size-3.5" aria-hidden="true" />
+                <Play className="icon-sm" aria-hidden="true" />
               ) : (
-                <Pause className="size-3.5" aria-hidden="true" />
+                <Pause className="icon-sm" aria-hidden="true" />
               )}
-              {userPaused ? 'Retomar' : 'Pausar'}
-              <span className="sr-only">a passagem automática das categorias</span>
+              {userPaused ? t('carousel.resume') : t('carousel.pause')}
+              <span className="visually-hidden"> {t('carousel.autoplayTarget')}</span>
             </button>
           ) : null}
 
@@ -228,6 +230,7 @@ export function Carousel({
 }
 
 function CarouselButton({ direction, disabled, onClick }) {
+  const { t } = useLocale()
   const isPrev = direction === 'prev'
   const Icon = isPrev ? ChevronLeft : ChevronRight
 
@@ -236,10 +239,10 @@ function CarouselButton({ direction, disabled, onClick }) {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      aria-label={isPrev ? 'Ver itens anteriores' : 'Ver próximos itens'}
-      className="border-border bg-card text-foreground hover:bg-muted hover:border-brand/35 focus-visible:ring-ring/30 flex size-9 items-center justify-center rounded-md border shadow-subtle transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40"
+      aria-label={isPrev ? t('carousel.previous') : t('carousel.next')}
+      className="border bg-body text-body d-flex h-fx-9 w-fx-9 align-items-center justify-content-center rounded-2 border shadow-sm"
     >
-      <Icon className="size-4" aria-hidden="true" />
+      <Icon className="icon" aria-hidden="true" />
     </button>
   )
 }
@@ -251,7 +254,7 @@ function CarouselButton({ direction, disabled, onClick }) {
  */
 export function CarouselItem({ className, children }) {
   return (
-    <div className={cn('shrink-0 snap-start', 'w-[82%] sm:w-[46%] lg:w-[31.5%]', className)}>
+    <div className={cn('flex-shrink-0 ', 'carousel-slide', className)}>
       {children}
     </div>
   )

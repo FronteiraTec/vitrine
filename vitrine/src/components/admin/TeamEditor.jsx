@@ -62,7 +62,7 @@ function NewPersonDialog({ open, onOpenChange, onCreated }) {
             </DialogDescription>
           </DialogHeader>
 
-          <DialogBody className="space-y-4">
+          <DialogBody className="space-y-3">
             <Field id="person-name" label="Nome" required>
               {(props) => (
                 <Input {...props} value={values.name} onChange={update('name')} required autoFocus />
@@ -126,10 +126,10 @@ export function TeamEditor({ value = [], onChange }) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="text-sm font-medium">Responsáveis ({value.length})</h3>
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <div className="d-flex align-items-center justify-content-between gap-2">
+          <h3 className="fs-7 fw-medium">Responsáveis ({value.length})</h3>
           <Button type="button" variant="outline" size="sm" onClick={() => setCreating(true)}>
             <UserPlus aria-hidden="true" />
             Nova pessoa
@@ -147,24 +147,24 @@ export function TeamEditor({ value = [], onChange }) {
             {value.map((member, index) => (
               <li
                 key={member.person_id}
-                className="border-border bg-card flex items-center gap-3 rounded-lg border p-3"
+                className="border bg-body d-flex align-items-center gap-2 rounded-3 p-2"
               >
-                <div className="text-muted-foreground flex flex-col">
+                <div className="text-body-secondary d-flex flex-column">
                   <button
                     type="button"
                     onClick={() => move(index, -1)}
                     disabled={index === 0}
-                    className="hover:text-foreground text-xs leading-none disabled:opacity-30"
+                    className="fs-8 lh-1"
                     aria-label="Mover para cima"
                   >
                     ▲
                   </button>
-                  <GripVertical className="my-0.5 size-3.5" aria-hidden="true" />
+                  <GripVertical className="my-1 icon-sm" aria-hidden="true" />
                   <button
                     type="button"
                     onClick={() => move(index, 1)}
                     disabled={index === value.length - 1}
-                    className="hover:text-foreground text-xs leading-none disabled:opacity-30"
+                    className="fs-8 lh-1"
                     aria-label="Mover para baixo"
                   >
                     ▼
@@ -173,9 +173,9 @@ export function TeamEditor({ value = [], onChange }) {
 
                 <Avatar src={member.person?.photo_url} name={member.person?.name} size="sm" />
 
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{member.person?.name}</p>
-                  <label className="sr-only" htmlFor={`role-${member.person_id}`}>
+                <div className="min-w-0 flex-grow-1">
+                  <p className="text-truncate fs-7 fw-medium">{member.person?.name}</p>
+                  <label className="visually-hidden" htmlFor={`role-${member.person_id}`}>
                     Papel de {member.person?.name} nesta iniciativa
                   </label>
                   <Input
@@ -183,7 +183,7 @@ export function TeamEditor({ value = [], onChange }) {
                     value={member.role ?? ''}
                     onChange={(event) => updateRole(member.person_id, event.target.value)}
                     placeholder="Papel nesta iniciativa"
-                    className="mt-1 h-8 text-xs"
+                    className="mt-1 h-fx-8 fs-8"
                   />
                 </div>
 
@@ -193,7 +193,7 @@ export function TeamEditor({ value = [], onChange }) {
                   size="icon-sm"
                   onClick={() => remove(member.person_id)}
                   aria-label={`Remover ${member.person?.name}`}
-                  className="text-muted-foreground hover:text-destructive"
+                  className="text-body-secondary"
                 >
                   <Trash2 />
                 </Button>
@@ -203,7 +203,7 @@ export function TeamEditor({ value = [], onChange }) {
         )}
       </div>
 
-      <div className="border-border space-y-3 border-t pt-5">
+      <div className="border space-y-2 border-top pt-3">
         <Field id="person-search" label="Adicionar responsável">
           {(props) => (
             <Input
@@ -217,32 +217,32 @@ export function TeamEditor({ value = [], onChange }) {
         </Field>
 
         {isPending ? (
-          <p className="text-muted-foreground text-sm">Carregando pessoas…</p>
+          <p className="text-body-secondary fs-7">Carregando pessoas…</p>
         ) : available.length === 0 ? (
-          <p className="text-muted-foreground text-sm">
+          <p className="text-body-secondary fs-7">
             {search
               ? 'Nenhuma pessoa encontrada com esse nome.'
               : 'Todas as pessoas cadastradas já foram adicionadas.'}
           </p>
         ) : (
-          <ul className="grid gap-2 sm:grid-cols-2">
+          <ul className="d-grid gap-2 grid-cols-sm-2">
             {available.slice(0, 12).map((person) => (
               <li key={person.id}>
                 <button
                   type="button"
                   onClick={() => addPerson(person)}
-                  className="border-border hover:border-brand/40 hover:bg-muted/50 flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-colors"
+                  className="border d-flex w-100 align-items-center gap-2 rounded-3 p-2 text-start"
                 >
                   <Avatar src={person.photo_url} name={person.name} size="sm" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">{person.name}</span>
+                  <span className="min-w-0 flex-grow-1">
+                    <span className="d-block text-truncate fs-7 fw-medium">{person.name}</span>
                     {person.role ? (
-                      <span className="text-muted-foreground block truncate text-xs">
+                      <span className="text-body-secondary d-block text-truncate fs-8">
                         {person.role}
                       </span>
                     ) : null}
                   </span>
-                  <Plus className="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
+                  <Plus className="text-body-secondary icon flex-shrink-0" aria-hidden="true" />
                 </button>
               </li>
             ))}
@@ -280,7 +280,7 @@ export function LinksEditor({ value = [], onChange }) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {value.length === 0 ? (
         <EmptyState
           compact
@@ -288,14 +288,14 @@ export function LinksEditor({ value = [], onChange }) {
           description="Adicione o site oficial, perfis em redes sociais ou repositórios."
         />
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-2">
           {value.map((link, index) => (
             <li
               key={link.id ?? link.key ?? index}
-              className="border-border bg-card grid gap-3 rounded-lg border p-3 sm:grid-cols-[10rem_1fr_1fr_auto]"
+              className="border bg-body d-grid gap-2 rounded-3 p-2 d-grid grid-media"
             >
               <div>
-                <label className="sr-only" htmlFor={`link-type-${index}`}>
+                <label className="visually-hidden" htmlFor={`link-type-${index}`}>
                   Tipo do link
                 </label>
                 <Select value={link.type} onValueChange={(type) => update(index, { type })}>
@@ -313,7 +313,7 @@ export function LinksEditor({ value = [], onChange }) {
               </div>
 
               <div>
-                <label className="sr-only" htmlFor={`link-label-${index}`}>
+                <label className="visually-hidden" htmlFor={`link-label-${index}`}>
                   Rótulo do link
                 </label>
                 <Input
@@ -321,12 +321,12 @@ export function LinksEditor({ value = [], onChange }) {
                   value={link.label}
                   onChange={(event) => update(index, { label: event.target.value })}
                   placeholder="Rótulo (ex.: Site oficial)"
-                  className="h-8 text-[0.8125rem]"
+                  className="h-fx-8"
                 />
               </div>
 
               <div>
-                <label className="sr-only" htmlFor={`link-url-${index}`}>
+                <label className="visually-hidden" htmlFor={`link-url-${index}`}>
                   Endereço do link
                 </label>
                 <Input
@@ -335,7 +335,7 @@ export function LinksEditor({ value = [], onChange }) {
                   value={link.url}
                   onChange={(event) => update(index, { url: event.target.value })}
                   placeholder="https://…"
-                  className="h-8 text-[0.8125rem]"
+                  className="h-fx-8"
                 />
               </div>
 
@@ -345,7 +345,7 @@ export function LinksEditor({ value = [], onChange }) {
                 size="icon-sm"
                 onClick={() => remove(index)}
                 aria-label="Remover link"
-                className="text-muted-foreground hover:text-destructive justify-self-end"
+                className="text-body-secondary ms-auto"
               >
                 <Trash2 />
               </Button>

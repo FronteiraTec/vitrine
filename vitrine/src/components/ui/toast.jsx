@@ -9,15 +9,11 @@ export function Toaster() {
       duration={4000}
       toastOptions={{
         classNames: {
-          toast:
-            'group flex items-center gap-3 rounded-lg border border-border bg-card p-4 text-sm shadow-float',
-          title: 'font-medium text-foreground',
-          description: 'text-muted-foreground text-[0.8125rem]',
-          actionButton: 'rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground',
-          cancelButton: 'rounded-md bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground',
-          success: '[&_[data-icon]]:text-status-published',
-          error: '[&_[data-icon]]:text-destructive',
-          warning: '[&_[data-icon]]:text-status-review',
+          toast: 'card shadow d-flex flex-row align-items-center gap-3 p-3 small',
+          title: 'fw-medium',
+          description: 'text-body-secondary small',
+          actionButton: 'btn btn-primary btn-sm',
+          cancelButton: 'btn btn-secondary btn-sm',
         },
       }}
     />

@@ -1,9 +1,15 @@
 import { clsx } from 'clsx'
-import { twMerge } from 'tailwind-merge'
 
-/** Junta classes condicionais resolvendo conflitos do Tailwind. */
+/**
+ * Junta classes condicionais.
+ *
+ * Era `twMerge(clsx(...))`. O `tailwind-merge` existia para resolver conflito
+ * entre utilitários do Tailwind — `px-2 px-4` virava `px-4`. Sem Tailwind não
+ * há esse conflito a resolver: as classes do Bootstrap são compostas, não
+ * concorrentes, e o que sobra é a cascata normal do CSS.
+ */
 export function cn(...inputs) {
-  return twMerge(clsx(inputs))
+  return clsx(inputs)
 }
 
 /**
@@ -21,12 +27,18 @@ export function slugify(value) {
     .slice(0, 80)
 }
 
-/** Formata uma data ISO no padrão brasileiro. Retorna '' quando ausente. */
-export function formatDate(value, options) {
+/**
+ * Formata uma data ISO. Retorna '' quando ausente.
+ *
+ * O idioma é opcional e cai no português: o painel administrativo só existe
+ * em português e chama sem ele. A vitrine pública passa o idioma da página
+ * (via `useLocale().formatDate`), e "29 de set. de 2026" vira "Sep 29, 2026".
+ */
+export function formatDate(value, options, locale = 'pt-BR') {
   if (!value) return ''
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
-  return new Intl.DateTimeFormat('pt-BR', {
+  return new Intl.DateTimeFormat(locale, {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -34,16 +46,16 @@ export function formatDate(value, options) {
   }).format(date)
 }
 
-/** Formata apenas o horário (HH:mm) — usado na timeline de atividades. */
-export function formatTime(value) {
+/** Formata apenas o horário — 24 h em português e espanhol, AM/PM em inglês. */
+export function formatTime(value, locale = 'pt-BR') {
   if (!value) return ''
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
-  return new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(date)
+  return new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(date)
 }
 
 /** Distância relativa em linguagem natural ("há 3 dias"). */
-export function formatRelative(value) {
+export function formatRelative(value, locale = 'pt-BR') {
   if (!value) return ''
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
@@ -57,7 +69,7 @@ export function formatRelative(value) {
     { amount: 12, unit: 'month' },
     { amount: Number.POSITIVE_INFINITY, unit: 'year' },
   ]
-  const formatter = new Intl.RelativeTimeFormat('pt-BR', { numeric: 'auto' })
+  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
   let duration = diffSeconds
   for (const division of divisions) {
     if (Math.abs(duration) < division.amount) {

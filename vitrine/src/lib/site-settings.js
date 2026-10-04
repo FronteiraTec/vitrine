@@ -52,7 +52,15 @@ export const SITE_SETTINGS_DEFAULTS = {
   footer_contact_phone: '',
   footer_address: '',
   footer_copyright: 'Vitrine Institucional. Projeto de demonstração.',
-  footer_note: 'Conteúdo fictício, criado para fins de apresentação.',
+  footer_note: '© 2026 FronteiraTec. Todos os direitos reservados.',
+
+  connect_enabled: true,
+  connect_title: 'Conexão INNE',
+  connect_description:
+    'O programa Conexão INNE aproxima empresas, entidades sem fins lucrativos e órgãos governamentais das iniciativas e pesquisadores da incubadora. Parceiros apresentam suas demandas e encontram soluções inovadoras ou propostas de projetos que atendam às suas necessidades.',
+  connect_cta_label: 'Cadastrar demanda',
+  connect_note: 'Disponível para empresas, entidades sem fins lucrativos e órgãos governamentais.',
+  connect_whatsapp: '+55 49 2049-6549',
 
   primary_color: null,
   brand_color: null,
@@ -100,15 +108,37 @@ export function withAlpha(hex, percent) {
 }
 
 /**
+ * Monta o endereço do wa.me a partir do telefone como ele foi digitado.
+ *
+ * O wa.me só aceita dígitos com código do país, então a máscara de leitura
+ * (`+55 49 2049-6549`) é descartada aqui. O código do país não é adivinhado a
+ * partir do tamanho: prefixar `55` num número que já vem de outro país geraria
+ * um link errado em silêncio — sem dígitos suficientes, a função devolve
+ * `null` e a seção simplesmente não mostra o botão.
+ */
+export function whatsappUrl(phone, message) {
+  const digits = typeof phone === 'string' ? phone.replace(/\D/g, '') : ''
+  if (digits.length < 10) return null
+
+  const query = message ? `?text=${encodeURIComponent(message)}` : ''
+  return `https://wa.me/${digits}${query}`
+}
+
+/**
  * Normaliza a linha do banco em um objeto sempre completo.
  *
  * Recebe `undefined` durante o carregamento e na renderização de servidor
  * (`npm run smoke`), então nenhum consumidor precisa tratar ausência: o
  * cabeçalho e o rodapé sempre têm o que pintar.
+ *
+ * `localized` troca os TEXTOS PADRÃO pelos do idioma da interface. Só o
+ * padrão: o que o administrador escreveu no painel é conteúdo da instituição,
+ * e aparece como foi escrito. A coluna nula é a forma de distinguir os dois —
+ * a migration 0005 cria a linha sem preencher texto nenhum.
  */
-export function resolveSiteSettings(row) {
+export function resolveSiteSettings(row, localized = {}) {
   const data = row ?? {}
-  const d = SITE_SETTINGS_DEFAULTS
+  const d = { ...SITE_SETTINGS_DEFAULTS, ...localized }
 
   const nav = list(data.header_nav)
     .filter((item) => item?.label && item?.to)
@@ -139,6 +169,9 @@ export function resolveSiteSettings(row) {
     // Lista vazia = navegação padrão. Evita que um rodapé sem links deixe o
     // site sem menu por um salvamento distraído.
     nav: nav.length ? nav : DEFAULT_NAV,
+    // O cabeçalho traduz os rótulos do menu padrão; os escritos no painel só
+    // quando apontam para uma página conhecida — ver `PublicLayout`.
+    navIsDefault: !nav.length,
 
     footerBg: color(data.footer_bg),
     footerFg: color(data.footer_fg),
@@ -152,6 +185,17 @@ export function resolveSiteSettings(row) {
     footerAddress: text(data.footer_address),
     footerCopyright: text(data.footer_copyright, d.footer_copyright),
     footerNote: text(data.footer_note, d.footer_note),
+
+    connectEnabled: data.connect_enabled ?? d.connect_enabled,
+    connectTitle: text(data.connect_title, d.connect_title),
+    connectDescription: text(data.connect_description, d.connect_description),
+    connectCtaLabel: text(data.connect_cta_label, d.connect_cta_label),
+    connectNote: text(data.connect_note, d.connect_note),
+    // Sem fallback para o padrão: um telefone é o único campo desta seção que
+    // não pode ser herdado do código. Apagá-lo é a forma de dizer "não há
+    // atendimento por aqui", e cair no número da INNE mandaria o visitante
+    // conversar com quem não espera a mensagem.
+    connectWhatsapp: text(data.connect_whatsapp),
 
     primaryColor: color(data.primary_color),
     brandColor: color(data.brand_color),

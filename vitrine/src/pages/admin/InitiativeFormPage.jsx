@@ -86,35 +86,35 @@ function validate(form) {
 function ReviewHistory({ initiativeId }) {
   const { data, isPending } = useReviewHistory(initiativeId)
 
-  if (isPending) return <Skeleton className="h-24" />
+  if (isPending) return <Skeleton className="h-fx-24" />
   if (!data?.length) {
     return (
-      <p className="text-muted-foreground text-sm">
+      <p className="text-body-secondary fs-7">
         Nenhuma mudança de status registrada ainda.
       </p>
     )
   }
 
   return (
-    <ol className="space-y-3">
+    <ol className="space-y-2">
       {data.map((entry) => (
-        <li key={entry.id} className="border-border flex gap-3 border-l-2 pl-4">
+        <li key={entry.id} className="border d-flex gap-2 border-start border-2 ps-3">
           <div className="space-y-1">
-            <p className="flex flex-wrap items-center gap-1.5 text-sm">
-              <span className="text-muted-foreground">
+            <p className="d-flex flex-wrap align-items-center gap-1 fs-7">
+              <span className="text-body-secondary">
                 {STATUS_META[entry.from_status]?.label ?? '—'}
               </span>
-              <span className="text-muted-foreground" aria-hidden="true">
+              <span className="text-body-secondary" aria-hidden="true">
                 →
               </span>
               <StatusBadge status={entry.to_status} size="sm" />
             </p>
-            <p className="text-muted-foreground text-xs">
+            <p className="text-body-secondary fs-8">
               {entry.reviewer?.name ?? 'Sistema'} · {formatDate(entry.created_at)} às{' '}
               {formatTime(entry.created_at)}
             </p>
             {entry.notes ? (
-              <p className="bg-muted mt-1.5 rounded-md p-2.5 text-sm text-pretty">{entry.notes}</p>
+              <p className="bg-body-secondary mt-1 rounded-2 p-2 fs-7 text-pretty">{entry.notes}</p>
             ) : null}
           </div>
         </li>
@@ -264,10 +264,10 @@ export function InitiativeFormPage() {
 
   if (isEditing && isPending) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-9 w-72" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-96 w-full" />
+      <div className="space-y-4">
+        <Skeleton className="h-fx-9 w-fx-72" />
+        <Skeleton className="h-fx-10 w-100" />
+        <Skeleton className="h-fx-96 w-100" />
       </div>
     )
   }
@@ -317,12 +317,12 @@ export function InitiativeFormPage() {
       />
 
       {isEditing ? (
-        <div className="border-border bg-card mb-6 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-lg border p-4">
+        <div className="border bg-body mb-4 d-flex flex-wrap align-items-center column-gap-3 row-gap-2 rounded-3 p-3">
           <StatusBadge status={initiative.status} />
-          <p className="text-muted-foreground text-sm">
+          <p className="text-body-secondary fs-7">
             {STATUS_META[initiative.status]?.description}
           </p>
-          <div className="ml-auto">
+          <div className="ms-auto">
             <StatusActions record={initiative} size="sm" />
           </div>
         </div>
@@ -331,9 +331,9 @@ export function InitiativeFormPage() {
       {disabled ? (
         <div
           role="status"
-          className="border-status-review/25 bg-status-review-bg text-status-review mb-6 flex items-start gap-2.5 rounded-lg border p-4 text-sm"
+          className="badge-status-review mb-4 d-flex align-items-start gap-2 rounded-3 border p-3 fs-7"
         >
-          <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <AlertCircle className="mt-1 icon flex-shrink-0" aria-hidden="true" />
           <p className="text-pretty">
             {lockedByReview
               ? 'Esta iniciativa está na fila de revisão e não pode ser editada até que um revisor conclua a análise.'
@@ -349,15 +349,15 @@ export function InitiativeFormPage() {
               <Icon aria-hidden="true" />
               <span>{label}</span>
               {errorCountByTab[value] > 0 ? (
-                <span className="bg-destructive size-1.5 rounded-full" aria-label="Contém erros" />
+                <span className="bg-danger h-fx-1 w-fx-1.5 rounded-pill" aria-label="Contém erros" />
               ) : null}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        <fieldset disabled={disabled} className="mt-8 max-w-3xl">
+        <fieldset disabled={disabled} className="mt-5 mw-3xl">
           {/* Informações básicas ------------------------------------------ */}
-          <TabsContent value="basico" className="space-y-6">
+          <TabsContent value="basico" className="space-y-4">
             <Field id="name" label="Nome da iniciativa" required error={errors.name}>
               {(props) => (
                 <Input
@@ -439,14 +439,14 @@ export function InitiativeFormPage() {
                   }} />}
             </Field>
 
-            <fieldset className="space-y-3">
-              <legend className="text-sm font-medium">Áreas de atuação</legend>
-              <p className="text-muted-foreground -mt-1 text-xs">
+            <fieldset className="space-y-2">
+              <legend className="fs-7 fw-medium">Áreas de atuação</legend>
+              <p className="text-body-secondary -mt-1 fs-8">
                 Usadas como filtro na busca pública.
               </p>
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+              <div className="d-grid grid-cols-2 gap-2 grid-cols-sm-3">
                 {AREAS.map((area) => (
-                  <div key={area} className="flex items-center gap-2.5">
+                  <div key={area} className="d-flex align-items-center gap-2">
                     <Checkbox
                       id={`area-${area}`}
                       checked={form.areas.includes(area)}
@@ -458,7 +458,7 @@ export function InitiativeFormPage() {
                         })
                       }
                     />
-                    <label htmlFor={`area-${area}`} className="cursor-pointer text-sm">
+                    <label htmlFor={`area-${area}`} className="fs-7">
                       {area}
                     </label>
                   </div>
@@ -468,7 +468,7 @@ export function InitiativeFormPage() {
           </TabsContent>
 
           {/* Imagens ------------------------------------------------------ */}
-          <TabsContent value="imagens" className="space-y-8">
+          <TabsContent value="imagens" className="space-y-5">
             <ImageUploader
               value={form.cover_image}
               onChange={(url) => update({ cover_image: url })}
@@ -478,7 +478,7 @@ export function InitiativeFormPage() {
               hint="Usada nos cards, no topo da página e no compartilhamento em redes sociais. Proporção recomendada: 16:10."
             />
 
-            <div className="border-border border-t pt-8">
+            <div className="border border-top pt-5">
               <GalleryUploader
                 value={form.gallery}
                 onChange={(gallery) => update({ gallery })}
@@ -499,8 +499,8 @@ export function InitiativeFormPage() {
           </TabsContent>
 
           {/* Contatos ----------------------------------------------------- */}
-          <TabsContent value="contatos" className="space-y-6">
-            <div className="grid gap-6 sm:grid-cols-2">
+          <TabsContent value="contatos" className="space-y-4">
+            <div className="d-grid gap-4 grid-cols-sm-2">
               <Field id="email" label="E-mail de contato" error={errors.email}>
                 {(props) => (
                   <Input
@@ -538,10 +538,10 @@ export function InitiativeFormPage() {
               )}
             </Field>
 
-            <div className="border-border space-y-3 border-t pt-6">
+            <div className="border space-y-2 border-top pt-4">
               <div>
-                <h3 className="text-sm font-medium">Links relacionados</h3>
-                <p className="text-muted-foreground text-xs">
+                <h3 className="fs-7 fw-medium">Links relacionados</h3>
+                <p className="text-body-secondary fs-8">
                   Redes sociais, repositórios e páginas complementares.
                 </p>
               </div>
@@ -556,7 +556,7 @@ export function InitiativeFormPage() {
           </TabsContent>
 
           {/* Localização -------------------------------------------------- */}
-          <TabsContent value="local" className="space-y-6">
+          <TabsContent value="local" className="space-y-4">
             <Field id="location" label="Local" hint="Prédio, sala ou referência interna.">
               {(props) => (
                 <Input
@@ -579,7 +579,7 @@ export function InitiativeFormPage() {
               )}
             </Field>
 
-            <div className="grid gap-6 sm:grid-cols-[1fr_8rem]">
+            <div className="d-grid gap-4 d-grid grid-form">
               <Field id="city" label="Cidade">
                 {(props) => (
                   <Input
@@ -605,44 +605,44 @@ export function InitiativeFormPage() {
           </TabsContent>
 
           {/* Publicação --------------------------------------------------- */}
-          <TabsContent value="publicacao" className="space-y-8">
+          <TabsContent value="publicacao" className="space-y-5">
             {isEditing ? (
               <>
-                <section className="border-border bg-card space-y-4 rounded-lg border p-5">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+                <section className="border bg-body space-y-3 rounded-3 p-3">
+                  <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
                     <div className="space-y-1">
-                      <h3 className="text-sm font-medium">Situação atual</h3>
-                      <p className="text-muted-foreground text-sm">
+                      <h3 className="fs-7 fw-medium">Situação atual</h3>
+                      <p className="text-body-secondary fs-7">
                         {STATUS_META[initiative.status]?.description}
                       </p>
                     </div>
                     <StatusBadge status={initiative.status} />
                   </div>
 
-                  <dl className="text-muted-foreground grid gap-3 text-sm sm:grid-cols-3">
+                  <dl className="text-body-secondary d-grid gap-2 fs-7 grid-cols-sm-3">
                     <div>
-                      <dt className="text-xs tracking-wide uppercase">Criada em</dt>
-                      <dd className="text-foreground">{formatDate(initiative.created_at)}</dd>
+                      <dt className="fs-8 tracking-wide text-uppercase">Criada em</dt>
+                      <dd className="text-body">{formatDate(initiative.created_at)}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs tracking-wide uppercase">Última alteração</dt>
-                      <dd className="text-foreground">{formatDate(initiative.updated_at)}</dd>
+                      <dt className="fs-8 tracking-wide text-uppercase">Última alteração</dt>
+                      <dd className="text-body">{formatDate(initiative.updated_at)}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs tracking-wide uppercase">Publicada em</dt>
-                      <dd className="text-foreground">
+                      <dt className="fs-8 tracking-wide text-uppercase">Publicada em</dt>
+                      <dd className="text-body">
                         {initiative.published_at ? formatDate(initiative.published_at) : '—'}
                       </dd>
                     </div>
                   </dl>
 
-                  <div className="border-border border-t pt-4">
+                  <div className="border border-top pt-3">
                     <StatusActions record={initiative} />
                   </div>
                 </section>
 
-                <section className="space-y-4">
-                  <h3 className="text-sm font-medium">Histórico de revisão</h3>
+                <section className="space-y-3">
+                  <h3 className="fs-7 fw-medium">Histórico de revisão</h3>
                   <ReviewHistory initiativeId={initiative.id} />
                 </section>
               </>

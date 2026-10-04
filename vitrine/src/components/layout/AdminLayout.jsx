@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
+  ChartColumn,
   ClipboardCheck,
   ExternalLink,
   FolderTree,
+  History,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -40,7 +42,9 @@ const NAV_ITEMS = [
   { to: '/admin/revisao', label: 'Revisão', icon: ClipboardCheck, requires: 'review' },
   { to: '/admin/categorias', label: 'Categorias', icon: FolderTree, requires: 'admin' },
   { to: '/admin/pessoas', label: 'Pessoas', icon: Users },
+  { to: '/admin/audiencia', label: 'Audiência', icon: ChartColumn },
   { to: '/admin/usuarios', label: 'Usuários', icon: ShieldCheck, requires: 'admin' },
+  { to: '/admin/atividade', label: 'Atividade', icon: History, requires: 'admin' },
   { to: '/admin/aparencia', label: 'Aparência', icon: Palette, requires: 'admin' },
   { to: '/admin/configuracoes', label: 'Configurações', icon: Settings },
 ]
@@ -64,7 +68,7 @@ function SidebarNav({ onNavigate }) {
   const pendingCount = (pendingInitiatives?.length ?? 0) + (pendingNews?.length ?? 0)
 
   return (
-    <nav className="flex flex-col gap-0.5 px-3" aria-label="Navegação administrativa">
+    <nav className="d-flex flex-column gap-1 px-2" aria-label="Navegação administrativa">
       {items.map(({ to, label, icon: Icon, end }) => (
         <NavLink
           key={to}
@@ -73,19 +77,19 @@ function SidebarNav({ onNavigate }) {
           onClick={onNavigate}
           className={({ isActive }) =>
             cn(
-              'group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+              'd-flex align-items-center gap-2 rounded-2 px-2 py-2 fs-7 fw-medium',
               isActive
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                ? 'bg-primary text-white'
+                : 'text-body-secondary  ',
             )
           }
         >
-          <Icon className="size-4 shrink-0" aria-hidden="true" />
-          <span className="flex-1">{label}</span>
+          <Icon className="icon flex-shrink-0" aria-hidden="true" />
+          <span className="flex-grow-1">{label}</span>
           {to === '/admin/revisao' && pendingCount > 0 ? (
             <Badge
               size="sm"
-              className="bg-status-review-bg text-status-review ring-status-review/25 tabular-nums"
+              className="badge-status-review ring-status-review/25 tabular-nums"
             >
               {pendingCount}
             </Badge>
@@ -98,8 +102,8 @@ function SidebarNav({ onNavigate }) {
 
 function SidebarFooter() {
   return (
-    <div className="border-border mt-auto border-t p-3">
-      <Button variant="ghost" size="sm" asChild className="w-full justify-start">
+    <div className="mt-auto border-top p-2">
+      <Button variant="ghost" size="sm" asChild className="w-100 justify-content-start">
         <Link to="/" target="_blank" rel="noreferrer">
           <ExternalLink aria-hidden="true" />
           Ver vitrine pública
@@ -118,19 +122,19 @@ function UserMenu() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="hover:bg-muted flex items-center gap-2.5 rounded-md p-1 pr-2.5 transition-colors"
+          className="d-flex align-items-center gap-2 rounded-2 p-1 pe-2"
         >
           <Avatar src={profile?.avatar_url} name={name} size="sm" />
-          <span className="hidden text-left sm:block">
-            <span className="block max-w-36 truncate text-sm font-medium">{name}</span>
-            <span className="text-muted-foreground block text-xs">
+          <span className="d-none text-start d-sm-block">
+            <span className="d-block max-w-fx-36 text-truncate fs-7 fw-medium">{name}</span>
+            <span className="text-body-secondary d-block fs-8">
               {ROLE_META[role]?.label ?? 'Sem papel'}
             </span>
           </span>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56">
-        <DropdownMenuLabel className="text-foreground truncate text-sm font-medium">
+      <DropdownMenuContent className="w-fx-56">
+        <DropdownMenuLabel className="text-body text-truncate fs-7 fw-medium">
           {profile?.email ?? user?.email}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -167,49 +171,49 @@ export function AdminLayout() {
   }, [pathname])
 
   return (
-    <div className="bg-muted/40 min-h-dvh">
+    <div className="bg-body-tertiary min-vh-100">
       <a href="#admin-conteudo" className="skip-link">
         Pular para o conteúdo
       </a>
 
       {/* Barra lateral fixa a partir de lg */}
-      <aside className="bg-card border-border fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r lg:flex">
-        <div className="border-border flex h-16 items-center border-b px-5">
+      <aside className="bg-body position-fixed top-0 bottom-0 start-0 z-3 d-none w-fx-64 flex-column border-end d-lg-flex">
+        <div className="d-flex h-fx-16 align-items-center border-bottom px-3">
           <Logo to="/admin" />
         </div>
-        <div className="flex-1 overflow-y-auto py-4">
+        <div className="flex-grow-1 overflow-y-auto py-3">
           <SidebarNav />
         </div>
         <SidebarFooter />
       </aside>
 
-      <div className="lg:pl-64">
-        <header className="bg-card/85 border-border sticky top-0 z-20 border-b backdrop-blur-md">
-          <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
+      <div className="ps-lg-sidebar">
+        <header className="bg-body position-sticky top-0 z-3 border-bottom">
+          <div className="d-flex h-fx-16 align-items-center gap-2 px-3 px-sm-4">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Abrir menu">
+                <Button variant="ghost" size="icon" className="d-lg-none" aria-label="Abrir menu">
                   <Menu />
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" title="Menu administrativo" className="p-0">
-                <div className="flex h-full flex-col py-4">
+                <div className="d-flex h-100 flex-column py-3">
                   <SidebarNav onNavigate={() => setOpen(false)} />
                   <SidebarFooter />
                 </div>
               </SheetContent>
             </Sheet>
 
-            <div className="lg:hidden">
+            <div className="d-lg-none">
               <Logo to="/admin" compact />
             </div>
 
-            <div className="flex-1" />
+            <div className="flex-grow-1" />
             <UserMenu />
           </div>
         </header>
 
-        <main id="admin-conteudo" className="p-4 pb-16 sm:p-6 lg:p-8">
+        <main id="admin-conteudo" className="p-3 pb-5 p-sm-4 p-lg-5">
           <Outlet />
         </main>
       </div>

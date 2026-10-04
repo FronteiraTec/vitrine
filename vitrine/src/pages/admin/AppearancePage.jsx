@@ -25,11 +25,18 @@ import { cn } from '@/lib/utils'
 
 /* --------------------------------- peças ---------------------------------- */
 
-/** Grade das abas: coluna única até `lg`, duas colunas em telas largas. */
-const tabGrid = 'grid items-start gap-6 pt-6 xl:grid-cols-2'
+/**
+ * Grade das abas: coluna única até `lg`, duas colunas em telas largas.
+ *
+ * Vai num `<div>` DENTRO de cada `TabsContent`, e não no próprio: o Radix
+ * esconde a aba inativa com o atributo `hidden`, e o `display: grid !important`
+ * de `.d-grid` venceria o `[hidden]` do Reboot — as abas fechadas continuariam
+ * na página como blocos vazios, empurrando a aba aberta para baixo.
+ */
+const tabGrid = 'd-grid align-items-start gap-4 grid-cols-1 grid-cols-xl-2'
 
 /**
- * `wide` marca a seção que ocupa a linha inteira do grid. Os editores de lista
+ * `wide` marca a seção que ocupa a linha inteira da grade. Os editores de lista
  * têm altura variável e campos lado a lado — espremidos em meia largura, cada
  * item viraria uma coluna estreita e alta.
  */
@@ -37,13 +44,13 @@ function Section({ title, description, wide = false, children }) {
   return (
     <section
       className={cn(
-        'border-border bg-card h-fit space-y-6 rounded-lg border p-5 sm:p-6',
-        wide && 'xl:col-span-2',
+        'border bg-body h-auto space-y-4 rounded-3 p-3 p-sm-4',
+        wide && 'col-full',
       )}
     >
       <div className="space-y-1">
-        <h2 className="text-sm font-semibold">{title}</h2>
-        {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
+        <h2 className="mb-0 fs-6 fw-semibold">{title}</h2>
+        {description ? <p className="text-body-secondary mb-0 fs-7">{description}</p> : null}
       </div>
       {children}
     </section>
@@ -55,11 +62,11 @@ function Toggle({ label, description, checked, onChange }) {
   const descriptionId = description ? `${id}-hint` : undefined
 
   return (
-    <div className="flex items-start justify-between gap-4">
-      <div className="space-y-0.5">
+    <div className="d-flex align-items-start justify-content-between gap-3">
+      <div className="space-y-1">
         <Label htmlFor={id}>{label}</Label>
         {description ? (
-          <p id={descriptionId} className="text-muted-foreground text-xs">
+          <p id={descriptionId} className="text-body-secondary mb-0 fs-8">
             {description}
           </p>
         ) : null}
@@ -69,7 +76,7 @@ function Toggle({ label, description, checked, onChange }) {
         aria-describedby={descriptionId}
         checked={checked}
         onCheckedChange={onChange}
-        className="mt-0.5 shrink-0"
+        className="mt-1 flex-shrink-0"
       />
     </div>
   )
@@ -98,36 +105,36 @@ function ListEditor({ items, onChange, renderRow, onAdd, addLabel, empty, max = 
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {items.length ? (
-        <ul className="space-y-3">
+        <ul className="space-y-2">
           {items.map((item, index) => (
             <li
               key={index}
-              className="border-border bg-muted/30 relative rounded-lg border p-4 pr-12"
+              className="border bg-body-tertiary position-relative rounded-3 p-3 pe-5"
             >
               {/* O índice compõe os `id` dos campos: derivá-los do conteúdo
                   produziria rótulos apontando para o campo errado assim que
                   duas linhas coincidissem. */}
               {renderRow(item, (patch) => update(index, patch), index)}
 
-              <div className="absolute top-3 right-3 flex flex-col gap-1">
+              <div className="position-absolute top-0 end-0 mt-2 me-2 d-flex flex-column gap-1">
                 <button
                   type="button"
                   onClick={() => remove(index)}
-                  className="text-muted-foreground hover:bg-destructive hover:text-destructive-foreground rounded-md p-1.5 transition-colors"
+                  className="text-body-secondary rounded-2 p-1"
                   aria-label={`Remover item ${index + 1}`}
                 >
-                  <Trash2 className="size-3.5" />
+                  <Trash2 className="icon-sm" />
                 </button>
-                <div className="text-muted-foreground/50 flex justify-center">
-                  <GripVertical className="size-3.5" aria-hidden="true" />
+                <div className="text-body-secondary opacity-50 d-flex justify-content-center">
+                  <GripVertical className="icon-sm" aria-hidden="true" />
                 </div>
                 <button
                   type="button"
                   onClick={() => move(index, -1)}
                   disabled={index === 0}
-                  className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md px-1.5 text-xs transition-colors disabled:opacity-30"
+                  className="text-body-secondary rounded-2 px-1 fs-8"
                   aria-label={`Mover item ${index + 1} para cima`}
                 >
                   ↑
@@ -136,7 +143,7 @@ function ListEditor({ items, onChange, renderRow, onAdd, addLabel, empty, max = 
                   type="button"
                   onClick={() => move(index, 1)}
                   disabled={index === items.length - 1}
-                  className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md px-1.5 text-xs transition-colors disabled:opacity-30"
+                  className="text-body-secondary rounded-2 px-1 fs-8"
                   aria-label={`Mover item ${index + 1} para baixo`}
                 >
                   ↓
@@ -146,7 +153,7 @@ function ListEditor({ items, onChange, renderRow, onAdd, addLabel, empty, max = 
           ))}
         </ul>
       ) : (
-        <p className="border-border text-muted-foreground rounded-lg border border-dashed px-4 py-6 text-center text-xs text-pretty">
+        <p className="border text-body-secondary rounded-3 border-dashed px-3 py-4 text-center fs-8 text-pretty">
           {empty}
         </p>
       )}
@@ -174,7 +181,7 @@ function BrandTab({ values, set }) {
       description="Símbolo e nome exibidos no cabeçalho, no rodapé e no topo do painel."
       wide
     >
-      <div className="grid gap-6 md:grid-cols-[12rem_minmax(0,1fr)]">
+      <div className="d-grid gap-4 d-grid grid-aside">
         <ImageUploader
           value={values.logo_url}
           onChange={(url) => set('logo_url', url)}
@@ -182,11 +189,11 @@ function BrandTab({ values, set }) {
           folder="marca"
           label="Símbolo"
           hint="Quadrado, fundo transparente. PNG ou SVG. Sem envio, usa o logotipo padrão."
-          ratio="aspect-square"
+          ratio="ratio-1x1"
           maxBytes={2 * 1024 * 1024}
         />
 
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="d-grid gap-4 grid-cols-sm-2">
           <Field
             id="brand-name"
             label="Nome"
@@ -246,7 +253,10 @@ function HeaderTab({ values, set }) {
         title="Cores do cabeçalho"
         description="Deixe em branco para seguir o tema. Confira o contraste entre fundo e texto."
       >
-        <div className="grid gap-6 sm:grid-cols-3">
+        {/* Três lado a lado só com a seção em largura cheia. A partir de `xl` ela
+            divide a linha com "Comportamento", e em meia coluna o hexadecimal
+            nem cabia no campo. */}
+        <div className="d-grid column-gap-4 grid-cols-md-3 grid-cols-xl-1">
           <ColorInput
             label="Fundo"
             value={values.header_bg}
@@ -280,7 +290,7 @@ function HeaderTab({ values, set }) {
           addLabel="Adicionar link"
           empty={`Sem links personalizados — usando o menu padrão: ${DEFAULT_NAV.map((l) => l.label).join(', ')}.`}
           renderRow={(item, update, index) => (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="d-grid gap-2 grid-cols-sm-2">
               <Field id={`nav-label-${index}`} label="Rótulo">
                 {(props) => (
                   <Input
@@ -298,7 +308,7 @@ function HeaderTab({ values, set }) {
                     value={item.to ?? ''}
                     onChange={(event) => update({ to: event.target.value })}
                     placeholder="/buscar"
-                    className="font-mono text-sm"
+                    className="font-monospace"
                   />
                 )}
               </Field>
@@ -314,7 +324,7 @@ function FooterTab({ values, set }) {
   return (
     <>
       <Section title="Texto" description="Conteúdo da primeira coluna e da linha final." wide>
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="d-grid gap-4 grid-cols-lg-2">
           <Field id="footer-description" label="Descrição" hint="Parágrafo curto sob a marca.">
             {(props) => (
               <Textarea
@@ -327,7 +337,7 @@ function FooterTab({ values, set }) {
             )}
           </Field>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             <Field
               id="footer-copyright"
               label="Direitos autorais"
@@ -365,7 +375,7 @@ function FooterTab({ values, set }) {
       </Section>
 
       <Section title="Contato" description="Cada campo em branco é omitido do rodapé.">
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="d-grid column-gap-4 grid-cols-sm-2">
           <Field id="footer-email" label="E-mail">
             {(props) => (
               <Input
@@ -387,24 +397,24 @@ function FooterTab({ values, set }) {
               />
             )}
           </Field>
+          <Field id="footer-address" label="Endereço" className="col-full">
+            {(props) => (
+              <Input
+                {...props}
+                value={values.footer_address ?? ''}
+                onChange={(event) => set('footer_address', event.target.value)}
+                placeholder="Rua Exemplo, 000 — Cidade/UF"
+              />
+            )}
+          </Field>
         </div>
-        <Field id="footer-address" label="Endereço">
-          {(props) => (
-            <Input
-              {...props}
-              value={values.footer_address ?? ''}
-              onChange={(event) => set('footer_address', event.target.value)}
-              placeholder="Rua Exemplo, 000 — Cidade/UF"
-            />
-          )}
-        </Field>
       </Section>
 
       <Section
         title="Cores do rodapé"
         description="Deixe em branco para seguir o tema (fundo na cor principal)."
       >
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="d-grid gap-4 grid-cols-sm-2">
           <ColorInput
             label="Fundo"
             value={values.footer_bg}
@@ -445,17 +455,17 @@ function FooterTab({ values, set }) {
           max={6}
           empty="Sem apoiadores personalizados — usando os logotipos padrão da UFFS e da INNE."
           renderRow={(item, update, index) => (
-            <div className="grid gap-4 sm:grid-cols-[10rem_1fr]">
+            <div className="d-grid gap-3 d-grid grid-media">
               <ImageUploader
                 value={item.logo_url || null}
                 onChange={(url) => update({ logo_url: url ?? '' })}
                 bucket={BUCKETS.SITE}
                 folder="apoiadores"
                 label="Logotipo"
-                ratio="aspect-[16/10]"
+                ratio="ratio-16x10"
                 maxBytes={2 * 1024 * 1024}
               />
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <Field
                   id={`partner-name-${index}`}
                   label="Nome"
@@ -499,7 +509,7 @@ function FooterTab({ values, set }) {
           max={8}
           empty="Nenhuma rede social cadastrada."
           renderRow={(item, update, index) => (
-            <div className="grid gap-3 sm:grid-cols-[10rem_1fr]">
+            <div className="d-grid gap-2 d-grid grid-media">
               <div className="space-y-2">
                 <Label id={`social-type-${index}`}>Rede</Label>
                 <Select value={item.type} onValueChange={(type) => update({ type })}>
@@ -540,8 +550,8 @@ function ColorsTab({ values, set }) {
       description="Alcançam a vitrine inteira — botões, links e destaques. O painel administrativo mantém o tema padrão."
       wide
     >
-      <div className="grid gap-8 lg:grid-cols-2">
-        <div className="space-y-6">
+      <div className="d-grid align-items-start gap-5 grid-cols-lg-2">
+        <div className="space-y-4">
           <ColorInput
             label="Cor principal"
             hint="Botões, fundo do rodapé e superfícies de destaque."
@@ -558,19 +568,25 @@ function ColorsTab({ values, set }) {
           />
         </div>
 
-        <aside className="bg-muted/40 border-border space-y-3 rounded-lg border p-4">
-          <h3 className="text-xs font-semibold tracking-wide uppercase">Onde cada cor aparece</h3>
-          <dl className="text-muted-foreground space-y-2 text-xs">
+        <aside className="bg-body-tertiary border space-y-3 rounded-3 p-3 p-sm-4">
+          <h3 className="mb-0 fs-8 fw-semibold tracking-wide text-uppercase">
+            Onde cada cor aparece
+          </h3>
+          <dl className="text-body-secondary mb-0 space-y-3 fs-7">
             <div>
-              <dt className="text-foreground font-medium">Cor principal</dt>
-              <dd>Botões preenchidos, fundo do rodapé, cabeçalho do painel e estados ativos.</dd>
+              <dt className="text-body fw-medium">Cor principal</dt>
+              <dd className="mt-1 mb-0">
+                Botões preenchidos, fundo do rodapé, cabeçalho do painel e estados ativos.
+              </dd>
             </div>
             <div>
-              <dt className="text-foreground font-medium">Cor de acento</dt>
-              <dd>Links de texto, anel de foco do teclado e detalhes de destaque.</dd>
+              <dt className="text-body fw-medium">Cor de acento</dt>
+              <dd className="mt-1 mb-0">
+                Links de texto, anel de foco do teclado e detalhes de destaque.
+              </dd>
             </div>
           </dl>
-          <p className="border-border text-muted-foreground border-t pt-3 text-xs text-pretty">
+          <p className="text-body-secondary mb-0 border-top pt-3 fs-8 text-pretty">
             A paleta de status do dashboard não é afetada: as cores dela foram validadas para
             separação sob daltonismo e mudá-las quebraria essa garantia.
           </p>
@@ -660,20 +676,28 @@ export function AppearanceForm({ settings }) {
 
         {/*
          * Duas colunas a partir de `xl`. As seções são independentes entre si,
-         * então cada uma fica com a própria altura (`h-fit`) em vez de esticar
+         * então cada uma fica com a própria altura (`h-auto`) em vez de esticar
          * até a vizinha mais alta da linha.
          */}
-        <TabsContent value="marca" className={tabGrid}>
-          <BrandTab values={values} set={set} />
+        <TabsContent value="marca" className="pt-4">
+          <div className={tabGrid}>
+            <BrandTab values={values} set={set} />
+          </div>
         </TabsContent>
-        <TabsContent value="cabecalho" className={tabGrid}>
-          <HeaderTab values={values} set={set} />
+        <TabsContent value="cabecalho" className="pt-4">
+          <div className={tabGrid}>
+            <HeaderTab values={values} set={set} />
+          </div>
         </TabsContent>
-        <TabsContent value="rodape" className={tabGrid}>
-          <FooterTab values={values} set={set} />
+        <TabsContent value="rodape" className="pt-4">
+          <div className={tabGrid}>
+            <FooterTab values={values} set={set} />
+          </div>
         </TabsContent>
-        <TabsContent value="cores" className={tabGrid}>
-          <ColorsTab values={values} set={set} />
+        <TabsContent value="cores" className="pt-4">
+          <div className={tabGrid}>
+            <ColorsTab values={values} set={set} />
+          </div>
         </TabsContent>
       </Tabs>
     </form>
@@ -687,9 +711,9 @@ export function AppearancePage() {
     return (
       <>
         <PageHeader title="Aparência" />
-        <div className={tabGrid}>
-          <Skeleton className="h-96" />
-          <Skeleton className="h-96" />
+        <div className={cn(tabGrid, 'pt-4')}>
+          <Skeleton className="h-fx-96" />
+          <Skeleton className="h-fx-96" />
         </div>
       </>
     )
@@ -699,7 +723,7 @@ export function AppearancePage() {
     return (
       <>
         <PageHeader title="Aparência" />
-        <p className="text-destructive text-sm">{error.message}</p>
+        <p className="text-danger fs-7">{error.message}</p>
       </>
     )
   }
@@ -713,13 +737,12 @@ export function AppearancePage() {
     return (
       <>
         <PageHeader title="Aparência" />
-        <div className="border-border bg-card max-w-3xl space-y-2 rounded-lg border p-6">
-          <h2 className="text-sm font-semibold">Configuração indisponível</h2>
-          <p className="text-muted-foreground text-sm text-pretty">
-            A tabela <code className="text-xs">site_settings</code> ainda não existe neste projeto
-            Supabase. Execute a migration{' '}
-            <code className="text-xs">20250101000005_site_settings.sql</code> e recarregue esta
-            página. Enquanto isso, a vitrine usa a identidade padrão.
+        <div className="border bg-body mw-3xl space-y-2 rounded-3 p-4">
+          <h2 className="fs-7 fw-semibold">Configuração indisponível</h2>
+          <p className="text-body-secondary fs-7 text-pretty">
+            A tabela <code className="fs-8">site_settings</code> ainda não existe neste banco.
+            Aplique as migrations (<code className="fs-8">docker compose run --rm migrate</code>)
+            e recarregue esta página. Enquanto isso, a vitrine usa a identidade padrão.
           </p>
         </div>
       </>

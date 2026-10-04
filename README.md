@@ -1,18 +1,19 @@
 # Vitrine
 
 Catálogo público de iniciativas institucionais — projetos, laboratórios, grupos
-de pesquisa, empresas juniores e programas de extensão — com área administrativa
-e fluxo de revisão editorial.
+de pesquisa, empresas juniores e programas de extensão — com área administrativa,
+fluxo de revisão editorial, notícias em três idiomas e relatório de audiência.
 
-A aplicação fica em [`vitrine/`](./vitrine):
+A aplicação fica em [`vitrine/`](./vitrine) e roda inteira em containers
+(PostgreSQL, API Node, Nginx com o React):
 
 ```bash
 cd vitrine
-npm install
-npm run dev
+cp .env.example .env        # senhas e domínio
+docker compose up -d --build
 ```
 
 Documentação completa:
 
-- [`vitrine/README.md`](./vitrine/README.md) — instalação, deploy e arquitetura
-- [`vitrine/supabase/README.md`](./vitrine/supabase/README.md) — banco, RLS e Storage
+- [`vitrine/README.md`](./vitrine/README.md) — instalação, deploy, arquitetura, audiência e migração do Supabase
+- [`vitrine/db/README.md`](./vitrine/db/README.md) — banco, RLS e arquivos

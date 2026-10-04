@@ -157,7 +157,7 @@ export function StatusActions({ record, kind = 'initiative', onDone, size = 'md'
 
   return (
     <>
-      <div className="flex items-center gap-2">
+      <div className="d-flex align-items-center gap-2">
         <Button
           size={size}
           variant={primaryMeta.variant}
@@ -205,19 +205,19 @@ export function StatusActions({ record, kind = 'initiative', onDone, size = 'md'
           }
         }}
       >
-        <DialogContent size="sm">
+        <DialogContent size="md">
           <DialogHeader>
             <DialogTitle>{meta?.confirmTitle}</DialogTitle>
             <DialogDescription>{meta?.confirmBody}</DialogDescription>
           </DialogHeader>
 
-          <DialogBody className="space-y-4">
-            <div className="bg-muted flex items-center gap-2 rounded-md p-3 text-sm">
-              <span className="text-muted-foreground">{STATUS_META[record.status]?.label}</span>
-              <span className="text-muted-foreground" aria-hidden="true">
+          <DialogBody className="space-y-3">
+            <div className="bg-body-secondary d-flex align-items-center gap-2 rounded-2 p-2 fs-7">
+              <span className="text-body-secondary">{STATUS_META[record.status]?.label}</span>
+              <span className="text-body-secondary" aria-hidden="true">
                 →
               </span>
-              <span className="font-medium">{STATUS_META[pendingStatus]?.label}</span>
+              <span className="fw-medium">{STATUS_META[pendingStatus]?.label}</span>
             </div>
 
             <Field

@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 export const DropdownMenu = DropdownMenuPrimitive.Root
 export const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
 export const DropdownMenuGroup = DropdownMenuPrimitive.Group
+export const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup
 
 export function DropdownMenuContent({ className, sideOffset = 6, align = 'end', ...props }) {
   return (
@@ -12,10 +13,7 @@ export function DropdownMenuContent({ className, sideOffset = 6, align = 'end', 
       <DropdownMenuPrimitive.Content
         sideOffset={sideOffset}
         align={align}
-        className={cn(
-          'bg-popover text-popover-foreground shadow-float data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 z-50 min-w-[11rem] overflow-hidden rounded-md border p-1',
-          className,
-        )}
+        className={cn('menu-panel dropdown-panel', className)}
         {...props}
       />
     </DropdownMenuPrimitive.Portal>
@@ -25,14 +23,7 @@ export function DropdownMenuContent({ className, sideOffset = 6, align = 'end', 
 export function DropdownMenuItem({ className, destructive, inset, ...props }) {
   return (
     <DropdownMenuPrimitive.Item
-      className={cn(
-        'relative flex cursor-pointer items-center gap-2.5 rounded-sm px-2.5 py-2 text-sm outline-none select-none',
-        'focus:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-        '[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:opacity-70',
-        destructive && 'text-destructive focus:bg-destructive/10 [&_svg]:opacity-100',
-        inset && 'pl-8',
-        className,
-      )}
+      className={cn('menu-item', destructive && 'menu-item-danger', inset && 'ps-4', className)}
       {...props}
     />
   )
@@ -41,15 +32,12 @@ export function DropdownMenuItem({ className, destructive, inset, ...props }) {
 export function DropdownMenuCheckboxItem({ className, children, ...props }) {
   return (
     <DropdownMenuPrimitive.CheckboxItem
-      className={cn(
-        'focus:bg-muted relative flex cursor-pointer items-center gap-2 rounded-sm py-2 pr-2.5 pl-8 text-sm outline-none select-none',
-        className,
-      )}
+      className={cn('menu-item position-relative ps-4', className)}
       {...props}
     >
-      <span className="absolute left-2.5 flex size-4 items-center justify-center">
+      <span className="position-absolute start-0 ms-2 d-flex align-items-center">
         <DropdownMenuPrimitive.ItemIndicator>
-          <Check className="size-3.5" />
+          <Check className="icon-sm" aria-hidden="true" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
       {children}
@@ -57,10 +45,31 @@ export function DropdownMenuCheckboxItem({ className, children, ...props }) {
   )
 }
 
+/**
+ * Opção exclusiva dentro de um `DropdownMenuRadioGroup`. O Radix entrega
+ * `role="menuitemradio"` com `aria-checked`, então o leitor de tela anuncia
+ * qual opção está marcada — o sinal visual não é o único.
+ */
+export function DropdownMenuRadioItem({ className, children, ...props }) {
+  return (
+    <DropdownMenuPrimitive.RadioItem
+      className={cn('menu-item position-relative ps-4', className)}
+      {...props}
+    >
+      <span className="position-absolute start-0 ms-2 d-flex align-items-center">
+        <DropdownMenuPrimitive.ItemIndicator>
+          <Check className="icon-sm" aria-hidden="true" />
+        </DropdownMenuPrimitive.ItemIndicator>
+      </span>
+      {children}
+    </DropdownMenuPrimitive.RadioItem>
+  )
+}
+
 export function DropdownMenuLabel({ className, ...props }) {
   return (
     <DropdownMenuPrimitive.Label
-      className={cn('text-muted-foreground px-2.5 py-1.5 text-xs font-medium', className)}
+      className={cn('px-3 py-2 small text-body-secondary fw-medium', className)}
       {...props}
     />
   )
@@ -68,9 +77,6 @@ export function DropdownMenuLabel({ className, ...props }) {
 
 export function DropdownMenuSeparator({ className, ...props }) {
   return (
-    <DropdownMenuPrimitive.Separator
-      className={cn('bg-border -mx-1 my-1 h-px', className)}
-      {...props}
-    />
+    <DropdownMenuPrimitive.Separator className={cn('dropdown-divider', className)} {...props} />
   )
 }

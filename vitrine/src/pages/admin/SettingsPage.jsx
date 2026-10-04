@@ -13,6 +13,15 @@ import { updateOwnProfile } from '@/services/admin'
 import { BUCKETS, ROLE_META } from '@/lib/constants'
 import { formatDate } from '@/lib/utils'
 
+function SectionTitle({ title, description }) {
+  return (
+    <div className="space-y-1">
+      <h2 className="mb-0 fs-6 fw-semibold">{title}</h2>
+      <p className="text-body-secondary mb-0 fs-7">{description}</p>
+    </div>
+  )
+}
+
 /**
  * Formulário de perfil. Recebe o perfil já carregado e é montado com `key`,
  * então inicializa o estado direto das props — sem efeito de sincronização.
@@ -43,40 +52,42 @@ function ProfileForm({ profile, userId, refreshProfile }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="border-border bg-card rounded-lg border">
-      <div className="space-y-6 p-5 sm:p-6">
-        <div className="space-y-1">
-          <h2 className="text-sm font-semibold">Perfil</h2>
-          <p className="text-muted-foreground text-sm">
-            Nome e foto exibidos para o restante da equipe no painel.
-          </p>
-        </div>
-
-        <Field id="profile-name" label="Nome" required>
-          {(props) => (
-            <Input
-              {...props}
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              required
-            />
-          )}
-        </Field>
-
-        <ImageUploader
-          value={avatarUrl}
-          onChange={setAvatarUrl}
-          bucket={BUCKETS.AVATARS}
-          // A policy do bucket exige que o arquivo fique na pasta do próprio usuário.
-          folder={userId ?? ''}
-          label="Foto de perfil"
-          ratio="aspect-square"
-          maxBytes={2 * 1024 * 1024}
-          className="max-w-40"
+    <form onSubmit={handleSubmit} className="border bg-body rounded-3">
+      <div className="space-y-4 p-3 p-sm-4">
+        <SectionTitle
+          title="Perfil"
+          description="Nome e foto exibidos para o restante da equipe no painel."
         />
+
+        {/* Foto ao lado do nome: empilhados, a foto deixava meia coluna vazia
+            à direita e empurrava o botão de salvar para baixo. */}
+        <div className="d-grid gap-4 grid-media">
+          <ImageUploader
+            value={avatarUrl}
+            onChange={setAvatarUrl}
+            bucket={BUCKETS.AVATARS}
+            // A policy do bucket exige que o arquivo fique na pasta do próprio usuário.
+            folder={userId ?? ''}
+            label="Foto de perfil"
+            ratio="ratio-1x1"
+            maxBytes={2 * 1024 * 1024}
+            className="max-w-fx-40"
+          />
+
+          <Field id="profile-name" label="Nome" required className="mb-0">
+            {(props) => (
+              <Input
+                {...props}
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                required
+              />
+            )}
+          </Field>
+        </div>
       </div>
 
-      <div className="border-border bg-muted/40 flex justify-end border-t px-5 py-4 sm:px-6">
+      <div className="bg-body-tertiary d-flex justify-content-end border-top rounded-bottom-3 px-3 py-3 px-sm-4">
         <Button type="submit" loading={saving} disabled={!dirty}>
           Salvar alterações
         </Button>
@@ -85,27 +96,103 @@ function ProfileForm({ profile, userId, refreshProfile }) {
   )
 }
 
-export function SettingsPage() {
-  const { profile, user, role, refreshProfile, requestPasswordReset, signOut } = useAuth()
-  const [sendingReset, setSendingReset] = useState(false)
+const MIN_PASSWORD = 8
 
-  async function handlePasswordReset() {
-    setSendingReset(true)
+/**
+ * Troca de senha de quem está logado. Pede a senha atual: uma sessão esquecida
+ * aberta num computador compartilhado não basta para tomar a conta. As outras
+ * sessões da conta são encerradas no servidor; esta continua.
+ */
+function PasswordForm() {
+  const { updatePassword } = useAuth()
+  const [values, setValues] = useState({ current: '', password: '', confirmation: '' })
+  const [saving, setSaving] = useState(false)
+
+  function update(field) {
+    return (event) => setValues((previous) => ({ ...previous, [field]: event.target.value }))
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault()
+    if (values.password.length < MIN_PASSWORD) {
+      toast.error(`A nova senha deve ter no mínimo ${MIN_PASSWORD} caracteres.`)
+      return
+    }
+    if (values.password !== values.confirmation) {
+      toast.error('A confirmação não confere com a nova senha.')
+      return
+    }
+    setSaving(true)
     try {
-      await requestPasswordReset(profile.email)
-      toast.success('Enviamos um link de redefinição para o seu e-mail.')
+      await updatePassword(values.password, values.current)
+      setValues({ current: '', password: '', confirmation: '' })
+      toast.success('Senha alterada. As outras sessões da sua conta foram encerradas.')
     } catch (error) {
       toast.error(error.message)
     } finally {
-      setSendingReset(false)
+      setSaving(false)
     }
   }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3" noValidate>
+      <Field id="current-password" label="Senha atual" required className="mb-0">
+        {(props) => (
+          <Input
+            {...props}
+            type="password"
+            autoComplete="current-password"
+            value={values.current}
+            onChange={update('current')}
+            required
+          />
+        )}
+      </Field>
+      <div className="d-grid gap-3 grid-cols-sm-2">
+        <Field id="new-password" label="Nova senha" required hint={`Mínimo de ${MIN_PASSWORD} caracteres.`} className="mb-0">
+          {(props) => (
+            <Input
+              {...props}
+              type="password"
+              autoComplete="new-password"
+              value={values.password}
+              onChange={update('password')}
+              minLength={MIN_PASSWORD}
+              required
+            />
+          )}
+        </Field>
+        <Field id="confirm-password" label="Confirmar nova senha" required className="mb-0">
+          {(props) => (
+            <Input
+              {...props}
+              type="password"
+              autoComplete="new-password"
+              value={values.confirmation}
+              onChange={update('confirmation')}
+              required
+            />
+          )}
+        </Field>
+      </div>
+      <Button type="submit" variant="outline" loading={saving} disabled={!values.current || !values.password}>
+        <KeyRound aria-hidden="true" />
+        Alterar senha
+      </Button>
+    </form>
+  )
+}
+
+export function SettingsPage() {
+  const { profile, user, role, refreshProfile, signOut } = useAuth()
 
   return (
     <>
       <PageHeader title="Configurações" description="Seus dados de acesso e preferências de conta." />
 
-      <div className="max-w-2xl space-y-6">
+      {/* Duas colunas a partir de `xl`: perfil de um lado, conta e segurança do
+          outro. Numa coluna só de 42rem, metade da tela ficava vazia. */}
+      <div className="d-grid align-items-start gap-4 grid-cols-1 grid-cols-xl-2">
         {profile ? (
           <ProfileForm
             key={profile.id}
@@ -114,64 +201,57 @@ export function SettingsPage() {
             refreshProfile={refreshProfile}
           />
         ) : (
-          <Skeleton className="h-96" />
+          <Skeleton className="h-fx-96" />
         )}
 
-        <section className="border-border bg-card space-y-4 rounded-lg border p-5 sm:p-6">
-          <div className="space-y-1">
-            <h2 className="text-sm font-semibold">Conta</h2>
-            <p className="text-muted-foreground text-sm">
-              Dados de acesso definidos na autenticação.
+        <div className="space-y-4">
+          <section className="border bg-body space-y-4 rounded-3 p-3 p-sm-4">
+            <SectionTitle title="Conta" description="Dados de acesso definidos na autenticação." />
+
+            <dl className="d-grid mb-0 column-gap-4 row-gap-3 grid-cols-sm-2">
+              <div>
+                <dt className="text-body-secondary fs-8 tracking-wide text-uppercase">E-mail</dt>
+                <dd className="mt-1 mb-0 fs-7 text-break">{profile?.email}</dd>
+              </div>
+              <div>
+                <dt className="text-body-secondary fs-8 tracking-wide text-uppercase">Papel</dt>
+                <dd className="mt-1 mb-0">
+                  <Badge variant="brand">{ROLE_META[role]?.label ?? '—'}</Badge>
+                </dd>
+              </div>
+              <div>
+                <dt className="text-body-secondary fs-8 tracking-wide text-uppercase">
+                  Conta criada em
+                </dt>
+                <dd className="mt-1 mb-0 fs-7">{formatDate(profile?.created_at)}</dd>
+              </div>
+              <div>
+                <dt className="text-body-secondary fs-8 tracking-wide text-uppercase">Situação</dt>
+                <dd className="mt-1 mb-0 fs-7">{profile?.is_active ? 'Ativa' : 'Inativa'}</dd>
+              </div>
+            </dl>
+
+            <p className="text-body-secondary mb-0 border-top pt-3 fs-8 text-pretty">
+              O papel só pode ser alterado por um administrador, na tela de Usuários.
             </p>
-          </div>
+          </section>
 
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <dt className="text-muted-foreground text-xs tracking-wide uppercase">E-mail</dt>
-              <dd className="mt-0.5 text-sm break-all">{profile?.email}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground text-xs tracking-wide uppercase">Papel</dt>
-              <dd className="mt-1">
-                <Badge variant="brand">{ROLE_META[role]?.label ?? '—'}</Badge>
-              </dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground text-xs tracking-wide uppercase">
-                Conta criada em
-              </dt>
-              <dd className="mt-0.5 text-sm">{formatDate(profile?.created_at)}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground text-xs tracking-wide uppercase">Situação</dt>
-              <dd className="mt-0.5 text-sm">{profile?.is_active ? 'Ativa' : 'Inativa'}</dd>
-            </div>
-          </dl>
+          <section className="border bg-body space-y-4 rounded-3 p-3 p-sm-4">
+            <SectionTitle
+              title="Segurança"
+              description="Trocar a senha encerra as sessões da sua conta em outros dispositivos."
+            />
 
-          <p className="text-muted-foreground text-xs text-pretty">
-            O papel só pode ser alterado por um administrador, na tela de Usuários.
-          </p>
-        </section>
+            <PasswordForm />
 
-        <section className="border-border bg-card space-y-4 rounded-lg border p-5 sm:p-6">
-          <div className="space-y-1">
-            <h2 className="text-sm font-semibold">Segurança</h2>
-            <p className="text-muted-foreground text-sm">
-              A troca de senha é feita por link enviado ao seu e-mail.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <Button variant="outline" onClick={handlePasswordReset} loading={sendingReset}>
-              <KeyRound aria-hidden="true" />
-              Alterar senha
-            </Button>
-            <Button variant="ghost" onClick={() => signOut()}>
-              <LogOut aria-hidden="true" />
-              Encerrar sessão
-            </Button>
-          </div>
-        </section>
+            <div className="border-top pt-3">
+              <Button variant="ghost" onClick={() => signOut()}>
+                <LogOut aria-hidden="true" />
+                Encerrar sessão
+              </Button>
+            </div>
+          </section>
+        </div>
       </div>
     </>
   )

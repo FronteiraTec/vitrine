@@ -8,27 +8,31 @@ import { InitiativeGridSkeleton, Skeleton } from '@/components/ui/skeleton'
 import { InitiativeGrid } from '@/components/initiatives/InitiativeCard'
 import { CategoryIcon } from '@/components/common/CategoryIcon'
 import { useCategoryBySlug, useInitiativeSearch } from '@/hooks/use-queries'
-import { useDocumentMeta } from '@/hooks/use-utils'
+import { useDocumentMeta } from '@/hooks/use-seo'
+import { useLocale } from '@/contexts/LocaleContext'
+import { DEFAULT_LOCALE } from '@/i18n/config'
 import { PAGE_SIZE } from '@/lib/constants'
 import { NotFoundPage } from './NotFoundPage'
 
-function Breadcrumb({ category }) {
+function Breadcrumb({ category, catalogLang }) {
+  const { t } = useLocale()
+
   return (
-    <nav aria-label="Trilha de navegação" className="text-muted-foreground mb-6 text-sm">
-      <ol className="flex flex-wrap items-center gap-1">
+    <nav aria-label={t('common.breadcrumb')} className="text-body-secondary mb-4 fs-7">
+      <ol className="d-flex flex-wrap align-items-center gap-1">
         <li>
-          <Link to="/" className="hover:text-foreground transition-colors">
-            Início
+          <Link to="/">
+            {t('common.home')}
           </Link>
         </li>
-        <ChevronRight className="size-3.5 shrink-0" aria-hidden="true" />
+        <ChevronRight className="icon-sm flex-shrink-0" aria-hidden="true" />
         <li>
-          <Link to="/categorias" className="hover:text-foreground transition-colors">
-            Categorias
+          <Link to="/categorias">
+            {t('categories.title')}
           </Link>
         </li>
-        <ChevronRight className="size-3.5 shrink-0" aria-hidden="true" />
-        <li className="text-foreground font-medium" aria-current="page">
+        <ChevronRight className="icon-sm flex-shrink-0" aria-hidden="true" />
+        <li className="text-body fw-medium" aria-current="page" lang={catalogLang}>
           {category.name}
         </li>
       </ol>
@@ -39,6 +43,9 @@ function Breadcrumb({ category }) {
 export function CategoryPage() {
   const { slug } = useParams()
   const [page, setPage] = useState(1)
+  const { t, locale } = useLocale()
+  // Nome e descrição da categoria são cadastrados em português.
+  const catalogLang = locale === DEFAULT_LOCALE ? undefined : DEFAULT_LOCALE
 
   const {
     data: category,
@@ -60,17 +67,16 @@ export function CategoryPage() {
   useDocumentMeta({
     title: category?.name,
     description:
-      category?.description ??
-      `Iniciativas da categoria ${category?.name ?? ''} no catálogo institucional.`,
+      category?.description ?? t('category.metaDescription', { name: category?.name ?? '' }),
     image: category?.image_url,
   })
 
   if (categoryPending) {
     return (
-      <div className="container-page py-12">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="mt-4 h-4 w-full max-w-xl" />
-        <div className="mt-12">
+      <div className="container py-5">
+        <Skeleton className="h-fx-8 w-fx-64" />
+        <Skeleton className="mt-3 h-fx-4 w-100 mw-xl" />
+        <div className="mt-5">
           <InitiativeGridSkeleton count={6} />
         </div>
       </div>
@@ -79,8 +85,8 @@ export function CategoryPage() {
 
   if (categoryError) {
     return (
-      <div className="container-page py-16">
-        <ErrorState description="Não foi possível carregar esta categoria." onRetry={() => refetchCategory()} />
+      <div className="container py-5">
+        <ErrorState description={t('category.loadError')} onRetry={() => refetchCategory()} />
       </div>
     )
   }
@@ -88,8 +94,8 @@ export function CategoryPage() {
   if (!category) {
     return (
       <NotFoundPage
-        title="Categoria não encontrada"
-        description="A categoria que você procura não existe ou foi removida do catálogo."
+        title={t('category.notFoundTitle')}
+        description={t('category.notFoundDescription')}
       />
     )
   }
@@ -98,31 +104,32 @@ export function CategoryPage() {
 
   return (
     <>
-      <div className="border-border bg-muted/40 border-b">
-        <div className="container-page py-10 sm:py-14">
-          <Breadcrumb category={category} />
+      <div className="border bg-body-tertiary border-bottom">
+        <div className="container py-5 py-sm-5">
+          <Breadcrumb category={category} catalogLang={catalogLang} />
 
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-            <span className="bg-primary text-primary-foreground flex size-14 shrink-0 items-center justify-center rounded-lg">
-              <CategoryIcon name={category.icon} className="size-7" />
+          <div className="d-flex flex-column gap-3 flex-sm-row align-items-sm-start">
+            <span className="bg-primary text-white d-flex h-fx-14 w-fx-14 flex-shrink-0 align-items-center justify-content-center rounded-3">
+              <CategoryIcon name={category.icon} className="h-fx-7 w-fx-7" />
             </span>
-            <div className="space-y-3">
-              <h1 className="font-display text-3xl sm:text-4xl">{category.name}</h1>
+            <div className="space-y-2">
+              <h1 className="fw-bold fs-3 fs-sm-2" lang={catalogLang}>
+                {category.name}
+              </h1>
               {category.description ? (
-                <p className="text-muted-foreground max-w-2xl leading-relaxed text-pretty">
+                <p className="text-body-secondary mw-2xl lh-base text-pretty" lang={catalogLang}>
                   {category.description}
                 </p>
               ) : null}
-              <p className="text-muted-foreground text-sm tabular-nums">
-                {data?.total ?? 0}{' '}
-                {data?.total === 1 ? 'iniciativa publicada' : 'iniciativas publicadas'}
+              <p className="text-body-secondary fs-7 tabular-nums">
+                {t('category.published', { count: data?.total ?? 0 })}
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container-page space-y-8 py-12">
+      <div className="container space-y-5 py-5">
         {isError ? (
           <ErrorState description={error?.message} onRetry={() => refetch()} />
         ) : isPending ? (
@@ -130,17 +137,17 @@ export function CategoryPage() {
         ) : results.length === 0 ? (
           <EmptyState
             icon={SearchX}
-            title="Nenhuma iniciativa nesta categoria"
-            description="Ainda não há conteúdo publicado aqui. Explore as outras categorias do catálogo."
+            title={t('category.emptyTitle')}
+            description={t('category.emptyDescription')}
             action={
               <Button variant="outline" asChild>
-                <Link to="/buscar">Explorar todas as iniciativas</Link>
+                <Link to="/buscar">{t('common.exploreAll')}</Link>
               </Button>
             }
           />
         ) : (
           <>
-            <div className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+            <div className={isFetching ? 'opacity-50' : undefined}>
               <InitiativeGrid initiatives={results} />
             </div>
             <Pagination
