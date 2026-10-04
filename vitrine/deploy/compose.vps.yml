@@ -11,12 +11,17 @@
 # lembrar dele.
 # =============================================================================
 
+# `build: !reset null` tira a receita de build: sem ela, imagem ausente é erro
+# ("No such image"), e nunca um build silencioso no servidor.
 services:
   migrate:
+    build: !reset null
     pull_policy: never
   api:
+    build: !reset null
     pull_policy: never
   web:
+    build: !reset null
     pull_policy: never
     ports: !reset []
     networks:

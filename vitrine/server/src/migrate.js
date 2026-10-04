@@ -39,15 +39,22 @@ const args = new Set(process.argv.slice(2))
 const MODE = args.has('--status') ? 'status' : args.has('--check') ? 'check' : 'apply'
 const APP_VERSION = process.env.APP_VERSION ?? 'local'
 
-const client = new pg.Client({ connectionString: config.adminDatabaseUrl })
+let client = null
 
-/** O Postgres pode levar alguns segundos para aceitar conexões no primeiro boot. */
+/**
+ * O Postgres pode levar alguns segundos para aceitar conexões no primeiro
+ * boot. Cada tentativa usa um cliente NOVO: o `pg` não reconecta um cliente
+ * cuja conexão falhou.
+ */
 async function connect(attempts = 30) {
   for (let attempt = 1; ; attempt += 1) {
+    const candidate = new pg.Client({ connectionString: config.adminDatabaseUrl })
     try {
-      await client.connect()
+      await candidate.connect()
+      client = candidate
       return
     } catch (error) {
+      await candidate.end().catch(() => {})
       if (attempt >= attempts) throw error
       console.log(`[migrate] banco indisponível (${error.code ?? error.message}); nova tentativa em 2 s`)
       await new Promise((resolve) => setTimeout(resolve, 2000))
@@ -228,5 +235,5 @@ try {
   console.error(`[migrate] ${error.message}`)
   process.exitCode = 1
 } finally {
-  await client.end().catch(() => {})
+  await client?.end().catch(() => {})
 }

@@ -5,8 +5,9 @@
 #   versão no ar · containers e saúde · API pronta? · migrations ·
 #   a borda alcança o site? · últimos deploys · backups · espaço em disco
 #
-# Sai com código diferente de zero se algo essencial estiver errado — dá para
-# usar em monitoramento.
+# SÓ LEITURA: não sobe, não para e não cria nada — pode rodar a qualquer hora.
+# Sai com código diferente de zero se algo essencial estiver errado, então
+# serve também para monitoramento.
 # =============================================================================
 
 source "$(dirname "$(readlink -f "$0")")/comum.sh"
@@ -16,38 +17,44 @@ problemas=0
 ruim() { printf '  ✗ %s\n' "$*"; problemas=$((problemas + 1)); }
 bom() { printf '  ✓ %s\n' "$*"; }
 
+# Um campo de um JSON simples, sem depender de jq no servidor.
+campo() { sed -n "s/.*\"$1\":\(\[[^]]*\]\|\"[^\"]*\"\|[^,}]*\).*/\1/p" <<< "$2" | head -1; }
+
 atual=$(commit_atual)
 anterior=$(commit_anterior)
 echo "Vitrine — $(date '+%Y-%m-%d %H:%M:%S')"
 echo
-echo "Versão no ar:   ${atual:+$(curto "$atual")  ($(git -C "$CLONE" log -1 --format='%s' "$atual" 2>/dev/null || echo '?'))}"
+if [ -n "$atual" ]; then
+  echo "Versão no ar:   $(curto "$atual")  $(git -C "$CLONE" log -1 --format='%s' "$atual" 2>/dev/null || true)"
+else
+  echo "Versão no ar:   nenhuma — ainda não houve deploy"
+fi
 echo "Anterior:       ${anterior:+$(curto "$anterior")}${anterior:-nenhuma}"
 echo
 
 echo "Containers"
-export VITRINE_TAG=${atual:-local}
-dc ps --all --format '  {{.Service}}\t{{.State}}\t{{.Status}}' 2>/dev/null || ruim "docker compose não respondeu"
+export VITRINE_TAG=${atual:-nenhuma}
 for servico in db api web; do
-  estado=$(dc ps --format '{{.Health}}' "$servico" 2>/dev/null || true)
-  [ "$estado" = "healthy" ] || ruim "$servico não está saudável (${estado:-parado})"
+  estado=$(dc ps --all --format '{{.State}} {{.Health}}' "$servico" 2>/dev/null || true)
+  if [ "$estado" = "running healthy" ]; then
+    bom "$servico"
+  else
+    ruim "$servico: ${estado:-não existe}"
+  fi
 done
 echo
 
-echo "API"
+echo "API e migrations"
 pronta=$(dc exec -T api wget -qO- http://127.0.0.1:3000/api/health/ready 2>/dev/null || true)
-if [[ $pronta == *'"ok":true'* ]]; then
-  bom "pronta — banco ok, nenhuma migration pendente"
+if [ -z "$pronta" ]; then
+  ruim "API sem resposta"
 else
-  ruim "não está pronta: ${pronta:-sem resposta}"
+  versao=$(campo version "$pronta" | tr -d '"')
+  [[ $pronta == *'"ok":true'* ]] && bom "pronta (banco ok, nenhuma migration pendente)" || ruim "não está pronta: $pronta"
+  [ -z "$atual" ] || [ "$versao" = "$atual" ] || ruim "responde na versão $(curto "$versao"), não na registrada como no ar"
+  echo "    aplicadas: $(campo applied "$pronta") · última: $(campo latest "$pronta" | tr -d '"')"
+  echo "    pendentes: $(campo pending "$pronta") · à frente deste código: $(campo ahead "$pronta")"
 fi
-if [ -n "$atual" ] && [[ $pronta != *"$atual"* ]]; then
-  ruim "a API responde numa versão diferente da registrada como no ar"
-fi
-echo
-
-echo "Migrations"
-dc run --rm --no-deps -T migrate node server/src/migrate.js --status 2>/dev/null | tail -6 | sed 's/^/  /' \
-  || ruim "não foi possível ler o estado das migrations"
 echo
 
 echo "Borda (HTTPS)"
@@ -55,12 +62,12 @@ if docker inspect "$BORDA_CONTAINER" >/dev/null 2>&1; then
   if docker exec "$BORDA_CONTAINER" wget -qO- http://vitrine-web/version.json >/dev/null 2>&1; then
     bom "$BORDA_CONTAINER alcança vitrine-web"
   else
-    ruim "$BORDA_CONTAINER não alcança vitrine-web (o web está na rede $(env_var BORDA_REDE quiron-borda)?)"
+    ruim "$BORDA_CONTAINER não alcança vitrine-web"
   fi
   if docker exec "$BORDA_CONTAINER" grep -q '>>> VITRINE' /etc/caddy/Caddyfile 2>/dev/null; then
     bom "bloco da Vitrine presente no Caddyfile da borda"
   else
-    ruim "o bloco da Vitrine sumiu do Caddyfile da borda — rode como root: $APP/deploy/vps/borda.sh"
+    ruim "o bloco da Vitrine não está no Caddyfile da borda — rode como root: $APP/deploy/vps/borda.sh"
   fi
 else
   ruim "container da borda ($BORDA_CONTAINER) não encontrado"
@@ -68,13 +75,18 @@ fi
 echo
 
 echo "Últimos deploys"
-tail -5 "$HISTORICO" 2>/dev/null | sed 's/^/  /' || echo "  (nenhum)"
+if [ -s "$HISTORICO" ]; then tail -5 "$HISTORICO" | sed 's/^/  /'; else echo "  (nenhum)"; fi
 echo
 
 echo "Backups"
-ls -1t "$BACKUPS"/*.dump 2>/dev/null | head -3 | while read -r arquivo; do
-  printf '  %s  %s\n' "$(du -h "$arquivo" | cut -f1)" "$(basename "$arquivo")"
-done
+recentes=$(ls -1t "$BACKUPS"/*.dump 2>/dev/null | head -3 || true)
+if [ -n "$recentes" ]; then
+  while read -r arquivo; do
+    printf '  %s  %s\n' "$(du -h "$arquivo" | cut -f1)" "$(basename "$arquivo")"
+  done <<< "$recentes"
+else
+  echo "  (nenhum ainda)"
+fi
 echo "  total: $(du -sh "$BACKUPS" 2>/dev/null | cut -f1)"
 echo
 
