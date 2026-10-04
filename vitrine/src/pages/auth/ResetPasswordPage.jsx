@@ -1,31 +1,37 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { AlertCircle } from 'lucide-react'
 import { AuthShell } from './AuthShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field } from '@/components/ui/label'
 import { useAuth } from '@/contexts/AuthContext'
-import { useDocumentMeta } from '@/hooks/use-utils'
+import { useDocumentMeta } from '@/hooks/use-seo'
+import { PRIVATE_ROBOTS } from '@/lib/seo'
 import { toast } from '@/components/ui/toast'
 
 const MIN_PASSWORD = 8
 
 /**
- * Destino do link enviado por e-mail. O Supabase detecta o token na URL
- * (`detectSessionInUrl`) e cria uma sessão temporária — por isso aqui basta
- * chamar `updateUser`.
+ * Destino do link enviado por e-mail (`/redefinir-senha?token=…`).
+ *
+ * O token vale uma vez e por uma hora; quem confere é o servidor, no envio. A
+ * senha nova encerra todas as sessões da conta — inclusive a de quem tivesse
+ * descoberto a antiga — e já abre uma sessão aqui.
  */
 export function ResetPasswordPage() {
-  const { updatePassword, isAuthenticated, loading } = useAuth()
+  const { resetPassword } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const token = searchParams.get('token') ?? ''
 
   const [password, setPassword] = useState('')
   const [confirmation, setConfirmation] = useState('')
   const [error, setError] = useState(null)
+  const [expired, setExpired] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  useDocumentMeta({ title: 'Definir nova senha' })
+  useDocumentMeta({ title: 'Definir nova senha', robots: PRIVATE_ROBOTS })
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -42,27 +48,26 @@ export function ResetPasswordPage() {
 
     setSubmitting(true)
     try {
-      await updatePassword(password)
+      await resetPassword(token, password)
       toast.success('Senha atualizada com sucesso.')
       navigate('/admin', { replace: true })
     } catch (submitError) {
-      setError(submitError.message)
+      if (submitError.code === 'invalid_token') setExpired(true)
+      else setError(submitError.message)
     } finally {
       setSubmitting(false)
     }
   }
-
-  const linkExpired = !loading && !isAuthenticated
 
   return (
     <AuthShell
       title="Definir nova senha"
       description="Escolha uma senha que você ainda não use em outros serviços."
     >
-      {linkExpired ? (
+      {!token || expired ? (
         <div
           role="alert"
-          className="border-destructive/25 bg-destructive/5 text-destructive space-y-3 rounded-md border p-4 text-sm"
+          className="border-danger bg-danger-subtle text-danger space-y-2 rounded-2 border p-3 fs-7"
         >
           <p className="text-pretty">
             Este link de redefinição é inválido ou já expirou. Solicite um novo para continuar.
@@ -72,13 +77,13 @@ export function ResetPasswordPage() {
           </Button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+        <form onSubmit={handleSubmit} className="space-y-3" noValidate>
           {error ? (
             <div
               role="alert"
-              className="border-destructive/25 bg-destructive/5 text-destructive flex items-start gap-2.5 rounded-md border p-3 text-sm"
+              className="border-danger bg-danger-subtle text-danger d-flex align-items-start gap-2 rounded-2 border p-2 fs-7"
             >
-              <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+              <AlertCircle className="mt-1 icon flex-shrink-0" aria-hidden="true" />
               <span>{error}</span>
             </div>
           ) : null}
@@ -111,7 +116,7 @@ export function ResetPasswordPage() {
             )}
           </Field>
 
-          <Button type="submit" size="lg" className="w-full" loading={submitting}>
+          <Button type="submit" size="lg" className="w-100" loading={submitting}>
             Salvar nova senha
           </Button>
         </form>

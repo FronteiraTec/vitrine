@@ -145,13 +145,13 @@ export function InitiativesAdminPage() {
       />
 
       {/* Filtros ---------------------------------------------------------- */}
-      <div className="border-border bg-card mb-5 flex flex-col gap-3 rounded-lg border p-4 lg:flex-row lg:items-center">
-        <div className="relative flex-1">
-          <label htmlFor="admin-busca" className="sr-only">
+      <div className="border bg-body mb-3 d-flex flex-column gap-2 rounded-3 p-3 flex-lg-row align-items-lg-center">
+        <div className="position-relative flex-grow-1">
+          <label htmlFor="admin-busca" className="visually-hidden">
             Buscar iniciativas
           </label>
           <Search
-            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+            className="text-body-secondary pe-none position-absolute top-50 start-0 icon translate-middle-y"
             aria-hidden="true"
           />
           <Input
@@ -163,11 +163,11 @@ export function InitiativesAdminPage() {
               setPage(1)
             }}
             placeholder="Buscar por nome, tema, responsável…"
-            className="pl-9"
+            className="ps-5"
           />
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="d-flex flex-wrap gap-2">
           <Select
             value={status}
             onValueChange={(value) => {
@@ -175,7 +175,7 @@ export function InitiativesAdminPage() {
               setPage(1)
             }}
           >
-            <SelectTrigger className="w-40" aria-label="Filtrar por status">
+            <SelectTrigger className="w-fx-40" aria-label="Filtrar por status">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -195,7 +195,7 @@ export function InitiativesAdminPage() {
               setPage(1)
             }}
           >
-            <SelectTrigger className="w-44" aria-label="Filtrar por categoria">
+            <SelectTrigger className="w-fx-44" aria-label="Filtrar por categoria">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -232,72 +232,72 @@ export function InitiativesAdminPage() {
       ) : (
         <>
           {/* Tabela (>= md) ---------------------------------------------- */}
-          <div className="border-border bg-card hidden overflow-hidden rounded-lg border md:block">
+          <div className="border bg-body d-none overflow-hidden rounded-3 d-md-block">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <caption className="sr-only">
+              <table className="table table-hover align-middle fs-7 mb-0">
+                <caption className="visually-hidden">
                   Lista de iniciativas com status, categoria, autor e última alteração
                 </caption>
-                <thead className="bg-muted/60 text-muted-foreground">
-                  <tr className="text-left">
-                    <th scope="col" className="px-4 py-3 font-medium">
+                <thead className="bg-body-tertiary text-body-secondary">
+                  <tr className="text-start">
+                    <th scope="col" className="px-3 py-2 fw-medium">
                       Iniciativa
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 fw-medium">
                       Categoria
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 fw-medium">
                       Status
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 fw-medium">
                       Autor
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium whitespace-nowrap">
+                    <th scope="col" className="px-3 py-2 fw-medium text-nowrap">
                       Alterada
                     </th>
-                    <th scope="col" className="px-4 py-3">
-                      <span className="sr-only">Ações</span>
+                    <th scope="col" className="px-3 py-2">
+                      <span className="visually-hidden">Ações</span>
                     </th>
                   </tr>
                 </thead>
-                <tbody className={isFetching && !isPending ? 'opacity-60' : undefined}>
+                <tbody className={isFetching && !isPending ? 'opacity-50' : undefined}>
                   {isPending ? (
                     <TableRowsSkeleton rows={8} cols={6} />
                   ) : (
                     items.map((initiative) => (
                       <tr
                         key={initiative.id}
-                        className="border-border hover:bg-muted/40 border-t transition-colors"
+                        className="border border-top"
                       >
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
+                        <td className="px-3 py-2">
+                          <div className="d-flex align-items-center gap-2">
                             <Image
                               src={initiative.cover_image}
                               alt=""
-                              ratio="size-10"
-                              wrapperClassName="rounded-md shrink-0"
+                              ratio="ratio-1x1 w-fx-10"
+                              wrapperClassName="rounded-2 flex-shrink-0"
                             />
                             <Link
                               to={`/admin/iniciativas/${initiative.id}`}
-                              className="hover:text-brand line-clamp-2 max-w-xs font-medium transition-colors"
+                              className="line-clamp-2 mw-xs fw-medium"
                             >
                               {initiative.name}
                             </Link>
                           </div>
                         </td>
-                        <td className="text-muted-foreground px-4 py-3">
+                        <td className="text-body-secondary px-3 py-2">
                           {initiative.category?.name ?? '—'}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-2">
                           <StatusBadge status={initiative.status} size="sm" />
                         </td>
-                        <td className="text-muted-foreground max-w-32 truncate px-4 py-3">
+                        <td className="text-body-secondary max-w-fx-32 text-truncate px-3 py-2">
                           {initiative.author?.name ?? '—'}
                         </td>
-                        <td className="text-muted-foreground px-4 py-3 whitespace-nowrap">
+                        <td className="text-body-secondary px-3 py-2 text-nowrap">
                           {formatRelative(initiative.updated_at)}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-3 py-2 text-end">
                           <RowActions initiative={initiative} onDelete={setToDelete} />
                         </td>
                       </tr>
@@ -309,38 +309,38 @@ export function InitiativesAdminPage() {
           </div>
 
           {/* Cartões (< md) ---------------------------------------------- */}
-          <ul className="space-y-3 md:hidden">
+          <ul className="space-y-2 d-md-none">
             {isPending
               ? Array.from({ length: 5 }, (_, index) => (
                   <li key={index}>
-                    <Skeleton className="h-24" />
+                    <Skeleton className="h-fx-24" />
                   </li>
                 ))
               : items.map((initiative) => (
                   <li
                     key={initiative.id}
-                    className="border-border bg-card flex gap-3 rounded-lg border p-3"
+                    className="border bg-body d-flex gap-2 rounded-3 p-2"
                   >
                     <Image
                       src={initiative.cover_image}
                       alt=""
-                      ratio="size-14"
-                      wrapperClassName="rounded-md shrink-0"
+                      ratio="ratio-1x1 w-fx-14"
+                      wrapperClassName="rounded-2 flex-shrink-0"
                     />
-                    <div className="min-w-0 flex-1 space-y-1.5">
+                    <div className="min-w-0 flex-grow-1 space-y-1">
                       <Link
                         to={`/admin/iniciativas/${initiative.id}`}
-                        className="line-clamp-2 block text-sm font-medium"
+                        className="line-clamp-2 d-block fs-7 fw-medium"
                       >
                         {initiative.name}
                       </Link>
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="d-flex flex-wrap align-items-center gap-2">
                         <StatusBadge status={initiative.status} size="sm" />
-                        <span className="text-muted-foreground text-xs">
+                        <span className="text-body-secondary fs-8">
                           {initiative.category?.name}
                         </span>
                       </div>
-                      <p className="text-muted-foreground text-xs">
+                      <p className="text-body-secondary fs-8">
                         {formatRelative(initiative.updated_at)}
                       </p>
                     </div>
@@ -372,14 +372,14 @@ export function InitiativesAdminPage() {
                   </Button>
                 )
               }
-              className="bg-card"
+              className="bg-body"
             />
           ) : null}
 
           {data && data.pageCount > 1 ? (
-            <div className="mt-6 flex flex-col items-center gap-3">
+            <div className="mt-4 d-flex flex-column align-items-center gap-2">
               <Pagination page={data.page} pageCount={data.pageCount} onPageChange={setPage} />
-              <p className="text-muted-foreground text-xs tabular-nums">
+              <p className="text-body-secondary fs-8 tabular-nums">
                 {data.total} {data.total === 1 ? 'iniciativa' : 'iniciativas'} no total
               </p>
             </div>

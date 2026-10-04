@@ -14,11 +14,14 @@ import {
   useFeaturedInitiatives,
   useLatestNews,
 } from '@/hooks/use-queries'
-import { useDocumentMeta } from '@/hooks/use-utils'
+import { useDocumentMeta } from '@/hooks/use-seo'
+import { useLocale } from '@/contexts/LocaleContext'
+import { newsListPath } from '@/i18n/config'
 
 function Hero() {
   const [term, setTerm] = useState('')
   const navigate = useNavigate()
+  const { t } = useLocale()
 
   function handleSubmit(event) {
     event.preventDefault()
@@ -27,42 +30,38 @@ function Hero() {
   }
 
   return (
-    <section className="hero-gradient text-primary-foreground relative overflow-hidden">
+    <section className="hero-gradient text-white position-relative overflow-hidden">
       {/* Anéis concêntricos discretos — motivo recorrente na comunicação da INNE */}
       <div
-        className="pointer-events-none absolute -top-20 -right-20 size-80 rounded-full border border-white/10 sm:-top-28 sm:-right-28 sm:size-[26rem]"
+        className="pe-none hero-blob hero-blob-1"
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none absolute -top-32 -right-32 size-96 rounded-full border border-white/[0.06] sm:-top-44 sm:-right-44 sm:size-[34rem]"
+        className="pe-none hero-blob hero-blob-2"
         aria-hidden="true"
       />
 
-      <div className="container-page relative py-20 sm:py-28 lg:py-32">
-        <div className="max-w-3xl">
-          <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium tracking-[0.08em] uppercase">
-            <Compass className="size-3.5" aria-hidden="true" />
-            Catálogo institucional
+      <div className="container position-relative py-5">
+        <div className="mw-3xl hero-reveal">
+          <p className="mb-3 d-inline-flex align-items-center gap-2 rounded-pill bg-white opacity-25 px-2 py-1 fs-8 fw-medium text-uppercase">
+            <Compass className="icon-sm" aria-hidden="true" />
+            {t('home.hero.eyebrow')}
           </p>
 
-          <h1 className="font-display text-4xl leading-[1.08] text-balance-title sm:text-5xl lg:text-6xl">
-            Conheça as iniciativas que transformam nossa instituição
-          </h1>
+          <h1 className="fw-bold fs-2 text-balance fs-sm-1">{t('home.hero.title')}</h1>
 
-          <p className="mt-6 max-w-xl text-base leading-relaxed opacity-80 sm:text-lg">
-            Projetos, laboratórios, grupos de pesquisa, empresas juniores e programas de extensão
-            reunidos em um catálogo público, aberto a quem quiser conhecer, colaborar ou fazer
-            parte.
+          <p className="mt-4 mw-xl fs-6 lh-base opacity-75 fs-sm-5">
+            {t('home.hero.description')}
           </p>
 
-          <form onSubmit={handleSubmit} className="mt-9 max-w-xl" role="search">
-            <label htmlFor="hero-search" className="sr-only">
-              Pesquisar iniciativas
+          <form onSubmit={handleSubmit} className="mt-5 mw-xl" role="search">
+            <label htmlFor="hero-search" className="visually-hidden">
+              {t('home.hero.searchLabel')}
             </label>
-            <div className="flex flex-col gap-2.5 sm:flex-row">
-              <div className="relative flex-1">
+            <div className="d-flex flex-column gap-2 flex-sm-row">
+              <div className="position-relative flex-grow-1">
                 <Search
-                  className="pointer-events-none absolute top-1/2 left-4 size-4.5 -translate-y-1/2 text-muted-foreground"
+                  className="pe-none position-absolute top-50 start-0 icon translate-middle-y text-body-secondary"
                   aria-hidden="true"
                 />
                 <input
@@ -70,33 +69,33 @@ function Hero() {
                   type="search"
                   value={term}
                   onChange={(event) => setTerm(event.target.value)}
-                  placeholder="Pesquisar por nome, área, tema…"
-                  className="text-foreground focus-visible:ring-primary-foreground/40 h-13 w-full rounded-md bg-white py-3.5 pr-4 pl-11 text-sm shadow-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2"
+                  placeholder={t('home.hero.searchPlaceholder')}
+                  className="text-body h-fx-13 w-100 rounded-2 bg-white py-2 pe-3 ps-5 fs-7 shadow-sm"
                 />
               </div>
               <Button
                 type="submit"
                 size="lg"
-                className="bg-primary-foreground text-primary h-13 shrink-0 hover:bg-white/90"
+                className="bg-white text-primary h-fx-13 flex-shrink-0"
               >
-                Buscar
+                {t('home.hero.searchButton')}
               </Button>
             </div>
           </form>
 
-          <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+          <div className="mt-4 d-flex flex-wrap align-items-center column-gap-3 row-gap-2 fs-7">
             <Link
               to="/buscar"
-              className="inline-flex items-center gap-1.5 font-medium underline-offset-4 opacity-90 transition-opacity hover:opacity-100 hover:underline"
+              className="d-inline-flex align-items-center gap-1 fw-medium opacity-100 hover-underline"
             >
-              Explorar todas as iniciativas
-              <ArrowRight className="size-4" aria-hidden="true" />
+              {t('common.exploreAll')}
+              <ArrowRight className="icon" aria-hidden="true" />
             </Link>
             <Link
               to="/categorias"
-              className="inline-flex items-center gap-1.5 opacity-70 underline-offset-4 transition-opacity hover:opacity-100 hover:underline"
+              className="d-inline-flex align-items-center gap-1 opacity-75 hover-underline"
             >
-              Navegar por categoria
+              {t('home.hero.browseCategories')}
             </Link>
           </div>
         </div>
@@ -107,14 +106,14 @@ function Hero() {
 
 function SectionHeading({ eyebrow, title, description, action }) {
   return (
-    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div className="max-w-2xl space-y-2">
+    <div className="mb-5 d-flex flex-column gap-3 flex-sm-row align-items-sm-end justify-content-sm-between">
+      <div className="mw-2xl space-y-2">
         {eyebrow ? (
-          <p className="text-brand text-xs font-semibold tracking-[0.12em] uppercase">{eyebrow}</p>
+          <p className="text-primary fs-8 fw-semibold text-uppercase">{eyebrow}</p>
         ) : null}
-        <h2 className="font-display text-3xl leading-tight sm:text-[2rem]">{title}</h2>
+        <h2 className="fw-bold fs-3 lh-sm fs-sm-3">{title}</h2>
         {description ? (
-          <p className="text-muted-foreground leading-relaxed text-pretty">{description}</p>
+          <p className="text-body-secondary lh-base text-pretty">{description}</p>
         ) : null}
       </div>
       {action}
@@ -124,17 +123,18 @@ function SectionHeading({ eyebrow, title, description, action }) {
 
 function CategoriesSection() {
   const { data, isPending, isError, refetch } = useCategoriesWithCounts()
+  const { t } = useLocale()
 
   return (
-    <section className="container-page py-16 sm:py-20">
+    <section className="container py-5 py-sm-5">
       <SectionHeading
-        eyebrow="Categorias"
-        title="Por onde você quer começar?"
-        description="Cada categoria reúne um tipo de iniciativa. Elas são definidas pela própria instituição e evoluem junto com o catálogo."
+        eyebrow={t('home.categories.eyebrow')}
+        title={t('home.categories.title')}
+        description={t('home.categories.description')}
         action={
-          <Button variant="outline" asChild className="shrink-0">
+          <Button variant="outline" asChild className="flex-shrink-0">
             <Link to="/categorias">
-              Ver todas
+              {t('common.seeAll')}
               <ArrowRight aria-hidden="true" />
             </Link>
           </Button>
@@ -142,20 +142,17 @@ function CategoriesSection() {
       />
 
       {isError ? (
-        <ErrorState
-          description="Não conseguimos carregar as categorias agora."
-          onRetry={() => refetch()}
-        />
+        <ErrorState description={t('home.categories.error')} onRetry={() => refetch()} />
       ) : isPending ? (
-        <div className="flex gap-4 overflow-hidden">
+        <div className="d-flex gap-3 overflow-hidden">
           {Array.from({ length: 4 }, (_, index) => (
-            <Skeleton key={index} className="h-80 w-[82%] shrink-0 sm:w-[46%] lg:w-[31.5%]" />
+            <Skeleton key={index} className="h-fx-80 carousel-slide" />
           ))}
         </div>
       ) : data.length === 0 ? (
         <EmptyState
-          title="Nenhuma categoria cadastrada"
-          description="Assim que a administração criar as primeiras categorias, elas aparecerão aqui."
+          title={t('categories.emptyTitle')}
+          description={t('categories.emptyDescription')}
         />
       ) : (
         /*
@@ -163,10 +160,10 @@ function CategoriesSection() {
          * primeiros: com rolagem lateral não há uma fileira para estourar, e
          * cortar a lista esconderia categorias sem motivo.
          */
-        <Carousel label="Categorias do catálogo" autoPlay>
+        <Carousel label={t('home.categories.carouselLabel')} autoPlay>
           {data.map((category) => (
             <CarouselItem key={category.id}>
-              <CategoryCard category={category} className="h-full" />
+              <CategoryCard category={category} className="h-100" />
             </CarouselItem>
           ))}
         </Carousel>
@@ -177,18 +174,19 @@ function CategoriesSection() {
 
 function FeaturedSection() {
   const { data, isPending, isError, refetch } = useFeaturedInitiatives(6)
+  const { t } = useLocale()
 
   return (
-    <section className="bg-muted/50 border-border border-y">
-      <div className="container-page py-16 sm:py-20">
+    <section className="bg-body-tertiary border border-top border-bottom">
+      <div className="container py-5 py-sm-5">
         <SectionHeading
-          eyebrow="Publicadas recentemente"
-          title="Iniciativas em destaque"
-          description="As adições mais recentes ao catálogo, de laboratórios de pesquisa a programas que atendem a comunidade."
+          eyebrow={t('home.featured.eyebrow')}
+          title={t('home.featured.title')}
+          description={t('home.featured.description')}
           action={
-            <Button variant="outline" asChild className="shrink-0">
+            <Button variant="outline" asChild className="flex-shrink-0">
               <Link to="/buscar">
-                Ver tudo
+                {t('common.seeEverything')}
                 <ArrowRight aria-hidden="true" />
               </Link>
             </Button>
@@ -196,16 +194,13 @@ function FeaturedSection() {
         />
 
         {isError ? (
-          <ErrorState
-            description="Não conseguimos carregar as iniciativas agora."
-            onRetry={() => refetch()}
-          />
+          <ErrorState description={t('home.featured.error')} onRetry={() => refetch()} />
         ) : isPending ? (
           <InitiativeGridSkeleton count={6} />
         ) : data.length === 0 ? (
           <EmptyState
-            title="Nenhuma iniciativa publicada ainda"
-            description="O catálogo está pronto — assim que o primeiro conteúdo for publicado, ele aparece aqui."
+            title={t('home.featured.emptyTitle')}
+            description={t('home.featured.emptyDescription')}
           />
         ) : (
           <InitiativeGrid initiatives={data} />
@@ -216,7 +211,10 @@ function FeaturedSection() {
 }
 
 function NewsSection() {
-  const { data, isPending, isError } = useLatestNews(3)
+  const { t, locale } = useLocale()
+  // A home não tem endereço por idioma: cada notícia vem traduzida quando há
+  // tradução no idioma do leitor, e no original quando não há.
+  const { data, isPending, isError } = useLatestNews(3, { locale })
 
   // Diferente das outras seções, uma falha aqui não vira estado de erro na
   // tela: notícia é conteúdo complementar na home, e um bloco quebrado no meio
@@ -224,15 +222,15 @@ function NewsSection() {
   if (isError || (!isPending && !data?.length)) return null
 
   return (
-    <section className="container-page py-16 sm:py-20">
+    <section className="container py-5 py-sm-5">
       <SectionHeading
-        eyebrow="Notícias"
-        title="Últimas novidades"
-        description="Comunicados, editais e avanços das iniciativas da instituição."
+        eyebrow={t('home.news.eyebrow')}
+        title={t('home.news.title')}
+        description={t('home.news.description')}
         action={
-          <Button variant="outline" asChild className="shrink-0">
-            <Link to="/noticias">
-              Ver todas
+          <Button variant="outline" asChild className="flex-shrink-0">
+            <Link to={newsListPath(locale)}>
+              {t('common.seeAll')}
               <ArrowRight aria-hidden="true" />
             </Link>
           </Button>
@@ -240,9 +238,9 @@ function NewsSection() {
       />
 
       {isPending ? (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="d-grid grid-cols-1 gap-3 grid-cols-sm-2 grid-cols-lg-3">
           {Array.from({ length: 3 }, (_, index) => (
-            <Skeleton key={index} className="h-80" />
+            <Skeleton key={index} className="h-fx-80" />
           ))}
         </div>
       ) : (
@@ -253,10 +251,8 @@ function NewsSection() {
 }
 
 export function HomePage() {
-  useDocumentMeta({
-    description:
-      'Catálogo público de projetos, laboratórios, grupos de pesquisa, empresas juniores e iniciativas da instituição.',
-  })
+  const { t } = useLocale()
+  useDocumentMeta({ description: t('home.metaDescription') })
 
   return (
     <>

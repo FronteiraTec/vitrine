@@ -1,0 +1,10 @@
+# Arquivos que rodam dentro dos containers Linux saem sempre com LF, mesmo num
+# clone no Windows com core.autocrlf: um script com CRLF quebra no Alpine
+# ("/bin/sh^M: not found").
+*.sh        text eol=lf
+*.conf      text eol=lf
+Dockerfile  text eol=lf
+docker/**   text eol=lf
+
+# Migrations têm checksum: o mesmo conteúdo em todo clone, Windows incluso.
+*.sql       text eol=lf

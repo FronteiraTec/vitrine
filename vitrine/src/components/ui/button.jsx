@@ -1,33 +1,40 @@
 import { Slot } from '@radix-ui/react-slot'
 import { cva } from 'class-variance-authority'
 import { Loader2 } from 'lucide-react'
+import { useLocale } from '@/contexts/LocaleContext'
 import { cn } from '@/lib/utils'
 
-const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-[background-color,color,box-shadow,border-color] duration-150 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
-  {
-    variants: {
-      variant: {
-        primary: 'bg-primary text-primary-foreground shadow-subtle hover:bg-primary-hover',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-accent',
-        outline: 'border border-border bg-card hover:bg-muted text-foreground shadow-subtle',
-        ghost: 'text-foreground hover:bg-muted',
-        subtle: 'text-muted-foreground hover:bg-muted hover:text-foreground',
-        destructive:
-          'bg-destructive text-destructive-foreground shadow-subtle hover:bg-destructive/90',
-        link: 'text-brand underline-offset-4 hover:underline',
-      },
-      size: {
-        sm: 'h-8 px-3 text-[0.8125rem] [&_svg]:size-4',
-        md: 'h-10 px-4 [&_svg]:size-4',
-        lg: 'h-12 px-6 text-base [&_svg]:size-5',
-        icon: 'size-10 [&_svg]:size-4',
-        'icon-sm': 'size-8 [&_svg]:size-4',
-      },
+/*
+ * Variantes mapeadas para as classes do Bootstrap.
+ *
+ * `ghost` e `subtle` não existem no Bootstrap e foram escritas no SCSS do
+ * projeto pela API `--bs-btn-*` dele — assim herdam foco, estado desabilitado e
+ * o tema escuro do alto contraste sem nenhuma regra extra.
+ *
+ * `icon` também é nosso: o Bootstrap dimensiona o botão pelo texto, e sem isso
+ * um botão só de ícone sairia retangular.
+ */
+const buttonVariants = cva('btn d-inline-flex align-items-center justify-content-center gap-2', {
+  variants: {
+    variant: {
+      primary: 'btn-primary',
+      secondary: 'btn-secondary',
+      outline: 'btn-outline-secondary',
+      ghost: 'btn-ghost',
+      subtle: 'btn-subtle',
+      destructive: 'btn-danger',
+      link: 'btn-link text-decoration-none',
     },
-    defaultVariants: { variant: 'primary', size: 'md' },
+    size: {
+      sm: 'btn-sm',
+      md: '',
+      lg: 'btn-lg',
+      icon: 'btn-icon',
+      'icon-sm': 'btn-icon btn-sm',
+    },
   },
-)
+  defaultVariants: { variant: 'primary', size: 'md' },
+})
 
 export function Button({
   className,
@@ -40,6 +47,7 @@ export function Button({
   ...props
 }) {
   const classes = cn(buttonVariants({ variant, size }), className)
+  const { t } = useLocale()
 
   /*
    * O caminho `asChild` é tratado separadamente porque o Slot do Radix exige
@@ -64,8 +72,8 @@ export function Button({
     >
       {loading ? (
         <>
-          <Loader2 className="animate-spin" aria-hidden="true" />
-          <span className="sr-only">Carregando</span>
+          <span className="spinner-border spinner-border-sm" aria-hidden="true" />
+          <span className="visually-hidden">{t('common.loading')}</span>
         </>
       ) : null}
       {children}
@@ -73,4 +81,4 @@ export function Button({
   )
 }
 
-export { buttonVariants }
+export { buttonVariants, Loader2 }

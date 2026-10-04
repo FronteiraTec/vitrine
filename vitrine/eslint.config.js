@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist', '.smoke']),
+  globalIgnores(['dist', '.smoke', 'server/node_modules', '.uploads']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
@@ -41,8 +41,8 @@ export default defineConfig([
     },
   },
   {
-    // Scripts de build rodam no Node, não no navegador.
-    files: ['scripts/**/*.{js,jsx,mjs}', '*.config.js'],
+    // Scripts de build e a API rodam no Node, não no navegador.
+    files: ['scripts/**/*.{js,jsx,mjs}', 'server/**/*.js', '*.config.js'],
     languageOptions: { globals: { ...globals.node } },
     rules: {
       'react-refresh/only-export-components': 'off',

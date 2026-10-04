@@ -8,8 +8,9 @@ export const AlertDialogTrigger = AlertDialogPrimitive.Trigger
 
 /**
  * Confirmação para ações destrutivas ou irreversíveis.
- * O botão de confirmação recebe foco apenas por teclado; o padrão do Radix
- * mantém o cancelamento como ação segura ao pressionar Esc.
+ *
+ * O padrão do Radix mantém o cancelamento como ação segura ao pressionar Esc —
+ * razão pela qual a primitiva foi mantida na migração para o Bootstrap.
  */
 export function ConfirmDialog({
   open,
@@ -25,24 +26,27 @@ export function ConfirmDialog({
   return (
     <AlertDialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <AlertDialogPrimitive.Portal>
-        <AlertDialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-[2px]" />
-        <AlertDialogPrimitive.Content className="bg-card shadow-float data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 fixed top-1/2 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border p-6">
-          <div className="flex gap-4">
+        <AlertDialogPrimitive.Overlay className="dialog-overlay" />
+        <AlertDialogPrimitive.Content className="dialog-panel dialog-sm p-4">
+          <div className="d-flex gap-3">
             {destructive ? (
-              <div className="bg-destructive/10 text-destructive flex size-10 shrink-0 items-center justify-center rounded-full">
-                <AlertTriangle className="size-5" aria-hidden="true" />
+              <div
+                className="d-flex align-items-center justify-content-center rounded-circle bg-danger-subtle text-danger flex-shrink-0"
+                style={{ width: '2.5rem', height: '2.5rem' }}
+              >
+                <AlertTriangle className="icon-lg" aria-hidden="true" />
               </div>
             ) : null}
-            <div className="space-y-1.5">
-              <AlertDialogPrimitive.Title className="text-base leading-tight font-semibold">
-                {title}
-              </AlertDialogPrimitive.Title>
-              <AlertDialogPrimitive.Description className="text-muted-foreground text-sm">
+
+            <div>
+              <AlertDialogPrimitive.Title className="h6 mb-1">{title}</AlertDialogPrimitive.Title>
+              <AlertDialogPrimitive.Description className="text-body-secondary small mb-0">
                 {description}
               </AlertDialogPrimitive.Description>
             </div>
           </div>
-          <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+
+          <div className="mt-4 d-flex flex-column-reverse flex-sm-row justify-content-sm-end gap-2">
             <AlertDialogPrimitive.Cancel
               className={cn(buttonVariants({ variant: 'outline' }))}
               disabled={loading}

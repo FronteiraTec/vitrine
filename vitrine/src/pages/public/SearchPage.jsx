@@ -23,7 +23,10 @@ import {
   useInitiativeSearch,
   useTags,
 } from '@/hooks/use-queries'
-import { useDebouncedValue, useDocumentMeta } from '@/hooks/use-utils'
+import { useDebouncedValue } from '@/hooks/use-utils'
+import { useDocumentMeta } from '@/hooks/use-seo'
+import { useLocale } from '@/contexts/LocaleContext'
+import { DEFAULT_LOCALE } from '@/i18n/config'
 import { PAGE_SIZE, SORT_OPTIONS } from '@/lib/constants'
 import { Search } from 'lucide-react'
 
@@ -80,31 +83,35 @@ function useSearchState() {
 }
 
 function ActiveFilterChips({ chips, onRemove, onClear }) {
+  const { t, locale } = useLocale()
   if (chips.length === 0) return null
+  // O rótulo do filtro é o nome da categoria, área ou tag — texto do banco.
+  const catalogLang = locale === DEFAULT_LOCALE ? undefined : DEFAULT_LOCALE
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="text-muted-foreground text-xs font-medium">Filtros ativos:</span>
+    <div className="d-flex flex-wrap align-items-center gap-2">
+      <span className="text-body-secondary fs-8 fw-medium">{t('search.activeFilters')}</span>
       {chips.map((chip) => (
         <button
           key={`${chip.group}-${chip.value}`}
           type="button"
           onClick={() => onRemove(chip.group, chip.value)}
-          className="bg-accent text-accent-foreground ring-brand/20 hover:bg-brand hover:text-primary-foreground inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset transition-colors"
+          className="bg-primary-subtle text-primary-emphasis d-inline-flex align-items-center gap-1 rounded-pill px-2 py-1 fs-8 fw-medium"
         >
-          {chip.label}
-          <X className="size-3" aria-hidden="true" />
-          <span className="sr-only">Remover filtro</span>
+          <span lang={catalogLang}>{chip.label}</span>
+          <X className="icon-sm" aria-hidden="true" />
+          <span className="visually-hidden">{t('search.removeFilter')}</span>
         </button>
       ))}
       <Button variant="subtle" size="sm" onClick={onClear}>
-        Limpar
+        {t('search.clear')}
       </Button>
     </div>
   )
 }
 
 export function SearchPage() {
+  const { t } = useLocale()
   const [state, update] = useSearchState()
   const [term, setTerm] = useState(state.q)
   const debouncedTerm = useDebouncedValue(term, 350)
@@ -122,9 +129,8 @@ export function SearchPage() {
   }
 
   useDocumentMeta({
-    title: state.q ? `Busca: ${state.q}` : 'Explorar iniciativas',
-    description:
-      'Pesquise projetos, laboratórios, grupos de pesquisa e programas por nome, área, categoria ou tema.',
+    title: state.q ? t('search.metaTitleQuery', { query: state.q }) : t('search.metaTitle'),
+    description: t('search.metaDescription'),
   })
 
   const { data: categories = [], isPending: categoriesLoading } = useCategoriesWithCounts()
@@ -182,16 +188,16 @@ export function SearchPage() {
       ...state.categories.map((id) => ({
         group: 'categories',
         value: id,
-        label: categoryLabels.get(id) ?? 'Categoria',
+        label: categoryLabels.get(id) ?? t('search.categoryFallback'),
       })),
       ...state.areas.map((name) => ({ group: 'areas', value: name, label: name })),
       ...state.tags.map((id) => ({
         group: 'tags',
         value: id,
-        label: tagLabels.get(id) ?? 'Tag',
+        label: tagLabels.get(id) ?? t('search.tagFallback'),
       })),
     ]
-  }, [state, categories, tags])
+  }, [state, categories, tags, t])
 
   const activeFilterCount = chips.length
   const showSkeleton = isPending
@@ -212,20 +218,18 @@ export function SearchPage() {
 
   return (
     <>
-      <div className="border-border bg-muted/40 border-b">
-        <div className="container-page py-10 sm:py-14">
-          <h1 className="font-display text-3xl sm:text-4xl">Explorar iniciativas</h1>
-          <p className="text-muted-foreground mt-2 max-w-2xl text-pretty">
-            Pesquise por nome, descrição, tema, área de atuação, responsável ou localização.
-          </p>
+      <div className="border bg-body-tertiary border-bottom">
+        <div className="container py-5 py-sm-5">
+          <h1 className="fw-bold fs-3 fs-sm-2">{t('search.title')}</h1>
+          <p className="text-body-secondary mt-2 mw-2xl text-pretty">{t('search.description')}</p>
 
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <div className="relative flex-1">
-              <label htmlFor="busca" className="sr-only">
-                Pesquisar iniciativas
+          <div className="mt-4 d-flex flex-column gap-2 flex-sm-row">
+            <div className="position-relative flex-grow-1">
+              <label htmlFor="busca" className="visually-hidden">
+                {t('search.inputLabel')}
               </label>
               <Search
-                className="text-muted-foreground pointer-events-none absolute top-1/2 left-3.5 size-4.5 -translate-y-1/2"
+                className="text-body-secondary pe-none position-absolute top-50 start-0 icon translate-middle-y"
                 aria-hidden="true"
               />
               <Input
@@ -233,70 +237,70 @@ export function SearchPage() {
                 type="search"
                 value={term}
                 onChange={(event) => setTerm(event.target.value)}
-                placeholder="Pesquisar iniciativas…"
-                className="h-12 pl-11"
+                placeholder={t('search.placeholder')}
+                className="h-fx-12 ps-5"
               />
             </div>
 
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" size="lg" className="lg:hidden">
+                <Button variant="outline" size="lg" className="d-lg-none">
                   <SlidersHorizontal aria-hidden="true" />
-                  Filtros
+                  {t('search.filters')}
                   {activeFilterCount > 0 ? (
-                    <Badge size="sm" variant="brand" className="ml-0.5 tabular-nums">
+                    <Badge size="sm" variant="brand" className="ms-1 tabular-nums">
                       {activeFilterCount}
                     </Badge>
                   ) : null}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="bottom" title="Filtros" className="lg:hidden">
-                <div className="p-5">{panel('mobile')}</div>
+              <SheetContent side="bottom" title={t('search.filters')} className="d-lg-none">
+                <div className="p-3">{panel('mobile')}</div>
               </SheetContent>
             </Sheet>
           </div>
         </div>
       </div>
 
-      <div className="container-page py-10">
-        <div className="flex gap-10">
-          <aside className="hidden w-64 shrink-0 lg:block">
-            <div className="sticky top-24">{panel('desktop')}</div>
+      <div className="container py-5">
+        <div className="d-flex gap-5">
+          <aside className="d-none w-fx-64 flex-shrink-0 d-lg-block">
+            <div className="position-sticky top-0">{panel('desktop')}</div>
           </aside>
 
-          <div className="min-w-0 flex-1 space-y-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-muted-foreground text-sm" aria-live="polite" aria-atomic="true">
+          <div className="min-w-0 flex-grow-1 space-y-4">
+            <div className="d-flex flex-column gap-2 flex-sm-row align-items-sm-center justify-content-sm-between">
+              <p className="text-body-secondary fs-7" aria-live="polite" aria-atomic="true">
                 {showSkeleton ? (
-                  'Buscando iniciativas…'
+                  t('search.searching')
                 ) : (
                   <>
-                    <strong className="text-foreground font-semibold tabular-nums">
+                    <strong className="text-body fw-semibold tabular-nums">
                       {data?.total ?? 0}
                     </strong>{' '}
-                    {data?.total === 1 ? 'iniciativa encontrada' : 'iniciativas encontradas'}
+                    {t('search.found', { count: data?.total ?? 0 })}
                     {state.q ? (
                       <>
                         {' '}
-                        para <strong className="text-foreground">“{state.q}”</strong>
+                        {t('search.for')} <strong className="text-body">“{state.q}”</strong>
                       </>
                     ) : null}
                   </>
                 )}
               </p>
 
-              <div className="flex items-center gap-2">
-                <label htmlFor="ordenacao" className="text-muted-foreground shrink-0 text-sm">
-                  Ordenar
+              <div className="d-flex align-items-center gap-2">
+                <label htmlFor="ordenacao" className="text-body-secondary flex-shrink-0 fs-7">
+                  {t('search.sortLabel')}
                 </label>
                 <Select value={state.sort} onValueChange={(value) => update({ sort: value })}>
-                  <SelectTrigger id="ordenacao" size="sm" className="w-44">
+                  <SelectTrigger id="ordenacao" size="sm" className="w-fx-44">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {SORT_OPTIONS.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
-                        {option.label}
+                        {t(`sort.${option.value}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -313,11 +317,11 @@ export function SearchPage() {
             ) : results.length === 0 ? (
               <EmptyState
                 icon={SearchX}
-                title="Nenhuma iniciativa encontrada"
+                title={t('search.emptyTitle')}
                 description={
                   activeFilterCount > 0 || state.q
-                    ? 'Tente remover alguns filtros ou usar termos mais amplos na busca.'
-                    : 'Ainda não há iniciativas publicadas no catálogo.'
+                    ? t('search.emptyFiltered')
+                    : t('search.emptyCatalog')
                 }
                 action={
                   activeFilterCount > 0 || state.q ? (
@@ -328,7 +332,7 @@ export function SearchPage() {
                         update({ q: '', categories: [], areas: [], tags: [] })
                       }}
                     >
-                      Limpar busca e filtros
+                      {t('search.clearAll')}
                     </Button>
                   ) : null
                 }
@@ -336,7 +340,7 @@ export function SearchPage() {
             ) : (
               <>
                 {/* Opacidade sutil enquanto a próxima página carrega, sem remover o conteúdo */}
-                <div className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                <div className={isFetching ? 'opacity-50' : undefined}>
                   <InitiativeGrid initiatives={results} />
                 </div>
 
@@ -347,7 +351,7 @@ export function SearchPage() {
                     update({ page }, { resetPage: false })
                     window.scrollTo({ top: 0, behavior: 'smooth' })
                   }}
-                  className="pt-4"
+                  className="pt-3"
                 />
               </>
             )}

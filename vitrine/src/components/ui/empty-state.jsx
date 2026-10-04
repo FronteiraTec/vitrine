@@ -1,4 +1,5 @@
 import { AlertCircle, Inbox, RefreshCw } from 'lucide-react'
+import { useLocale } from '@/contexts/LocaleContext'
 import { cn } from '@/lib/utils'
 import { Button } from './button'
 
@@ -17,48 +18,59 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'border-border flex flex-col items-center justify-center rounded-lg border border-dashed text-center',
-        compact ? 'gap-2 px-6 py-10' : 'gap-3 px-6 py-16',
+        'd-flex flex-column align-items-center justify-content-center text-center border border-2 border-dashed rounded-3',
+        compact ? 'gap-2 px-4 py-4' : 'gap-3 px-4 py-5',
         className,
       )}
     >
-      <div className="bg-muted text-muted-foreground flex size-11 items-center justify-center rounded-full">
-        <Icon className="size-5" aria-hidden="true" />
+      <div
+        className="d-flex align-items-center justify-content-center rounded-circle bg-body-secondary text-body-secondary"
+        style={{ width: '2.75rem', height: '2.75rem' }}
+      >
+        <Icon className="icon-lg" aria-hidden="true" />
       </div>
-      <div className="space-y-1">
-        <p className="text-foreground text-sm font-semibold">{title}</p>
+
+      <div>
+        <p className="fw-semibold mb-1">{title}</p>
         {description ? (
-          <p className="text-muted-foreground mx-auto max-w-sm text-sm text-pretty">{description}</p>
+          <p className="text-body-secondary small mb-0 mx-auto text-pretty" style={{ maxWidth: '24rem' }}>
+            {description}
+          </p>
         ) : null}
       </div>
+
       {action ? <div className="mt-2">{action}</div> : null}
     </div>
   )
 }
 
 /** Estado de erro com ação de nova tentativa. */
-export function ErrorState({ title = 'Não foi possível carregar', description, onRetry, className }) {
+export function ErrorState({ title, description, onRetry, className }) {
+  const { t } = useLocale()
+
   return (
     <div
       role="alert"
       className={cn(
-        'border-destructive/25 bg-destructive/5 flex flex-col items-center justify-center gap-3 rounded-lg border px-6 py-12 text-center',
+        'alert alert-danger d-flex flex-column align-items-center justify-content-center gap-3 text-center py-4',
         className,
       )}
     >
-      <div className="bg-destructive/10 text-destructive flex size-11 items-center justify-center rounded-full">
-        <AlertCircle className="size-5" aria-hidden="true" />
-      </div>
-      <div className="space-y-1">
-        <p className="text-foreground text-sm font-semibold">{title}</p>
+      <AlertCircle className="icon-xl" aria-hidden="true" />
+
+      <div>
+        <p className="fw-semibold mb-1">{title ?? t('common.errorTitle')}</p>
         {description ? (
-          <p className="text-muted-foreground mx-auto max-w-md text-sm text-pretty">{description}</p>
+          <p className="small mb-0 mx-auto text-pretty" style={{ maxWidth: '30rem' }}>
+            {description}
+          </p>
         ) : null}
       </div>
+
       {onRetry ? (
-        <Button variant="outline" size="sm" onClick={onRetry} className="mt-1">
-          <RefreshCw aria-hidden="true" />
-          Tentar novamente
+        <Button variant="outline" size="sm" onClick={onRetry}>
+          <RefreshCw className="icon" aria-hidden="true" />
+          {t('common.retry')}
         </Button>
       ) : null}
     </div>

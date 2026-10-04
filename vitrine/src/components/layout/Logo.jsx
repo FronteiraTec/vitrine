@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useSiteSettings } from '@/hooks/use-queries'
+import { useLocale } from '@/contexts/LocaleContext'
 import { cn } from '@/lib/utils'
 
 /**
@@ -12,6 +13,7 @@ import { cn } from '@/lib/utils'
  */
 export function Logo({ to = '/', className, compact = false, inverted = false }) {
   const { brandName, brandTagline, logoUrl } = useSiteSettings()
+  const { t } = useLocale()
 
   const content = (
     <>
@@ -19,16 +21,16 @@ export function Logo({ to = '/', className, compact = false, inverted = false })
         src={logoUrl}
         alt=""
         aria-hidden="true"
-        className="size-9 shrink-0 object-contain"
+        className="h-fx-9 w-fx-9 flex-shrink-0 object-fit-contain"
       />
       {!compact ? (
-        <span className="flex flex-col leading-none">
-          <span className="font-display text-xl tracking-tight">{brandName}</span>
+        <span className="d-flex flex-column lh-1">
+          <span className="fw-bold fs-5 tracking-tight">{brandName}</span>
           {brandTagline ? (
             <span
               className={cn(
-                'mt-0.5 text-[0.625rem] font-medium tracking-[0.16em] uppercase',
-                inverted ? 'opacity-70' : 'text-muted-foreground',
+                'mt-1 fw-medium text-uppercase',
+                inverted ? 'opacity-75' : 'text-body-secondary',
               )}
             >
               {brandTagline}
@@ -40,14 +42,14 @@ export function Logo({ to = '/', className, compact = false, inverted = false })
   )
 
   const classes = cn(
-    'flex items-center gap-2.5 rounded-md transition-opacity hover:opacity-85',
+    'd-flex align-items-center gap-2 rounded-2',
     className,
   )
 
   if (!to) return <span className={classes}>{content}</span>
 
   return (
-    <Link to={to} className={classes} aria-label={`${brandName} — página inicial`}>
+    <Link to={to} className={classes} aria-label={t('logo.home', { brand: brandName })}>
       {content}
     </Link>
   )

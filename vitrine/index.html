@@ -7,24 +7,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#145c33" />
     <title>Vitrine — Catálogo de iniciativas institucionais</title>
+    <!--
+      `data-seo` marca as tags que `useDocumentMeta` (src/hooks/use-seo.js)
+      substitui quando a página monta. Sem a marca, o cliente acrescentava as
+      suas AO LADO destas, e toda página ficava com duas descrições — a
+      genérica primeiro, que é a que o buscador tende a usar.
+    -->
     <meta
       name="description"
       content="Catálogo público de projetos, laboratórios, grupos de pesquisa, empresas juniores e iniciativas da instituição."
+      data-seo
     />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Vitrine" />
-    <meta property="og:title" content="Vitrine — Catálogo de iniciativas institucionais" />
+    <meta property="og:type" content="website" data-seo />
+    <meta property="og:site_name" content="Vitrine" data-seo />
+    <meta property="og:title" content="Vitrine — Catálogo de iniciativas institucionais" data-seo />
     <meta
       property="og:description"
       content="Catálogo público de projetos, laboratórios, grupos de pesquisa, empresas juniores e iniciativas da instituição."
+      data-seo
     />
-    <meta name="twitter:card" content="summary_large_image" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-      rel="stylesheet"
-    />
+    <meta name="twitter:card" content="summary_large_image" data-seo />
+    <meta property="og:locale" content="pt_BR" data-seo />
+    <link rel="alternate" type="application/rss+xml" title="Notícias" href="/rss.xml" />
+
+    <!--
+      Preferências de acessibilidade aplicadas antes do primeiro paint.
+
+      Precisa ser síncrono e vir antes do bundle: se esperasse o React montar,
+      quem escolheu alto contraste ou texto grande veria o tema padrão piscar
+      em toda navegação — um "flash of unstyled preference".
+
+      O vocabulário (chave e nomes dos atributos) é o mesmo de `src/lib/a11y.js`.
+      É a única duplicação do módulo, e é consciente: mexeu lá, mexa aqui.
+    -->
+    <script>
+      ;(function () {
+        try {
+          var saved = JSON.parse(localStorage.getItem('vitrine:acessibilidade') || '{}')
+          var root = document.documentElement
+          var scales = ['base', 'lg', 'xl', 'xxl']
+
+          root.setAttribute(
+            'data-font-scale',
+            scales.indexOf(saved.fontScale) >= 0 ? saved.fontScale : 'base',
+          )
+          var alto = saved.contrast === 'high'
+          root.setAttribute('data-contrast', alto ? 'high' : 'normal')
+          if (alto) root.setAttribute('data-bs-theme', 'dark')
+          if (saved.motion === 'reduced') root.setAttribute('data-motion', 'reduced')
+        } catch (error) {
+          /* Modo privativo ou storage bloqueado: segue com o padrão. */
+        }
+      })()
+    </script>
+
   </head>
   <body>
     <div id="root"></div>

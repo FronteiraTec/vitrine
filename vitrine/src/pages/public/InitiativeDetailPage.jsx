@@ -22,24 +22,30 @@ import { InitiativeCard } from '@/components/initiatives/InitiativeCard'
 import { LinkIcon } from '@/components/initiatives/LinkIcon'
 import { CategoryIcon } from '@/components/common/CategoryIcon'
 import { usePublishedInitiative, useRelatedInitiatives } from '@/hooks/use-queries'
-import { useDocumentMeta, useStructuredData } from '@/hooks/use-utils'
-import { displayUrl, formatDate, safeExternalUrl, truncate } from '@/lib/utils'
+import { useTrackView } from '@/hooks/use-track-view'
+import { useDocumentMeta, useStructuredData } from '@/hooks/use-seo'
+import { useLocale } from '@/contexts/LocaleContext'
+import { DEFAULT_LOCALE } from '@/i18n/config'
+import { displayUrl, safeExternalUrl, truncate } from '@/lib/utils'
 import { NotFoundPage } from './NotFoundPage'
 
-function Breadcrumb({ initiative }) {
+function Breadcrumb({ initiative, catalogLang }) {
+  const { t } = useLocale()
+
   return (
-    <nav aria-label="Trilha de navegação" className="text-sm">
-      <ol className="flex flex-wrap items-center gap-1 opacity-80">
+    <nav aria-label={t('common.breadcrumb')} className="fs-7">
+      <ol className="d-flex flex-wrap align-items-center gap-1 opacity-75">
         <li>
-          <Link to="/" className="transition-opacity hover:opacity-100 hover:underline">
-            Início
+          <Link to="/" className="hover-underline">
+            {t('common.home')}
           </Link>
         </li>
-        <ChevronRight className="size-3.5 shrink-0" aria-hidden="true" />
+        <ChevronRight className="icon-sm flex-shrink-0" aria-hidden="true" />
         <li>
           <Link
             to={`/categoria/${initiative.category?.slug}`}
-            className="transition-opacity hover:opacity-100 hover:underline"
+            className="hover-underline"
+            lang={catalogLang}
           >
             {initiative.category?.name}
           </Link>
@@ -51,19 +57,21 @@ function Breadcrumb({ initiative }) {
 
 function InfoRow({ icon: Icon, label, children }) {
   return (
-    <div className="flex gap-3">
-      <Icon className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden="true" />
-      <div className="min-w-0 space-y-0.5">
-        <dt className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+    <div className="d-flex gap-2">
+      <Icon className="text-body-secondary mt-1 icon flex-shrink-0" aria-hidden="true" />
+      <div className="min-w-0 space-y-1">
+        <dt className="text-body-secondary fs-8 fw-medium tracking-wide text-uppercase">
           {label}
         </dt>
-        <dd className="text-sm break-words">{children}</dd>
+        <dd className="fs-7 text-break">{children}</dd>
       </div>
     </div>
   )
 }
 
 function ShareButton({ initiative }) {
+  const { t } = useLocale()
+
   async function handleShare() {
     const url = window.location.href
     const shareData = {
@@ -84,16 +92,16 @@ function ShareButton({ initiative }) {
 
     try {
       await navigator.clipboard.writeText(url)
-      toast.success('Link copiado para a área de transferência.')
+      toast.success(t('initiative.shareCopied'))
     } catch {
-      toast.error('Não foi possível copiar o link.')
+      toast.error(t('initiative.shareFailed'))
     }
   }
 
   return (
     <Button variant="outline" size="sm" onClick={handleShare}>
       <Share2 aria-hidden="true" />
-      Compartilhar
+      {t('initiative.share')}
     </Button>
   )
 }
@@ -101,16 +109,16 @@ function ShareButton({ initiative }) {
 function DetailSkeleton() {
   return (
     <div>
-      <Skeleton className="h-[38vh] max-h-96 min-h-64 w-full rounded-none" />
-      <div className="container-page py-12">
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <div className="space-y-4">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="max-h-fx-96 min-h-fx-64 w-100 rounded-0" />
+      <div className="container py-5">
+        <div className="d-grid gap-5 grid-detail">
+          <div className="space-y-3">
+            <Skeleton className="h-fx-4 w-fx-32" />
+            <Skeleton className="h-fx-4 w-100" />
+            <Skeleton className="h-fx-4 w-100" />
+            <Skeleton className="h-fx-4 w-fx-3/4" />
           </div>
-          <Skeleton className="h-64" />
+          <Skeleton className="h-fx-64" />
         </div>
       </div>
     </div>
@@ -119,11 +127,17 @@ function DetailSkeleton() {
 
 export function InitiativeDetailPage() {
   const { slug } = useParams()
+  const { t, locale, formatDate } = useLocale()
+  // O conteúdo da iniciativa é cadastrado em português. Com a interface em
+  // outro idioma, cada trecho de conteúdo declara o próprio `lang`; os rótulos
+  // ao redor seguem o idioma da página.
+  const catalogLang = locale === DEFAULT_LOCALE ? undefined : DEFAULT_LOCALE
   const { data: initiative, isPending, isError, error, refetch } = usePublishedInitiative(slug)
   const { data: related, isPending: relatedPending } = useRelatedInitiatives(
     initiative?.category_id,
     initiative?.id,
   )
+  useTrackView('initiative', initiative?.id, locale)
 
   const description = initiative?.short_description ?? truncate(initiative?.description, 160)
 
@@ -166,7 +180,7 @@ export function InitiativeDetailPage() {
 
   if (isError) {
     return (
-      <div className="container-page py-20">
+      <div className="container py-5">
         <ErrorState description={error?.message} onRetry={() => refetch()} />
       </div>
     )
@@ -175,8 +189,8 @@ export function InitiativeDetailPage() {
   if (!initiative) {
     return (
       <NotFoundPage
-        title="Iniciativa não encontrada"
-        description="Esta iniciativa não existe, ainda não foi publicada ou saiu da vitrine."
+        title={t('initiative.notFoundTitle')}
+        description={t('initiative.notFoundDescription')}
       />
     )
   }
@@ -190,7 +204,7 @@ export function InitiativeDetailPage() {
   return (
     <article>
       {/* Banner ---------------------------------------------------------- */}
-      <header className="bg-primary text-primary-foreground relative">
+      <header className="bg-primary text-white position-relative">
         {initiative.cover_image ? (
           <>
             {/* O wrapper é absoluto: a altura vem do cabeçalho, não de proporção. */}
@@ -198,37 +212,37 @@ export function InitiativeDetailPage() {
               src={initiative.cover_image}
               alt=""
               eager
-              ratio=""
-              wrapperClassName="absolute inset-0 bg-primary"
-              className="opacity-35"
+              ratio={null}
+              wrapperClassName="position-absolute top-0 start-0 w-100 h-100 bg-primary"
+              className="opacity-25"
             />
             <div
-              className="from-primary via-primary/85 absolute inset-0 bg-linear-to-t to-transparent"
+              className="position-absolute top-0 start-0 w-100 h-100 overlay-gradient"
               aria-hidden="true"
             />
           </>
         ) : null}
 
-        <div className="container-page relative flex min-h-64 flex-col justify-end py-10 sm:py-14">
-          <Breadcrumb initiative={initiative} />
+        <div className="container position-relative d-flex min-h-fx-64 flex-column justify-content-end py-5 py-sm-5">
+          <Breadcrumb initiative={initiative} catalogLang={catalogLang} />
 
-          <div className="mt-5 max-w-3xl space-y-4">
+          <div className="mt-3 mw-3xl space-y-3" lang={catalogLang}>
             {initiative.category ? (
               <Link
                 to={`/categoria/${initiative.category.slug}`}
-                className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-3 py-1 text-xs font-semibold tracking-[0.06em] uppercase transition-colors hover:bg-white/20"
+                className="d-inline-flex align-items-center gap-1 rounded-pill bg-white/12 px-2 py-1 fs-8 fw-semibold text-uppercase"
               >
-                <CategoryIcon name={initiative.category.icon} className="size-3.5" />
+                <CategoryIcon name={initiative.category.icon} className="icon-sm" />
                 {initiative.category.name}
               </Link>
             ) : null}
 
-            <h1 className="font-display text-3xl leading-[1.1] text-balance-title sm:text-5xl">
+            <h1 className="fw-bold fs-3 text-balance fs-sm-1">
               {initiative.name}
             </h1>
 
             {initiative.short_description ? (
-              <p className="max-w-2xl text-base leading-relaxed opacity-85 sm:text-lg">
+              <p className="mw-2xl fs-6 lh-base opacity-75 fs-sm-5">
                 {initiative.short_description}
               </p>
             ) : null}
@@ -237,13 +251,13 @@ export function InitiativeDetailPage() {
       </header>
 
       {/* Corpo ------------------------------------------------------------ */}
-      <div className="container-page py-12 sm:py-16">
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-16">
-          <div className="min-w-0 space-y-12">
+      <div className="container py-5 py-sm-5">
+        <div className="d-grid gap-5 grid-detail gap-lg-5">
+          <div className="min-w-0 space-y-5">
             {initiative.description ? (
-              <section className="space-y-5">
-                <SectionDivider label="Sobre" />
-                <div className="space-y-4 leading-[1.75] text-pretty">
+              <section className="space-y-3">
+                <SectionDivider label={t('initiative.about')} />
+                <div className="space-y-3 text-pretty" lang={catalogLang}>
                   {initiative.description.split(/\n{2,}/).map((paragraph, index) => (
                     <p key={index}>{paragraph}</p>
                   ))}
@@ -252,9 +266,9 @@ export function InitiativeDetailPage() {
             ) : null}
 
             {initiative.areas?.length ? (
-              <section className="space-y-5">
-                <SectionDivider label="Áreas de atuação" />
-                <ul className="flex flex-wrap gap-2">
+              <section className="space-y-3">
+                <SectionDivider label={t('initiative.areas')} />
+                <ul className="d-flex flex-wrap gap-2" lang={catalogLang}>
                   {initiative.areas.map((area) => (
                     <li key={area}>
                       <Badge variant="brand">{area}</Badge>
@@ -265,19 +279,19 @@ export function InitiativeDetailPage() {
             ) : null}
 
             {initiative.team?.length ? (
-              <section className="space-y-5">
-                <SectionDivider label="Equipe e responsáveis" />
-                <ul className="grid gap-3 sm:grid-cols-2">
+              <section className="space-y-3">
+                <SectionDivider label={t('initiative.team')} />
+                <ul className="d-grid gap-2 grid-cols-sm-2" lang={catalogLang}>
                   {initiative.team.map((entry) => (
                     <li
                       key={entry.person?.id}
-                      className="border-border bg-card flex items-center gap-3 rounded-lg border p-4"
+                      className="border bg-body d-flex align-items-center gap-2 rounded-3 p-3"
                     >
                       <Avatar src={entry.person?.photo_url} name={entry.person?.name} size="md" />
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{entry.person?.name}</p>
+                        <p className="text-truncate fs-7 fw-medium">{entry.person?.name}</p>
                         {entry.role || entry.person?.role ? (
-                          <p className="text-muted-foreground truncate text-xs">
+                          <p className="text-body-secondary text-truncate fs-8">
                             {entry.role ?? entry.person?.role}
                           </p>
                         ) : null}
@@ -289,16 +303,16 @@ export function InitiativeDetailPage() {
             ) : null}
 
             {gallery.length ? (
-              <section className="space-y-5">
-                <SectionDivider label="Galeria" />
-                <div className="grid gap-3 sm:grid-cols-2">
+              <section className="space-y-3">
+                <SectionDivider label={t('initiative.gallery')} />
+                <div className="d-grid gap-2 grid-cols-sm-2">
                   {gallery.map((url) => (
                     <Image
                       key={url}
                       src={url}
-                      alt={`Imagem de ${initiative.name}`}
-                      ratio="aspect-[16/10]"
-                      wrapperClassName="rounded-lg border border-border"
+                      alt={t('initiative.galleryAlt', { name: initiative.name })}
+                      ratio="ratio-16x10"
+                      wrapperClassName="rounded-3 border border"
                     />
                   ))}
                 </div>
@@ -306,13 +320,13 @@ export function InitiativeDetailPage() {
             ) : null}
 
             {initiative.tags?.length ? (
-              <section className="space-y-5">
-                <SectionDivider label="Temas" />
-                <ul className="flex flex-wrap gap-2">
+              <section className="space-y-3">
+                <SectionDivider label={t('initiative.tags')} />
+                <ul className="d-flex flex-wrap gap-2" lang={catalogLang}>
                   {initiative.tags.map((tag) => (
                     <li key={tag.id}>
                       <Link to={`/buscar?tag=${tag.id}`}>
-                        <Badge variant="outline" className="hover:bg-muted transition-colors">
+                        <Badge variant="outline">
                           {tag.name}
                         </Badge>
                       </Link>
@@ -324,25 +338,25 @@ export function InitiativeDetailPage() {
           </div>
 
           {/* Coluna lateral ------------------------------------------------ */}
-          <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+          <aside className="space-y-4 sticky-lg">
             {hasContact ? (
-              <section className="surface p-5">
-                <h2 className="mb-4 text-xs font-semibold tracking-[0.12em] uppercase">
-                  Informações
+              <section className="card p-3">
+                <h2 className="mb-3 fs-8 fw-semibold text-uppercase">
+                  {t('initiative.info')}
                 </h2>
-                <dl className="space-y-4">
+                <dl className="space-y-3">
                   {location || cityState ? (
-                    <InfoRow icon={MapPin} label="Localização">
-                      {location ? <p>{location}</p> : null}
-                      {cityState ? <p className="text-muted-foreground">{cityState}</p> : null}
+                    <InfoRow icon={MapPin} label={t('initiative.location')}>
+                      {location ? <p lang={catalogLang}>{location}</p> : null}
+                      {cityState ? <p className="text-body-secondary">{cityState}</p> : null}
                     </InfoRow>
                   ) : null}
 
                   {initiative.email ? (
-                    <InfoRow icon={Mail} label="E-mail">
+                    <InfoRow icon={Mail} label={t('initiative.email')}>
                       <a
                         href={`mailto:${initiative.email}`}
-                        className="text-brand hover:underline"
+                        className="text-primary hover-underline"
                       >
                         {initiative.email}
                       </a>
@@ -350,10 +364,10 @@ export function InitiativeDetailPage() {
                   ) : null}
 
                   {initiative.phone ? (
-                    <InfoRow icon={Phone} label="Telefone">
+                    <InfoRow icon={Phone} label={t('initiative.phone')}>
                       <a
                         href={`tel:${initiative.phone.replace(/[^\d+]/g, '')}`}
-                        className="text-brand hover:underline"
+                        className="text-primary hover-underline"
                       >
                         {initiative.phone}
                       </a>
@@ -361,12 +375,12 @@ export function InitiativeDetailPage() {
                   ) : null}
 
                   {website ? (
-                    <InfoRow icon={Globe} label="Website">
+                    <InfoRow icon={Globe} label={t('initiative.website')}>
                       <a
                         href={website}
                         target="_blank"
                         rel="noreferrer noopener"
-                        className="text-brand hover:underline"
+                        className="text-primary hover-underline"
                       >
                         {displayUrl(website)}
                       </a>
@@ -374,7 +388,7 @@ export function InitiativeDetailPage() {
                   ) : null}
 
                   {initiative.published_at ? (
-                    <InfoRow icon={Calendar} label="Publicado em">
+                    <InfoRow icon={Calendar} label={t('initiative.publishedAt')}>
                       <time dateTime={initiative.published_at}>
                         {formatDate(initiative.published_at)}
                       </time>
@@ -385,9 +399,9 @@ export function InitiativeDetailPage() {
             ) : null}
 
             {initiative.links?.length ? (
-              <section className="surface p-5">
-                <h2 className="mb-4 text-xs font-semibold tracking-[0.12em] uppercase">
-                  Links relacionados
+              <section className="card p-3">
+                <h2 className="mb-3 fs-8 fw-semibold text-uppercase">
+                  {t('initiative.links')}
                 </h2>
                 <ul className="space-y-1">
                   {initiative.links.map((link) => {
@@ -399,17 +413,19 @@ export function InitiativeDetailPage() {
                           href={href}
                           target="_blank"
                           rel="noreferrer noopener"
-                          className="hover:bg-muted group flex items-center gap-3 rounded-md px-2 py-2.5 transition-colors"
+                          className="d-flex align-items-center gap-2 rounded-2 px-2 py-2"
                         >
-                          <LinkIcon type={link.type} className="text-muted-foreground size-4 shrink-0" />
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate text-sm font-medium">{link.label}</span>
-                            <span className="text-muted-foreground block truncate text-xs">
+                          <LinkIcon type={link.type} className="text-body-secondary icon flex-shrink-0" />
+                          <span className="min-w-0 flex-grow-1">
+                            <span className="d-block text-truncate fs-7 fw-medium" lang={catalogLang}>
+                              {link.label}
+                            </span>
+                            <span className="text-body-secondary d-block text-truncate fs-8">
                               {displayUrl(href)}
                             </span>
                           </span>
                           <ArrowUpRight
-                            className="text-muted-foreground size-4 shrink-0 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                            className="text-body-secondary icon flex-shrink-0"
                             aria-hidden="true"
                           />
                         </a>
@@ -420,10 +436,10 @@ export function InitiativeDetailPage() {
               </section>
             ) : null}
 
-            <div className="flex flex-wrap gap-2">
+            <div className="d-flex flex-wrap gap-2">
               <ShareButton initiative={initiative} />
               <Button variant="ghost" size="sm" asChild>
-                <Link to={`/categoria/${initiative.category?.slug}`}>Ver categoria</Link>
+                <Link to={`/categoria/${initiative.category?.slug}`}>{t('initiative.viewCategory')}</Link>
               </Button>
             </div>
           </aside>
@@ -432,24 +448,24 @@ export function InitiativeDetailPage() {
 
       {/* Relacionadas ----------------------------------------------------- */}
       {relatedPending || related?.length ? (
-        <section className="bg-muted/50 border-border border-t">
-          <div className="container-page py-14">
-            <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div className="space-y-1.5">
-                <h2 className="font-display text-2xl sm:text-3xl">Iniciativas relacionadas</h2>
-                <p className="text-muted-foreground text-sm">
-                  Outras iniciativas em {initiative.category?.name}.
+        <section className="bg-body-tertiary border border-top">
+          <div className="container py-5">
+            <div className="mb-5 d-flex flex-column gap-2 flex-sm-row align-items-sm-end justify-content-sm-between">
+              <div className="space-y-1">
+                <h2 className="fw-bold fs-4 fs-sm-3">{t('initiative.related')}</h2>
+                <p className="text-body-secondary fs-7">
+                  {t('initiative.relatedDescription', { category: initiative.category?.name ?? '' })}
                 </p>
               </div>
-              <Button variant="outline" asChild className="shrink-0">
-                <Link to={`/categoria/${initiative.category?.slug}`}>Ver todas</Link>
+              <Button variant="outline" asChild className="flex-shrink-0">
+                <Link to={`/categoria/${initiative.category?.slug}`}>{t('common.seeAll')}</Link>
               </Button>
             </div>
 
             {relatedPending ? (
               <InitiativeGridSkeleton count={3} />
             ) : (
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="d-grid grid-cols-1 gap-3 grid-cols-sm-2 grid-cols-lg-3">
                 {related.map((item) => (
                   <InitiativeCard key={item.id} initiative={item} />
                 ))}

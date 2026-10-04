@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { AlertCircle, CheckCircle2, Lock } from 'lucide-react'
+import { AlertCircle, Lock } from 'lucide-react'
 import { AuthShell } from './AuthShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/contexts/AuthContext'
-import { useDocumentMeta } from '@/hooks/use-utils'
-import { isSupabaseConfigured, requireSupabase } from '@/lib/supabase'
+import { useDocumentMeta } from '@/hooks/use-seo'
+import { api } from '@/lib/api'
+import { PRIVATE_ROBOTS } from '@/lib/seo'
 
 const MIN_PASSWORD = 8
 
@@ -25,14 +26,15 @@ function useHasAdmin() {
   return useQuery({
     queryKey: ['installation', 'has-admin'],
     queryFn: async () => {
-      const supabase = requireSupabase()
-      const { data, error } = await supabase.rpc('installation_has_admin')
-      if (error) return true
-      return Boolean(data)
+      try {
+        const data = await api.get('/auth/setup')
+        return Boolean(data?.hasAdmin)
+      } catch {
+        return true
+      }
     },
     staleTime: 60 * 1000,
     retry: false,
-    enabled: isSupabaseConfigured,
   })
 }
 
@@ -44,20 +46,21 @@ function useHasAdmin() {
  * ser criada por um admin — porque não há admin. Assim que o primeiro existe, a
  * página se fecha e passa a apontar para o login.
  *
- * A trava definitiva não é esta: quem quiser pode chamar o endpoint de signup
- * do GoTrue direto. Por isso a migration 0007 faz toda conta que não seja a
- * primeira nascer inativa, e o cadastro aberto deve ser desligado no painel do
- * Supabase. Aqui é só a porta da frente.
+ * A trava definitiva não é esta: a API recusa o cadastro assim que existe um
+ * administrador ativo, e a migration 0007 ainda faz toda conta que não seja a
+ * primeira nascer inativa. Aqui é só a porta da frente.
+ *
+ * A conta criada já entra logada, e a guarda de visitante (`GuestRoute`) leva
+ * direto ao painel.
  */
 export function SignUpPage() {
   const { signUp } = useAuth()
   const { data: hasAdmin, isPending: checkingAdmin } = useHasAdmin()
   const [values, setValues] = useState({ name: '', email: '', password: '' })
   const [error, setError] = useState(null)
-  const [done, setDone] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  useDocumentMeta({ title: 'Criar acesso' })
+  useDocumentMeta({ title: 'Criar acesso', robots: PRIVATE_ROBOTS })
 
   function update(field) {
     return (event) => setValues((current) => ({ ...current, [field]: event.target.value }))
@@ -75,10 +78,8 @@ export function SignUpPage() {
     setSubmitting(true)
     try {
       await signUp(values.email.trim(), values.password, values.name.trim())
-      setDone(true)
     } catch (submitError) {
       setError(submitError.message)
-    } finally {
       setSubmitting(false)
     }
   }
@@ -86,7 +87,7 @@ export function SignUpPage() {
   if (checkingAdmin) {
     return (
       <AuthShell title="Criar acesso">
-        <Skeleton className="h-64" />
+        <Skeleton className="h-fx-64" />
       </AuthShell>
     )
   }
@@ -97,35 +98,14 @@ export function SignUpPage() {
         title="Cadastro fechado"
         description="Esta instalação não aceita autocadastro."
       >
-        <div className="border-border bg-muted text-muted-foreground flex items-start gap-3 rounded-md border p-4 text-sm">
-          <Lock className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+        <div className="border bg-body-secondary text-body-secondary d-flex align-items-start gap-2 rounded-2 p-3 fs-7">
+          <Lock className="mt-1 icon flex-shrink-0" aria-hidden="true" />
           <p className="text-pretty">
             As contas de acesso são criadas por um administrador da plataforma. Se você deve ter
             acesso ao painel, peça a liberação à coordenação responsável.
           </p>
         </div>
-        <Button asChild size="lg" className="w-full">
-          <Link to="/entrar">Ir para o login</Link>
-        </Button>
-      </AuthShell>
-    )
-  }
-
-  if (done) {
-    return (
-      <AuthShell
-        title="Conta criada"
-        description="Falta apenas confirmar o endereço de e-mail."
-      >
-        <div className="border-status-published/25 bg-status-published-bg text-status-published flex items-start gap-3 rounded-md border p-4 text-sm">
-          <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          <p className="text-pretty">
-            Enviamos um link de confirmação para <strong>{values.email}</strong>. Depois de
-            confirmar, entre normalmente — o acesso às áreas restritas depende do papel atribuído
-            por um administrador.
-          </p>
-        </div>
-        <Button asChild size="lg" className="w-full">
+        <Button asChild size="lg" className="w-100">
           <Link to="/entrar">Ir para o login</Link>
         </Button>
       </AuthShell>
@@ -137,21 +117,21 @@ export function SignUpPage() {
       title="Configurar o primeiro acesso"
       description="Esta instalação ainda não tem administrador. A conta criada agora recebe esse papel — as demais passam a ser criadas por ela, pelo painel."
       footer={
-        <p className="text-muted-foreground text-sm">
+        <p className="text-body-secondary fs-7">
           Já tem conta?{' '}
-          <Link to="/entrar" className="text-brand font-medium hover:underline">
+          <Link to="/entrar" className="text-primary fw-medium hover-underline">
             Entrar
           </Link>
         </p>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+      <form onSubmit={handleSubmit} className="space-y-3" noValidate>
         {error ? (
           <div
             role="alert"
-            className="border-destructive/25 bg-destructive/5 text-destructive flex items-start gap-2.5 rounded-md border p-3 text-sm"
+            className="border-danger bg-danger-subtle text-danger d-flex align-items-start gap-2 rounded-2 border p-2 fs-7"
           >
-            <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <AlertCircle className="mt-1 icon flex-shrink-0" aria-hidden="true" />
             <span>{error}</span>
           </div>
         ) : null}
@@ -202,8 +182,8 @@ export function SignUpPage() {
           )}
         </Field>
 
-        <Button type="submit" size="lg" className="w-full" loading={submitting}>
-          Criar conta
+        <Button type="submit" size="lg" className="w-100" loading={submitting}>
+          Criar conta e entrar
         </Button>
       </form>
     </AuthShell>

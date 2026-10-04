@@ -1,10 +1,15 @@
 import { Component } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { translateNow } from '@/i18n/store'
 
 /**
  * Última linha de defesa: evita a tela branca quando um componente quebra.
  * Erros de dados são tratados nas próprias telas (ErrorState).
+ *
+ * O texto vem de `translateNow`, e não do contexto de idioma: esta tela
+ * aparece justamente quando a árvore do React — inclusive o provider —
+ * quebrou. O store guarda o idioma em que a página estava pintada.
  */
 export class ErrorBoundary extends Component {
   constructor(props) {
@@ -24,24 +29,26 @@ export class ErrorBoundary extends Component {
     if (!this.state.error) return this.props.children
 
     return (
-      <div className="flex min-h-dvh items-center justify-center p-6">
-        <div className="surface max-w-md space-y-4 p-8 text-center">
-          <div className="bg-destructive/10 text-destructive mx-auto flex size-12 items-center justify-center rounded-full">
-            <AlertTriangle className="size-6" aria-hidden="true" />
+      <div className="d-flex min-vh-100 align-items-center justify-content-center p-4">
+        <div className="card mw-md space-y-3 p-5 text-center">
+          <div className="bg-danger-subtle text-danger mx-auto d-flex h-fx-12 w-fx-12 align-items-center justify-content-center rounded-pill">
+            <AlertTriangle className="icon-xl" aria-hidden="true" />
           </div>
-          <div className="space-y-1.5">
-            <h1 className="text-lg font-semibold">Algo deu errado</h1>
-            <p className="text-muted-foreground text-sm text-pretty">
-              A página encontrou um erro inesperado. Recarregar costuma resolver.
+          <div className="space-y-1">
+            <h1 className="fs-5 fw-semibold">{translateNow('errorBoundary.title')}</h1>
+            <p className="text-body-secondary fs-7 text-pretty">
+              {translateNow('errorBoundary.description')}
             </p>
           </div>
-          <details className="text-muted-foreground text-left text-xs">
-            <summary className="cursor-pointer py-1">Detalhes técnicos</summary>
-            <pre className="bg-muted mt-2 max-h-40 overflow-auto rounded-md p-3 whitespace-pre-wrap">
+          <details className="text-body-secondary text-start fs-8">
+            <summary className="py-1">{translateNow('errorBoundary.details')}</summary>
+            <pre className="bg-body-secondary mt-2 max-h-fx-40 overflow-auto rounded-2 p-2 text-prewrap">
               {String(this.state.error?.message ?? this.state.error)}
             </pre>
           </details>
-          <Button onClick={() => window.location.reload()}>Recarregar página</Button>
+          <Button onClick={() => window.location.reload()}>
+            {translateNow('errorBoundary.reload')}
+          </Button>
         </div>
       </div>
     )

@@ -52,9 +52,9 @@ export function ReviewQueuePage() {
       {isError ? (
         <ErrorState description={error?.message} onRetry={retry} />
       ) : isPending ? (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {Array.from({ length: 4 }, (_, index) => (
-            <Skeleton key={index} className="h-32" />
+            <Skeleton key={index} className="h-fx-32" />
           ))}
         </div>
       ) : items.length === 0 ? (
@@ -67,10 +67,10 @@ export function ReviewQueuePage() {
               <Link to="/admin/iniciativas">Ver todas as iniciativas</Link>
             </Button>
           }
-          className="bg-card"
+          className="bg-body"
         />
       ) : (
-        <ul className="space-y-4">
+        <ul className="space-y-3">
           {items.map((item) => {
             const kind = KINDS[item.kind]
             const editPath = kind.editPath(item)
@@ -78,37 +78,37 @@ export function ReviewQueuePage() {
             return (
               <li
                 key={`${item.kind}-${item.id}`}
-                className="border-border bg-card rounded-lg border p-4 sm:p-5"
+                className="border bg-body rounded-3 p-3 p-sm-3"
               >
-                <div className="flex flex-col gap-4 sm:flex-row">
+                <div className="d-flex flex-column gap-3 flex-sm-row">
                   <Image
                     src={item.cover_image}
                     alt=""
-                    ratio="aspect-[16/10] sm:aspect-square"
-                    wrapperClassName="rounded-md shrink-0 sm:w-28"
+                    ratio="ratio-16x10"
+                    wrapperClassName="rounded-2 flex-shrink-0 w-sm-fx-28"
                     fallbackIcon={item.kind === 'news' ? Newspaper : undefined}
                   />
 
-                  <div className="min-w-0 flex-1 space-y-2">
+                  <div className="min-w-0 flex-grow-1 space-y-2">
                     <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="d-flex flex-wrap align-items-center gap-2">
                         <Badge size="sm" variant="outline">
                           {kind.label}
                         </Badge>
-                        <h2 className="leading-snug font-semibold">
-                          <Link to={editPath} className="hover:text-brand transition-colors">
+                        <h2 className="lh-sm fw-semibold">
+                          <Link to={editPath}>
                             {item.name}
                           </Link>
                         </h2>
                       </div>
-                      <p className="text-muted-foreground text-sm">
+                      <p className="text-body-secondary fs-7">
                         {item.category?.name ? `${item.category.name} · ` : ''}enviada por{' '}
                         {item.author?.name ?? 'autor desconhecido'} ·{' '}
                         {formatRelative(item.updated_at)}
                       </p>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <div className="d-flex flex-wrap align-items-center gap-2 pt-1">
                       <Button variant="outline" size="sm" asChild>
                         <Link to={editPath}>
                           <Eye aria-hidden="true" />

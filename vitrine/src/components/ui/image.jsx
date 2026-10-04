@@ -3,16 +3,23 @@ import { ImageOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 /**
- * Imagem com lazy loading, transição de entrada e fallback visual.
- * Evita "flash" de área vazia e trata URLs quebradas do Storage sem
- * mostrar o ícone padrão de imagem quebrada do navegador.
+ * Imagem com lazy loading, transição de entrada e reserva visual.
+ *
+ * A proporção vem das classes `.ratio` do Bootstrap (`ratio-16x9`, `ratio-1x1`)
+ * e o recorte de `.media-frame`, no SCSS do projeto — o `.ratio` sozinho reserva
+ * o espaço, mas não faz a foto preencher o quadro sem distorcer.
+ *
+ * `ratio={null}` desliga a reserva de espaço: é o caso em que o pai já tem
+ * altura própria e a imagem deve preenchê-lo (a capa da página de iniciativa).
+ * Com `.ratio` aplicado ali, o `::before` do Bootstrap imporia uma proporção
+ * que briga com a altura do pai.
  */
 export function Image({
   src,
   alt = '',
   className,
   wrapperClassName,
-  ratio = 'aspect-[16/10]',
+  ratio = 'ratio-16x9',
   eager = false,
   fallbackIcon: FallbackIcon = ImageOff,
   ...props
@@ -20,7 +27,7 @@ export function Image({
   const [state, setState] = useState(src ? 'loading' : 'error')
 
   return (
-    <div className={cn('bg-muted relative overflow-hidden', ratio, wrapperClassName)}>
+    <div className={cn(ratio && 'ratio', 'media-frame', ratio, wrapperClassName)}>
       {src && state !== 'error' ? (
         <img
           src={src}
@@ -30,18 +37,15 @@ export function Image({
           fetchPriority={eager ? 'high' : 'auto'}
           onLoad={() => setState('loaded')}
           onError={() => setState('error')}
-          className={cn(
-            'size-full object-cover transition-opacity duration-500',
-            state === 'loaded' ? 'opacity-100' : 'opacity-0',
-            className,
-          )}
+          className={cn(state === 'loaded' ? 'opacity-100' : 'opacity-0', className)}
+          style={{ transition: 'opacity 0.4s ease' }}
           {...props}
         />
       ) : null}
 
       {state === 'error' ? (
-        <div className="text-muted-foreground/40 absolute inset-0 flex items-center justify-center">
-          <FallbackIcon className="size-7" aria-hidden="true" />
+        <div className="d-flex align-items-center justify-content-center text-body-secondary opacity-50">
+          <FallbackIcon className="icon-xl" aria-hidden="true" />
         </div>
       ) : null}
     </div>

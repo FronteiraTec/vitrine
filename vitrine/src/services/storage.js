@@ -1,6 +1,5 @@
-import { friendlyError, requireSupabase } from '@/lib/supabase'
+import { api } from '@/lib/api'
 import { ACCEPTED_IMAGE_TYPES, BUCKETS, MAX_IMAGE_BYTES } from '@/lib/constants'
-import { slugify } from '@/lib/utils'
 
 /** Valida antes de subir: evita gastar rede para receber 400 do servidor. */
 export function validateImage(file, { maxBytes = MAX_IMAGE_BYTES } = {}) {
@@ -16,23 +15,10 @@ export function validateImage(file, { maxBytes = MAX_IMAGE_BYTES } = {}) {
   return null
 }
 
-function extensionFor(file) {
-  const fromName = file.name?.split('.').pop()?.toLowerCase()
-  if (fromName && /^[a-z0-9]{2,5}$/.test(fromName)) return fromName
-  return file.type.split('/')[1] ?? 'jpg'
-}
-
-function buildPath({ folder, file }) {
-  const base = slugify(file.name?.replace(/\.[^.]+$/, '') ?? 'imagem').slice(0, 40) || 'imagem'
-  const unique = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
-  const name = `${base}-${unique}.${extensionFor(file)}`
-  return folder ? `${folder}/${name}` : name
-}
-
 /**
- * Envia uma imagem e devolve a URL pública.
- * Os buckets são públicos para leitura (a vitrine é pública), mas a escrita
- * continua restrita por policy — ver `0004_storage.sql`.
+ * Envia uma imagem e devolve a URL pública. O servidor confere o tipo pelo
+ * conteúdo do arquivo, o tamanho pelo limite do destino e a permissão pela
+ * policy do banco — esta validação aqui é só para responder mais rápido.
  */
 export async function uploadImage({ bucket = BUCKETS.INITIATIVES, folder = '', file }) {
   const validationError = validateImage(file, {
@@ -40,18 +26,10 @@ export async function uploadImage({ bucket = BUCKETS.INITIATIVES, folder = '', f
   })
   if (validationError) throw new Error(validationError)
 
-  const supabase = requireSupabase()
-  const path = buildPath({ folder, file })
-
-  const { error } = await supabase.storage.from(bucket).upload(path, file, {
-    cacheControl: '31536000',
-    upsert: false,
-    contentType: file.type,
-  })
-  if (error) throw new Error(friendlyError(error))
-
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path)
-  return { url: data.publicUrl, path, bucket }
+  const form = new FormData()
+  form.append('folder', folder)
+  form.append('file', file)
+  return api.upload(`/arquivos/${bucket}`, form)
 }
 
 /**
@@ -61,14 +39,16 @@ export async function uploadImage({ bucket = BUCKETS.INITIATIVES, folder = '', f
  */
 export async function removeImageByUrl(url, bucket = BUCKETS.INITIATIVES) {
   if (!url) return
-  const marker = `/storage/v1/object/public/${bucket}/`
+  const marker = `/arquivos/${bucket}/`
   const index = url.indexOf(marker)
   if (index === -1) return
 
   const path = decodeURIComponent(url.slice(index + marker.length).split('?')[0])
   if (!path) return
 
-  const supabase = requireSupabase()
-  const { error } = await supabase.storage.from(bucket).remove([path])
-  if (error) console.warn('Não foi possível remover a imagem do Storage:', error.message)
+  try {
+    await api.delete(`/arquivos/${bucket}`, { path })
+  } catch (error) {
+    console.warn('Não foi possível remover a imagem:', error.message)
+  }
 }

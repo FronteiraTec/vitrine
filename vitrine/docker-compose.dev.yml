@@ -1,0 +1,13 @@
+# =============================================================================
+# Desenvolvimento: só o banco em container, com a porta aberta para ESTA máquina.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d db migrate
+#   npm run dev:api      # API em http://localhost:3000 (lê server/.env)
+#   npm run dev          # React em http://localhost:5173, repassando /api à API
+#
+# Nunca use este arquivo no servidor: ele expõe o Postgres.
+# =============================================================================
+services:
+  db:
+    ports:
+      - "127.0.0.1:${DB_PORT:-5432}:5432"

@@ -80,13 +80,13 @@ export function NewsAdminPage() {
         }
       />
 
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1">
-          <label htmlFor="news-admin-search" className="sr-only">
+      <div className="mb-3 d-flex flex-column gap-2 flex-sm-row">
+        <div className="position-relative flex-grow-1">
+          <label htmlFor="news-admin-search" className="visually-hidden">
             Buscar notícias
           </label>
           <Search
-            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+            className="text-body-secondary pe-none position-absolute top-50 start-0 icon translate-middle-y"
             aria-hidden="true"
           />
           <Input
@@ -95,12 +95,12 @@ export function NewsAdminPage() {
             value={q}
             onChange={(event) => update({ q: event.target.value })}
             placeholder="Buscar por título ou conteúdo…"
-            className="pl-9"
+            className="ps-5"
           />
         </div>
 
         <Select value={status} onValueChange={(value) => update({ status: value })}>
-          <SelectTrigger className="sm:w-48" aria-label="Filtrar por status">
+          <SelectTrigger className="w-sm-48" aria-label="Filtrar por status">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -117,9 +117,9 @@ export function NewsAdminPage() {
       {isError ? (
         <ErrorState description={error?.message} onRetry={() => refetch()} />
       ) : isPending ? (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {Array.from({ length: 5 }, (_, index) => (
-            <Skeleton key={index} className="h-24" />
+            <Skeleton key={index} className="h-fx-24" />
           ))}
         </div>
       ) : data.items.length === 0 ? (
@@ -139,41 +139,40 @@ export function NewsAdminPage() {
               </Link>
             </Button>
           }
-          className="bg-card"
+          className="bg-body"
         />
       ) : (
         <>
-          <ul className="space-y-3">
+          <ul className="space-y-2">
             {data.items.map((item) => (
-              <li key={item.id} className="border-border bg-card rounded-lg border p-4">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <li key={item.id} className="border bg-body rounded-3 p-3">
+                <div className="d-flex flex-column gap-3 flex-sm-row align-items-sm-center">
                   <Image
                     src={item.cover_image}
                     alt=""
-                    ratio="aspect-[16/10] sm:aspect-square"
-                    wrapperClassName="rounded-md shrink-0 sm:w-20"
+                    ratio="ratio-16x10"
+                    wrapperClassName="rounded-2 flex-shrink-0 w-sm-fx-20"
                     fallbackIcon={Newspaper}
                   />
 
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="leading-snug font-semibold">
+                  <div className="min-w-0 flex-grow-1 space-y-1">
+                    <div className="d-flex flex-wrap align-items-center gap-2">
+                      <h2 className="lh-sm fw-semibold">
                         <Link
                           to={`/admin/noticias/${item.id}`}
-                          className="hover:text-brand transition-colors"
-                        >
+                                                  >
                           {item.name}
                         </Link>
                       </h2>
                       <StatusBadge status={item.status} size="sm" />
                     </div>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-body-secondary fs-7">
                       {item.author?.name ?? 'autor desconhecido'} · atualizada{' '}
                       {formatRelative(item.updated_at)}
                     </p>
                   </div>
 
-                  <div className="flex shrink-0 items-center gap-2">
+                  <div className="d-flex flex-shrink-0 align-items-center gap-2">
                     {item.status === STATUS.PUBLISHED ? (
                       <Button variant="ghost" size="icon" asChild aria-label="Ver na vitrine">
                         <Link to={`/noticia/${item.slug}`} target="_blank" rel="noreferrer">
@@ -196,7 +195,7 @@ export function NewsAdminPage() {
                         onClick={() => setToDelete(item)}
                         aria-label={`Excluir ${item.name}`}
                       >
-                        <Trash2 className="text-destructive" />
+                        <Trash2 className="text-danger" />
                       </Button>
                     ) : null}
                   </div>
@@ -209,7 +208,7 @@ export function NewsAdminPage() {
             page={data.page}
             pageCount={data.pageCount}
             onPageChange={(next) => update({ pagina: next }, { resetPage: false })}
-            className="pt-8"
+            className="pt-5"
           />
         </>
       )}

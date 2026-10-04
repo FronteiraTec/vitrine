@@ -1,0 +1,156 @@
+# =============================================================================
+# Vitrine — stack completa em containers
+#
+#   db           PostgreSQL 17 (dados em volume; porta NÃO exposta)
+#   migrate      aplica db/migrations e encerra; a API só sobe depois dele
+#   api          Node: sessão, dados, uploads, SEO no servidor, audiência
+#   web          Nginx: o React construído, os arquivos enviados e o repasse
+#   geoipupdate  (opcional, perfil "geoip") base de localização da audiência
+#
+# O MESMO arquivo serve aos três lugares onde a Vitrine roda:
+#
+#   sua máquina   docker compose up -d --build
+#                 imagens construídas aqui (vitrine-api:local), porta 127.0.0.1:8080
+#   GitHub CI     imagens construídas pela pipeline, testadas antes de publicar
+#   servidor      + deploy/compose.vps.yml: imagens do registry (tag = commit),
+#                 sem porta; a borda Caddy da VPS fala com o `web` pela rede
+#
+# Detalhes: README.md (seção 9) e deploy/README.md.
+# =============================================================================
+
+name: vitrine
+
+x-logs: &logs
+  # Sem teto, o log de um container cresce até encher o disco — que é
+  # compartilhado com os outros sistemas do servidor.
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+x-labels: &labels
+  com.fronteiratec.sistema: vitrine
+
+x-db-env: &db-env
+  POSTGRES_DB: vitrine
+  POSTGRES_USER: vitrine
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+
+x-api-build: &api-build
+  context: .
+  dockerfile: server/Dockerfile
+  args:
+    APP_VERSION: ${VITRINE_TAG:-local}
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      <<: *db-env
+      TZ: ${TZ:-America/Sao_Paulo}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vitrine -d vitrine"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    mem_limit: 256m
+    logging: *logs
+    labels: *labels
+
+  migrate:
+    build: *api-build
+    image: ${VITRINE_IMAGE_PREFIX:-vitrine}-api:${VITRINE_TAG:-local}
+    command: ["node", "server/src/migrate.js"]
+    restart: "no"
+    environment:
+      ADMIN_DATABASE_URL: postgres://vitrine:${POSTGRES_PASSWORD}@db:5432/vitrine
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?defina APP_DB_PASSWORD no .env}
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 256m
+    logging: *logs
+    labels: *labels
+
+  api:
+    build: *api-build
+    image: ${VITRINE_IMAGE_PREFIX:-vitrine}-api:${VITRINE_TAG:-local}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://authenticator:${APP_DB_PASSWORD}@db:5432/vitrine
+      SITE_URL: ${SITE_URL:-}
+      TRUST_PROXY: 1
+      UPLOADS_DIR: /data/arquivos
+      SHELL_URL: http://web/index.html
+      GEOIP_DB: /geoip/GeoLite2-City.mmdb
+      ANALYTICS_TIMEZONE: ${TZ:-America/Sao_Paulo}
+      COOKIE_SECURE: ${COOKIE_SECURE:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      TZ: ${TZ:-America/Sao_Paulo}
+    volumes:
+      - arquivos:/data/arquivos
+      - geoip:/geoip:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    mem_limit: 256m
+    logging: *logs
+    labels: *labels
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+      args:
+        VITE_SITE_URL: ${SITE_URL:-}
+        APP_VERSION: ${VITRINE_TAG:-local}
+    image: ${VITRINE_IMAGE_PREFIX:-vitrine}-web:${VITRINE_TAG:-local}
+    restart: unless-stopped
+    # Só nesta máquina por padrão. Porta publicada pelo Docker passa por cima
+    # do firewall (UFW): num servidor, 0.0.0.0 exporia o site em HTTP puro,
+    # contornando o HTTPS. No servidor, o compose.vps.yml remove a porta.
+    ports:
+      - "${HTTP_BIND:-127.0.0.1}:${HTTP_PORT:-8080}:80"
+    environment:
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
+      REAL_IP_HEADER: ${REAL_IP_HEADER:-X-Forwarded-For}
+    volumes:
+      - arquivos:/data/arquivos:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    mem_limit: 64m
+    logging: *logs
+    labels: *labels
+
+  # Base de localização (GeoLite2 City, da MaxMind), atualizada toda semana.
+  # Exige conta gratuita em maxmind.com: GEOIP_ACCOUNT_ID e GEOIP_LICENSE_KEY
+  # no .env. Sem ela, a audiência é contada igual, só que sem país e cidade.
+  geoipupdate:
+    image: ghcr.io/maxmind/geoipupdate:v7
+    profiles: ["geoip"]
+    restart: unless-stopped
+    environment:
+      GEOIPUPDATE_ACCOUNT_ID: ${GEOIP_ACCOUNT_ID:-}
+      GEOIPUPDATE_LICENSE_KEY: ${GEOIP_LICENSE_KEY:-}
+      GEOIPUPDATE_EDITION_IDS: GeoLite2-City
+      GEOIPUPDATE_FREQUENCY: 168
+    volumes:
+      - geoip:/usr/share/GeoIP
+    mem_limit: 64m
+    logging: *logs
+    labels: *labels
+
+volumes:
+  db-data:
+  arquivos:
+  geoip:

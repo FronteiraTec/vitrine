@@ -1,6 +1,7 @@
 import { MessageCircle, PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useSiteSettings } from '@/hooks/use-queries'
+import { useLocale } from '@/contexts/LocaleContext'
 
 /**
  * Conexão INNE — canal de entrada para parceiros externos.
@@ -19,77 +20,64 @@ import { useSiteSettings } from '@/hooks/use-queries'
 const WHATSAPP_NUMBER = '554920496549'
 const WHATSAPP_DISPLAY = '+55 49 2049-6549'
 
-const MESSAGE = 'Olá! Gostaria de cadastrar uma demanda no programa Conexão INNE.'
-
-const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(MESSAGE)}`
-
 export function ConnectSection() {
   // Só o logotipo vem da configuração: "Conexão INNE" é o nome do programa, não
-  // a marca do site — renomear a vitrine não deveria renomear o programa.
+  // a marca do site — renomear a vitrine não deveria renomear o programa. Pelo
+  // mesmo motivo o nome não é traduzido.
   const { logoUrl } = useSiteSettings()
+  const { t } = useLocale()
+
+  // A mensagem pronta sai no idioma de quem clica: a equipe da incubadora já
+  // sabe, pela primeira linha, em que língua responder.
+  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t('connect.message'))}`
 
   return (
-    <section className="hero-gradient text-primary-foreground relative overflow-hidden">
-      {/* Trama de pontos: dá textura ao fundo escuro sem competir com o texto. */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.18]"
-        aria-hidden="true"
-        style={{
-          backgroundImage: 'radial-gradient(currentColor 1px, transparent 1px)',
-          backgroundSize: '22px 22px',
-        }}
-      />
-
-      <div className="container-page relative py-16 sm:py-20 lg:py-24">
-        <div className="grid items-center gap-12 lg:grid-cols-[1.15fr_1fr]">
+    <section className="hero-gradient text-white">
+      <div className="container py-5 py-sm-5 py-lg-5">
+        <div className="d-grid align-items-center gap-5 d-grid grid-split">
           <div>
-            <h2 className="font-display text-3xl leading-[1.1] text-balance-title sm:text-4xl lg:text-5xl">
+            <h2 className="fw-bold fs-3 text-balance fs-sm-2 fs-lg-1">
               Conexão INNE
             </h2>
 
-            <p className="mt-6 max-w-xl text-base leading-relaxed opacity-85 sm:text-lg">
-              O programa Conexão INNE aproxima empresas, entidades sem fins lucrativos e órgãos
-              governamentais das iniciativas e pesquisadores da incubadora. Parceiros apresentam
-              suas demandas e encontram soluções inovadoras ou propostas de projetos que atendam às
-              suas necessidades.
+            <p className="mt-4 mw-xl fs-6 lh-base opacity-75 fs-sm-5">
+              {t('connect.description')}
             </p>
 
-            <div className="mt-9">
+            <div className="mt-5">
               <Button
                 size="lg"
                 asChild
-                className="bg-primary-foreground text-primary h-13 hover:bg-white/90"
+                className="bg-white text-primary h-fx-13"
               >
                 <a
-                  href={WHATSAPP_URL}
+                  href={whatsappUrl}
                   target="_blank"
                   rel="noreferrer noopener"
-                  aria-label={`Cadastrar demanda pelo WhatsApp ${WHATSAPP_DISPLAY}`}
+                  aria-label={t('connect.ctaLabel', { phone: WHATSAPP_DISPLAY })}
                 >
                   <PlusCircle aria-hidden="true" />
-                  Cadastrar demanda
+                  {t('connect.cta')}
                 </a>
               </Button>
             </div>
 
-            <p className="mt-5 text-sm opacity-70 text-pretty">
-              Disponível para empresas, entidades sem fins lucrativos e órgãos governamentais.
-            </p>
+            <p className="mt-3 fs-7 opacity-75 text-pretty">{t('connect.audience')}</p>
 
-            <p className="mt-2 inline-flex items-center gap-1.5 text-sm opacity-70">
-              <MessageCircle className="size-4" aria-hidden="true" />
-              Atendimento por WhatsApp — {WHATSAPP_DISPLAY}
+            <p className="mt-2 d-inline-flex align-items-center gap-1 fs-7 opacity-75">
+              <MessageCircle className="icon" aria-hidden="true" />
+              {t('connect.whatsapp', { phone: WHATSAPP_DISPLAY })}
             </p>
           </div>
 
           {/* A marca sozinha, sem moldura. Some no celular: empilhada, seria
               só um bloco alto antes da chamada. */}
-          <div className="hidden items-center justify-center lg:flex">
+          <div className="d-none align-items-center justify-content-center d-lg-flex">
             <img
               src={logoUrl}
               alt=""
               aria-hidden="true"
-              className="max-h-40 w-auto max-w-full object-contain"
+              className="max-h-fx-40 w-auto mw-100 object-fit-contain"
             />
           </div>
         </div>

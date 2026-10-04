@@ -1,0 +1,2300 @@
+// =============================================================================
+// Vitrine — folha de estilo do projeto
+//
+// Bootstrap 5.3 com a aparência de fábrica, tematizado só na cor institucional.
+// Tudo o que vem depois do import existe por um destes três motivos:
+//
+//   1. acessibilidade (escala de texto, alto contraste, movimento reduzido);
+//   2. comportamento que o Bootstrap não cobre (estados do Radix, line-clamp);
+//   3. cores de dados já validadas para daltonismo, que seria erro descartar.
+//
+// Não há aqui nenhuma tentativa de recriar o visual anterior: a escolha foi
+// adotar o Bootstrap como ele é.
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// 1. Variáveis do Bootstrap — precisam vir ANTES do import
+// -----------------------------------------------------------------------------
+
+// Verde institucional (INNE/UFFS). É a única cor de marca sobrescrita: o resto
+// da paleta é a do Bootstrap.
+$primary: #145c33;
+
+// RFS desligado de propósito.
+//
+// Por padrão o Bootstrap torna os títulos fluidos (`font-size: calc(1.375rem +
+// 1.5vw)`), o que impede multiplicá-los por um fator de acessibilidade sem
+// recalcular a expressão inteira. Com tamanhos fixos, o controle de "aumentar
+// texto" vira uma multiplicação simples — e, principalmente, continua mexendo
+// SÓ na tipografia, sem arrastar espaçamento junto como faria escalar a raiz.
+$enable-rfs: false;
+
+// Import seletivo, e não `bootstrap/scss/bootstrap`.
+//
+// O pacote inteiro compila 256 KB de CSS, e boa parte é de componentes que
+// este projeto não usa — accordion, navbar, list-group, progress, carrossel e
+// os popover/tooltip/toast do Bootstrap, todos substituídos por primitivas do
+// Radix, que são acessíveis sem depender do JavaScript dele.
+//
+// Em portal de notícia isso não é detalhe: CSS bloqueia a renderização, e o
+// peso entra direto no LCP da primeira visita. A lista abaixo é conferida pelo
+// auditor de classes órfãs — se faltar um módulo, ele acusa a classe que
+// deixou de existir.
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/variables-dark';
+@import 'bootstrap/scss/maps';
+@import 'bootstrap/scss/mixins';
+@import 'bootstrap/scss/utilities';
+
+@import 'bootstrap/scss/root';
+@import 'bootstrap/scss/reboot';
+@import 'bootstrap/scss/type';
+@import 'bootstrap/scss/images';
+@import 'bootstrap/scss/containers';
+@import 'bootstrap/scss/grid';
+@import 'bootstrap/scss/tables';
+@import 'bootstrap/scss/forms';
+@import 'bootstrap/scss/buttons';
+@import 'bootstrap/scss/transitions';
+@import 'bootstrap/scss/dropdown';
+@import 'bootstrap/scss/nav';
+@import 'bootstrap/scss/card';
+@import 'bootstrap/scss/breadcrumb';
+@import 'bootstrap/scss/pagination';
+@import 'bootstrap/scss/badge';
+@import 'bootstrap/scss/alert';
+@import 'bootstrap/scss/spinners';
+@import 'bootstrap/scss/modal';
+@import 'bootstrap/scss/offcanvas';
+@import 'bootstrap/scss/helpers';
+@import 'bootstrap/scss/utilities/api';
+
+// -----------------------------------------------------------------------------
+// 2. Acessibilidade — escala tipográfica
+//
+// Dirigida por `data-font-scale` no <html>, gravado por `src/lib/a11y.js`.
+// Multiplica apenas tamanhos de TEXTO: a grade, o espaçamento, as áreas de
+// toque e as imagens continuam iguais. É a diferença entre ampliar o texto e
+// dar zoom na página.
+// -----------------------------------------------------------------------------
+
+:root {
+  --a11y-text-scale: 1;
+}
+
+html[data-font-scale='lg'] {
+  --a11y-text-scale: 1.125;
+}
+html[data-font-scale='xl'] {
+  --a11y-text-scale: 1.25;
+}
+html[data-font-scale='xxl'] {
+  --a11y-text-scale: 1.45;
+}
+
+body {
+  font-size: calc(#{$font-size-base} * var(--a11y-text-scale));
+}
+
+// Os tamanhos saem das próprias variáveis do Bootstrap, e não de uma cópia:
+// mudar o tema continua sendo um lugar só.
+$a11y-headings: (
+  1: $h1-font-size,
+  2: $h2-font-size,
+  3: $h3-font-size,
+  4: $h4-font-size,
+  5: $h5-font-size,
+  6: $h6-font-size,
+);
+
+@each $level, $size in $a11y-headings {
+  h#{$level},
+  .h#{$level},
+  .fs-#{$level} {
+    font-size: calc(#{$size} * var(--a11y-text-scale));
+  }
+}
+
+.small,
+small {
+  font-size: calc(#{$small-font-size} * var(--a11y-text-scale));
+}
+
+.lead {
+  font-size: calc(#{$lead-font-size} * var(--a11y-text-scale));
+}
+
+// -----------------------------------------------------------------------------
+// 3. Acessibilidade — alto contraste
+//
+// O atributo `data-contrast="high"` vem acompanhado de `data-bs-theme="dark"`,
+// posto pelo mesmo módulo. Isso é deliberado: o tema escuro do Bootstrap já
+// recolore cartões, formulários, tabelas e bordas por conta própria. Reaproveitá-lo
+// evita reescrever componente por componente — aqui só empurramos o contraste
+// até o nível AAA.
+//
+// Relações sobre o fundo preto: texto 21:1, links e foco 17,7:1, erro 8,2:1 —
+// todas acima do 7:1 que o critério 1.4.6 exige.
+// -----------------------------------------------------------------------------
+
+$hc-bg: #000000;
+$hc-fg: #ffffff;
+$hc-accent: #ffe600;
+
+html[data-contrast='high'] {
+  --bs-body-bg: #{$hc-bg};
+  --bs-body-bg-rgb: 0, 0, 0;
+  --bs-body-color: #{$hc-fg};
+  --bs-body-color-rgb: 255, 255, 255;
+
+  --bs-emphasis-color: #{$hc-fg};
+  --bs-secondary-color: #{$hc-fg};
+  --bs-secondary-bg: #141414;
+  --bs-tertiary-color: #{$hc-fg};
+  --bs-tertiary-bg: #141414;
+
+  --bs-border-color: #{$hc-fg};
+  --bs-border-color-translucent: #{$hc-fg};
+
+  --bs-link-color: #{$hc-accent};
+  --bs-link-hover-color: #{$hc-accent};
+  --bs-link-color-rgb: 255, 230, 0;
+
+  --bs-primary: #{$hc-fg};
+  --bs-primary-rgb: 255, 255, 255;
+
+  --bs-heading-color: #{$hc-fg};
+
+  // `text-body-secondary` é o token do texto de apoio — data, autoria, legenda.
+  // Mantê-lo cinza deixaria justamente a informação secundária abaixo do piso.
+  .text-body-secondary,
+  .text-muted {
+    color: #{$hc-fg} !important;
+  }
+
+  // Botões: as variantes do Bootstrap gravam valores literais em `--bs-btn-*`,
+  // então não herdam as variáveis acima e precisam ser ditas por extenso.
+  .btn {
+    --bs-btn-color: #{$hc-bg};
+    --bs-btn-bg: #{$hc-fg};
+    --bs-btn-border-color: #{$hc-fg};
+    --bs-btn-hover-color: #{$hc-bg};
+    --bs-btn-hover-bg: #e6e6e6;
+    --bs-btn-hover-border-color: #{$hc-fg};
+    --bs-btn-active-color: #{$hc-bg};
+    --bs-btn-active-bg: #cccccc;
+    --bs-btn-disabled-color: #{$hc-bg};
+    --bs-btn-disabled-bg: #999999;
+  }
+
+  .btn-outline-secondary,
+  .btn-outline-primary,
+  .btn-light,
+  .btn-link {
+    --bs-btn-color: #{$hc-fg};
+    --bs-btn-bg: transparent;
+    --bs-btn-border-color: #{$hc-fg};
+    --bs-btn-hover-color: #{$hc-bg};
+    --bs-btn-hover-bg: #{$hc-fg};
+    --bs-btn-hover-border-color: #{$hc-fg};
+    --bs-btn-active-color: #{$hc-bg};
+    --bs-btn-active-bg: #{$hc-fg};
+  }
+
+  .card,
+  .dropdown-menu,
+  .offcanvas,
+  .modal-content,
+  .popover-panel {
+    --bs-card-bg: #{$hc-bg};
+    background-color: #{$hc-bg};
+    border-color: #{$hc-fg};
+    color: #{$hc-fg};
+  }
+
+  .form-control,
+  .form-select {
+    background-color: #{$hc-bg};
+    color: #{$hc-fg};
+    border-color: #{$hc-fg};
+  }
+
+  // Cabeçalho e rodapé recebem cor por `style` inline, vinda de `site_settings`.
+  // Estilo inline vence seletor, e `!important` é a única forma de alcançá-lo —
+  // uso contido e deliberado: é a escolha de acessibilidade do leitor passando
+  // à frente da escolha estética do administrador.
+  .site-header,
+  .site-footer {
+    background-color: #{$hc-bg} !important;
+    background-image: none !important;
+    color: #{$hc-fg} !important;
+    border-color: #{$hc-fg} !important;
+  }
+
+  .hero-gradient {
+    background-color: #{$hc-bg} !important;
+    background-image: none !important;
+    outline: 1px solid #{$hc-fg};
+  }
+
+  // Sublinhado devolve aos links a marca que não depende de cor (critério
+  // 1.4.1). Botões ficam de fora: sublinhar a caixa de um botão confunde.
+  a:not(.btn):not(.nav-link):not(.navbar-brand) {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  :focus-visible {
+    outline: 3px solid #{$hc-accent};
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: #{$hc-accent};
+    color: #{$hc-bg};
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 4. Acessibilidade — movimento
+//
+// A preferência do sistema vale sozinha; `data-motion="reduced"` existe para
+// quem não quer (ou não consegue) mudar a configuração do aparelho inteiro.
+// -----------------------------------------------------------------------------
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html[data-motion='reduced'] {
+  scroll-behavior: auto;
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 5. Foco e navegação por teclado
+// -----------------------------------------------------------------------------
+
+:focus-visible {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: 2px;
+}
+
+// "Pular para o conteúdo": invisível até receber foco.
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  z-index: 1080;
+  padding: 0.5rem 1rem;
+  background-color: var(--bs-primary);
+  color: #fff;
+  border-radius: var(--bs-border-radius);
+  text-decoration: none;
+
+  &:focus {
+    left: 1rem;
+    top: 1rem;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 6. Estados dos componentes Radix
+//
+// O Radix é headless: ele anuncia o estado em `data-state` e não traz estilo
+// nenhum. Estas regras são o mínimo para que abrir e fechar não seja um corte
+// seco. O `prefers-reduced-motion` acima já as neutraliza quando é o caso.
+// -----------------------------------------------------------------------------
+
+@keyframes vitrine-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+[data-state='open'][data-radix-popper-content-wrapper],
+.popover-panel[data-state='open'],
+.dropdown-panel[data-state='open'],
+.dialog-panel[data-state='open'] {
+  animation: vitrine-fade-in 150ms ease-out;
+}
+
+// Painel flutuante genérico: popover, menu e diálogo compartilham a superfície.
+.popover-panel,
+.dropdown-panel {
+  background-color: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  box-shadow: var(--bs-box-shadow);
+  z-index: 1070;
+}
+
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1055;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.dialog-panel {
+  position: fixed;
+  z-index: 1056;
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+}
+
+// -----------------------------------------------------------------------------
+// 7. Utilidades que o Bootstrap não tem
+// -----------------------------------------------------------------------------
+
+// Ícones: o Bootstrap não traz utilitário de tamanho para SVG.
+.icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+.icon-sm {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+}
+.icon-lg {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+.icon-xl {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+}
+
+// Corta o texto em N linhas. Usado nos resumos dos cartões, para que uma
+// chamada longa não desalinhe a grade.
+.line-clamp-2,
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-2 {
+  -webkit-line-clamp: 2;
+}
+.line-clamp-3 {
+  -webkit-line-clamp: 3;
+}
+
+// Distribui a quebra de linha do título em vez de deixar uma palavra órfã.
+.text-balance {
+  text-wrap: balance;
+}
+.text-pretty {
+  text-wrap: pretty;
+}
+
+// Rolagem sem barra visível — trilhos de abas e carrossel.
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 8. Tipografia da notícia
+//
+// Entra na escala de acessibilidade pelo mesmo fator do resto do texto.
+// A coluna de leitura fica em torno de 70 caracteres por linha, que é a medida
+// em que a leitura corrida se sustenta.
+// -----------------------------------------------------------------------------
+
+.article-column {
+  max-width: 44rem;
+  margin-inline: auto;
+}
+
+.article-title {
+  font-size: calc(1.75rem * var(--a11y-text-scale));
+  line-height: 1.15;
+}
+
+.article-lead {
+  font-size: calc(1.125rem * var(--a11y-text-scale));
+  line-height: 1.6;
+}
+
+.article-body {
+  font-size: calc(1.0625rem * var(--a11y-text-scale));
+  line-height: 1.8;
+
+  p {
+    margin-top: 1.25rem;
+    white-space: pre-line;
+  }
+
+  h2 {
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    font-size: calc(1.375rem * var(--a11y-text-scale));
+  }
+
+  ul {
+    margin-top: 1.25rem;
+    padding-left: 1.5rem;
+  }
+
+  li + li {
+    margin-top: 0.5rem;
+  }
+
+  // A citação usa o `.blockquote` do Bootstrap, que tem tamanho fixo; aqui ela
+  // entra na mesma escala de acessibilidade do resto do texto.
+  .blockquote {
+    font-size: calc(#{$blockquote-font-size} * var(--a11y-text-scale));
+    line-height: 1.5;
+  }
+}
+
+@include media-breakpoint-up(sm) {
+  .article-title {
+    font-size: calc(2.5rem * var(--a11y-text-scale));
+  }
+  .article-body {
+    font-size: calc(1.125rem * var(--a11y-text-scale));
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 9. Cores de status do workflow
+//
+// Mantidas da versão anterior porque NÃO são escolha estética: a paleta foi
+// verificada para separação sob protanopia, deuteranopia e tritanopia, com
+// piso de distinção em visão normal e contraste mínimo sobre a superfície
+// clara. Descartá-las na migração jogaria fora esse trabalho.
+//
+// Rascunho e arquivado são cinzas de propósito — são estados inativos —, e todo
+// gráfico traz rótulo e contagem visíveis, então a cor nunca é a única
+// portadora de informação.
+// -----------------------------------------------------------------------------
+
+$status-colors: (
+  'published': #1a7f5a,
+  'review': #b5711a,
+  'draft': #74777d,
+  'rejected': #c0392b,
+  'archived': #4a4f7a,
+);
+
+:root {
+  @each $name, $color in $status-colors {
+    --status-#{$name}: #{$color};
+    --status-#{$name}-bg: #{rgba($color, 0.12)};
+  }
+}
+
+@each $name, $color in $status-colors {
+  .status-#{$name} {
+    color: #{$color};
+  }
+  .badge-status-#{$name} {
+    color: #{darken($color, 8%)};
+    background-color: #{rgba($color, 0.12)};
+    border: 1px solid #{rgba($color, 0.25)};
+  }
+  .dot-status-#{$name} {
+    background-color: #{$color};
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 10. Blocos visuais remanescentes
+// -----------------------------------------------------------------------------
+
+// Faixa escura usada nas seções de destaque da home.
+.hero-gradient {
+  background-color: #10241a;
+  background-image: linear-gradient(155deg, #1d4a33 0%, #10241a 55%, #070f0b 100%);
+  color: #fff;
+}
+
+// Proporção fixa para imagem de capa. O Bootstrap traz `.ratio`, usada onde
+// cabe; esta variante existe para o wrapper que também recorta o conteúdo.
+.media-frame {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bs-secondary-bg);
+
+  > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 11. Variantes de componente que o Bootstrap não traz
+//
+// Escritas pela API de variáveis do próprio Bootstrap (`--bs-btn-*`), e não com
+// regras soltas: assim elas herdam estado de foco, desabilitado e o tema escuro
+// do alto contraste sem nenhuma linha a mais.
+// -----------------------------------------------------------------------------
+
+// Botão sem preenchimento, para ações secundárias dentro de listas e cabeçalhos.
+.btn-ghost {
+  --bs-btn-color: var(--bs-body-color);
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: transparent;
+  --bs-btn-hover-color: var(--bs-body-color);
+  --bs-btn-hover-bg: var(--bs-secondary-bg);
+  --bs-btn-hover-border-color: transparent;
+  --bs-btn-active-color: var(--bs-body-color);
+  --bs-btn-active-bg: var(--bs-tertiary-bg);
+  --bs-btn-active-border-color: transparent;
+  --bs-btn-disabled-color: var(--bs-secondary-color);
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: transparent;
+}
+
+// Igual ao anterior, mas partindo do texto de apoio.
+.btn-subtle {
+  @extend .btn-ghost;
+  --bs-btn-color: var(--bs-secondary-color);
+}
+
+// Botão quadrado, só com ícone. O Bootstrap dimensiona pelo texto, então sem
+// isto um botão de ícone sai retangular.
+.btn-icon {
+  --bs-btn-padding-x: 0;
+  --bs-btn-padding-y: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &.btn-sm {
+    width: 2rem;
+    height: 2rem;
+  }
+  &.btn-lg {
+    width: 3rem;
+    height: 3rem;
+  }
+}
+
+// Carregamento. O `.placeholder` do Bootstrap exige marcação própria por
+// elemento; aqui basta uma superfície pulsante que assume a forma do espaço.
+.skeleton {
+  background-color: var(--bs-secondary-bg);
+  border-radius: var(--bs-border-radius);
+  animation: vitrine-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes vitrine-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+// Avatar.
+.avatar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  background-color: var(--bs-secondary-bg);
+  color: var(--bs-emphasis-color);
+  font-weight: 500;
+  user-select: none;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &.avatar-sm {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.75rem;
+  }
+  &.avatar-md {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 0.875rem;
+  }
+  &.avatar-lg {
+    width: 3.5rem;
+    height: 3.5rem;
+    font-size: 1rem;
+  }
+  &.avatar-xl {
+    width: 5rem;
+    height: 5rem;
+    font-size: 1.25rem;
+  }
+}
+
+// Caixa de seleção e interruptor.
+//
+// O Radix renderiza um <button>, e não um <input>, então `.form-check-input`
+// do Bootstrap não se aplica. Estas regras imitam a aparência dele sobre o
+// elemento que o Radix realmente entrega — mantendo o comportamento acessível
+// da primitiva, que é o motivo de ela estar aqui.
+.check-box {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.25em;
+  background-color: var(--bs-body-bg);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &[data-state='checked'],
+  &[data-state='indeterminate'] {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+.switch {
+  width: 2.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background-color: var(--bs-border-color);
+  display: inline-flex;
+  align-items: center;
+  transition: background-color 0.15s ease-in-out;
+
+  &[data-state='checked'] {
+    background-color: var(--bs-primary);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+
+  .switch-thumb {
+    display: block;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background-color: #fff;
+    transform: translateX(0.125rem);
+    transition: transform 0.15s ease-in-out;
+    pointer-events: none;
+  }
+
+  &[data-state='checked'] .switch-thumb {
+    transform: translateX(1.125rem);
+  }
+}
+
+// Dica flutuante. O tooltip do Bootstrap depende do JS dele; aqui quem controla
+// abertura, atraso e foco é o Radix, então só a superfície é nossa.
+.tooltip-panel {
+  z-index: 1080;
+  max-width: 14rem;
+  padding: 0.375rem 0.625rem;
+  border-radius: var(--bs-border-radius);
+  background-color: var(--bs-emphasis-color);
+  color: var(--bs-body-bg);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-wrap: pretty;
+}
+
+.tooltip-arrow {
+  fill: var(--bs-emphasis-color);
+}
+
+
+// -----------------------------------------------------------------------------
+// 12. Superfícies flutuantes
+//
+// Diálogo, gaveta, menu e select são controlados pelo Radix — foco preso,
+// `Esc`, clique fora, retorno do foco ao gatilho. O Bootstrap oferece modal e
+// offcanvas equivalentes, mas presos ao JavaScript dele, que não conversa com
+// o estado do React. Daqui sai só a aparência; o comportamento continua sendo
+// o das primitivas acessíveis.
+// -----------------------------------------------------------------------------
+
+.dialog-panel {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100vw - 2rem);
+  max-height: calc(100dvh - 2rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius-lg);
+  box-shadow: var(--bs-box-shadow-lg);
+
+  &.dialog-sm {
+    max-width: 28rem;
+  }
+  &.dialog-md {
+    max-width: 34rem;
+  }
+  &.dialog-lg {
+    max-width: 44rem;
+  }
+  &.dialog-xl {
+    max-width: 58rem;
+  }
+}
+
+.sheet-panel {
+  position: fixed;
+  z-index: 1056;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  box-shadow: var(--bs-box-shadow-lg);
+
+  &.sheet-start {
+    inset-block: 0;
+    left: 0;
+    width: min(20rem, 85vw);
+    border-right: 1px solid var(--bs-border-color);
+  }
+  &.sheet-end {
+    inset-block: 0;
+    right: 0;
+    width: min(22rem, 88vw);
+    border-left: 1px solid var(--bs-border-color);
+  }
+  &.sheet-bottom {
+    inset-inline: 0;
+    bottom: 0;
+    max-height: 85dvh;
+    border-top: 1px solid var(--bs-border-color);
+    border-start-start-radius: var(--bs-border-radius-lg);
+    border-start-end-radius: var(--bs-border-radius-lg);
+  }
+}
+
+// Item de menu e de select. `.dropdown-item` do Bootstrap serviria, mas assume
+// <a> ou <button> em <li>; o Radix entrega um <div> com `role="menuitem"`.
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--bs-border-radius-sm);
+  font-size: 0.875rem;
+  color: var(--bs-body-color);
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+
+  &:focus,
+  &[data-highlighted] {
+    background-color: var(--bs-secondary-bg);
+  }
+
+  &[data-disabled] {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  &[data-state='checked'] {
+    color: var(--bs-primary);
+    font-weight: 500;
+  }
+
+  &.menu-item-danger {
+    color: var(--bs-danger);
+
+    &:focus,
+    &[data-highlighted] {
+      background-color: rgba(var(--bs-danger-rgb), 0.1);
+    }
+  }
+}
+
+.menu-panel {
+  min-width: 11rem;
+  max-height: 18rem;
+  overflow: hidden auto;
+  padding: 0.25rem;
+  background-color: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  box-shadow: var(--bs-box-shadow);
+  z-index: 1070;
+}
+
+// -----------------------------------------------------------------------------
+// Seletor de idioma do cabeçalho
+//
+// Mesma altura dos botões de ícone ao lado (2.5rem), com respiro lateral curto:
+// no celular ele divide a linha com o menu, a marca e a busca, e cada pixel
+// conta. Abaixo de 360px — o iPhone SE de primeira geração — a bandeira sai e
+// fica só o código do idioma, que é a informação que importa; o nome completo
+// continua no rótulo acessível.
+// -----------------------------------------------------------------------------
+
+.lang-flag {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 1.3125rem;
+  height: 0.875rem;
+  overflow: hidden;
+  border-radius: 2px;
+  // Contorno sutil: sem ele, a faixa branca da bandeira some no fundo claro.
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// `.btn.` na frente para vencer o `.gap-2` do componente Button, que como todo
+// utilitário do Bootstrap sai com `!important`.
+.btn.language-trigger {
+  --bs-btn-padding-x: 0.5rem;
+  --bs-btn-padding-y: 0;
+  --bs-btn-font-size: 0.875rem;
+  --bs-btn-font-weight: 600;
+  height: 2.5rem;
+  gap: 0.375rem !important;
+
+  .language-code {
+    letter-spacing: 0.02em;
+  }
+
+  @media (max-width: 359.98px) {
+    .lang-flag {
+      display: none;
+    }
+  }
+}
+
+// Gatilho do select: mesma aparência de `.form-select`, mas sobre o <button>
+// que o Radix renderiza.
+.select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: calc(1.5em + 0.75rem + 2px);
+  padding: 0.375rem 0.75rem;
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  border: var(--bs-border-width) solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  font-size: 1rem;
+  text-align: start;
+
+  &[data-placeholder] {
+    color: var(--bs-secondary-color);
+  }
+
+  &:disabled {
+    background-color: var(--bs-secondary-bg);
+    opacity: 0.65;
+  }
+
+  &.select-trigger-sm {
+    min-height: calc(1.5em + 0.5rem + 2px);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  > span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// Amostra de cor: o <input type="color"> nativo desenha uma borda própria que
+// não dá para estilizar, então ele é ampliado além do recorte do contêiner.
+.color-swatch {
+  position: relative;
+  display: inline-block;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: var(--bs-border-width) solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+
+  input[type='color'] {
+    position: absolute;
+    inset: -0.5rem;
+    width: calc(100% + 1rem);
+    height: calc(100% + 1rem);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+}
+
+
+// -----------------------------------------------------------------------------
+// 13. Utilidades de layout que o Bootstrap não cobre
+//
+// Três lacunas reais, e a decisão de preenchê-las em vez de contorná-las:
+//
+// • ESPAÇAMENTO ENTRE IRMÃOS (`.space-y-*`). O Bootstrap resolve isso com
+//   `.vstack` + `gap`, o que exige transformar o contêiner em flex. Em blocos
+//   que hoje são fluxo normal — texto corrido, listas, seções de formulário —
+//   virar flex muda a forma como as margens colapsam e como os filhos se
+//   esticam. Uma regra `> * + *` reproduz o comportamento antigo exatamente,
+//   e trocar cento e poucos usos por flex seria arriscar regressão de layout
+//   em troca de nada.
+//
+// • GRADE (`.grid-cols-*`). O sistema do Bootstrap é `.row`/`.col`, que exige
+//   um elemento embrulhando cada filho. As listagens deste projeto usam CSS
+//   Grid direto, sem esse elemento. `d-grid` do Bootstrap existe, mas não traz
+//   utilitário de colunas — é só o que falta.
+//
+// • NUMERAL TABULAR. Usado em paginação e tabelas para os dígitos não
+//   "dançarem" ao trocar de página.
+// -----------------------------------------------------------------------------
+
+$espacos: (
+  1: 0.25rem,
+  2: 0.5rem,
+  3: 1rem,
+  4: 1.5rem,
+  5: 3rem,
+);
+
+@each $passo, $valor in $espacos {
+  .space-y-#{$passo} > * + * {
+    margin-top: #{$valor};
+  }
+  .space-x-#{$passo} > * + * {
+    margin-left: #{$valor};
+  }
+}
+
+.grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.grid-cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@each $nome, $largura in $grid-breakpoints {
+  @if $largura != 0 {
+    @media (min-width: #{$largura}) {
+      @for $n from 1 through 4 {
+        .grid-cols-#{$nome}-#{$n} {
+          grid-template-columns: repeat(#{$n}, minmax(0, 1fr));
+        }
+      }
+    }
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+// `min-width: 0` em filho de flex é o que permite o texto truncar em vez de
+// empurrar o contêiner. O Bootstrap não traz o utilitário.
+.min-w-0 {
+  min-width: 0;
+}
+
+// Sublinhado só ao passar o mouse ou receber foco. O Bootstrap não tem
+// utilitário de estado; esta é a única variante de `hover` que o projeto usa
+// com frequência suficiente para merecer uma classe.
+.hover-underline {
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}
+
+// Degraus intermediários de tipografia.
+//
+// A escala `.fs-1`..`.fs-6` do Bootstrap para em 1rem, e o projeto usa dois
+// tamanhos menores — rótulo de apoio e microcópia. Entram na escala de
+// acessibilidade pelo mesmo fator do resto do texto.
+.fs-7 {
+  font-size: calc(0.875rem * var(--a11y-text-scale));
+}
+.fs-8 {
+  font-size: calc(0.75rem * var(--a11y-text-scale));
+}
+
+
+// -----------------------------------------------------------------------------
+// 14. Complementos da migração
+//
+// Lacunas que só apareceram ao traduzir as telas: larguras de leitura, alturas
+// fixas de esqueleto, tracking e um punhado de utilitários que o Bootstrap não
+// tem. Preferiu-se uma classe a um `style` inline espalhado — inline não entra
+// no alto contraste nem na escala de acessibilidade.
+// -----------------------------------------------------------------------------
+
+$larguras: (
+  'sm': 24rem,
+  'md': 28rem,
+  'lg': 32rem,
+  'xl': 36rem,
+  '2xl': 42rem,
+  '3xl': 48rem,
+  '4xl': 56rem,
+);
+
+@each $nome, $valor in $larguras {
+  .mw-#{$nome} {
+    max-width: #{$valor};
+  }
+}
+
+// Alturas e larguras fixas (degrau de 0,25rem, como na origem). Usadas em
+// esqueleto de carregamento e em caixas de altura previsível.
+$fixos: (8, 9, 11, 13, 16, 20, 24, 32, 40, 44, 48, 56, 64, 72, 80, 96);
+
+@each $passo in $fixos {
+  .h-fx-#{$passo} {
+    height: #{$passo * 0.25}rem;
+  }
+  .w-fx-#{$passo} {
+    width: #{$passo * 0.25}rem;
+  }
+}
+
+.tracking-tight {
+  letter-spacing: -0.02em;
+}
+.tracking-wide {
+  letter-spacing: 0.12em;
+}
+
+.place-items-center {
+  place-items: center;
+}
+
+.list-disc {
+  list-style-type: disc;
+}
+
+.text-prewrap {
+  white-space: pre-line;
+}
+
+.border-dashed {
+  border-style: dashed !important;
+}
+
+
+// -----------------------------------------------------------------------------
+// 15. Grades nomeadas
+//
+// Substituem as medidas arbitrárias que o Tailwind aceitava na própria classe
+// (`sm:grid-cols-[10rem_1fr]`). Sem o compilador dele isso não significa nada,
+// e a alternativa — `.row`/`.col` do Bootstrap — exigiria um elemento a mais
+// embrulhando cada filho. Nomear a intenção também diz mais do que a medida.
+// -----------------------------------------------------------------------------
+
+@include media-breakpoint-up(sm) {
+  // Miniatura à esquerda, campos à direita: editores de galeria e de equipe.
+  .grid-media {
+    grid-template-columns: 10rem minmax(0, 1fr);
+  }
+  // Campo largo + campo curto lado a lado.
+  .grid-form {
+    grid-template-columns: minmax(0, 1fr) 8rem;
+  }
+  .w-sm-48 {
+    width: 12rem;
+  }
+}
+
+@include media-breakpoint-up(md) {
+  // Rótulo à esquerda, controle à direita: tela de aparência.
+  .grid-aside {
+    grid-template-columns: 12rem minmax(0, 1fr);
+  }
+  .grid-footer-3 {
+    grid-template-columns: 1.4fr 1fr 1fr;
+  }
+  .grid-footer-2 {
+    grid-template-columns: 1.6fr 1fr;
+  }
+}
+
+@include media-breakpoint-up(lg) {
+  .grid-split {
+    grid-template-columns: 1.15fr 1fr;
+  }
+  .col-span-2 {
+    grid-column: span 2;
+  }
+  // Abre espaço para a barra lateral fixa do painel.
+  .ps-lg-sidebar {
+    padding-left: 16rem;
+  }
+}
+
+// Largura de cada item do carrossel, por faixa de tela.
+.carousel-slide {
+  flex-shrink: 0;
+  width: 82%;
+}
+
+@include media-breakpoint-up(sm) {
+  .carousel-slide {
+    width: 46%;
+  }
+}
+
+@include media-breakpoint-up(lg) {
+  .carousel-slide {
+    width: 31.5%;
+  }
+}
+
+
+// -----------------------------------------------------------------------------
+// 16. Tamanhos fixos e complementos finais
+//
+// A escala segue o degrau de 0,25rem da origem, para as caixas manterem a
+// proporção que tinham. Vira classe, e não `style` inline, porque inline não
+// participa do alto contraste nem da escala de acessibilidade.
+// -----------------------------------------------------------------------------
+
+@for $n from 1 through 96 {
+  .h-fx-#{$n} {
+    height: #{$n * 0.25}rem;
+  }
+  .w-fx-#{$n} {
+    width: #{$n * 0.25}rem;
+  }
+  .min-h-fx-#{$n} {
+    min-height: #{$n * 0.25}rem;
+  }
+  .max-h-fx-#{$n} {
+    max-height: #{$n * 0.25}rem;
+  }
+  .min-w-fx-#{$n} {
+    min-width: #{$n * 0.25}rem;
+  }
+  .max-w-fx-#{$n} {
+    max-width: #{$n * 0.25}rem;
+  }
+}
+
+// Tipografia responsiva: o Bootstrap não gera `.fs-*` por breakpoint.
+@each $nome, $largura in $grid-breakpoints {
+  @if $largura != 0 {
+    @media (min-width: #{$largura}) {
+      @each $nivel, $tamanho in $a11y-headings {
+        .fs-#{$nome}-#{$nivel} {
+          font-size: calc(#{$tamanho} * var(--a11y-text-scale));
+        }
+      }
+      .fs-#{$nome}-7 {
+        font-size: calc(0.875rem * var(--a11y-text-scale));
+      }
+      .fs-#{$nome}-8 {
+        font-size: calc(0.75rem * var(--a11y-text-scale));
+      }
+    }
+  }
+}
+
+// Herda a cor do contêiner — usado no cabeçalho, que pode ter cor escolhida
+// pelo administrador.
+.text-current {
+  color: currentColor;
+}
+
+// Lista com divisória entre itens, sem borda no último.
+.list-divided > * + * {
+  border-top: var(--bs-border-width) solid var(--bs-border-color);
+}
+
+@include media-breakpoint-up(lg) {
+  // Conteúdo + coluna lateral: página de detalhes da iniciativa.
+  .grid-detail {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+  }
+}
+
+
+// Grade além de 4 colunas — a tela de categorias usa 7 e 11 para alinhar
+// cabeçalho e linhas de uma tabela feita com CSS Grid.
+@for $n from 5 through 12 {
+  .grid-cols-#{$n} {
+    grid-template-columns: repeat(#{$n}, minmax(0, 1fr));
+  }
+}
+
+@each $nome, $largura in $grid-breakpoints {
+  @if $largura != 0 {
+    @media (min-width: #{$largura}) {
+      @for $n from 5 through 12 {
+        .grid-cols-#{$nome}-#{$n} {
+          grid-template-columns: repeat(#{$n}, minmax(0, 1fr));
+        }
+      }
+    }
+  }
+}
+
+
+// -----------------------------------------------------------------------------
+// 17. Correções pós-migração
+// -----------------------------------------------------------------------------
+
+// ---- Ícones dentro de controles -------------------------------------------
+//
+// O Tailwind resolvia isso com `[&_svg]:size-4` na própria variante do botão.
+// Não há classe equivalente no Bootstrap, e sem a regra os ícones do lucide
+// caem no padrão deles (24 px) e estouram a altura do controle.
+//
+// Fica no SCSS de propósito: é característica do componente, não decisão de
+// quem o usa. Assim nenhum ponto de uso precisa lembrar de passar `.icon`.
+
+.btn > svg,
+.menu-item > svg,
+.nav-link > svg,
+.badge > svg,
+.page-link > svg,
+.select-trigger > svg,
+.alert > svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.btn-lg > svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+// O ícone de um botão quadrado pode ser maior: não divide espaço com texto.
+.btn-icon > svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.btn-icon.btn-sm > svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+// ---- Estado ativo das abas ------------------------------------------------
+//
+// O Radix marca a aba selecionada com `data-state="active"`; o Bootstrap
+// estiliza `.active`. Sem esta ponte, a aba ativa ficava indistinguível das
+// outras — e a cor não seria suficiente sozinha de todo modo, por isso o peso
+// da fonte também muda.
+
+.nav-tabs .nav-link[data-state='active'] {
+  color: var(--bs-primary);
+  font-weight: 600;
+  border-bottom-color: var(--bs-primary);
+  background-color: transparent;
+}
+
+.nav-tabs .nav-link {
+  border-width: 0 0 2px 0;
+  border-style: solid;
+  border-color: transparent;
+  color: var(--bs-secondary-color);
+
+  &:hover {
+    color: var(--bs-body-color);
+    border-bottom-color: var(--bs-border-color);
+  }
+}
+
+// ---- Botão flutuante de acessibilidade ------------------------------------
+//
+// `start-0` encostava o botão na borda da tela. O recuo é o que mantém a área
+// de toque inteira alcançável em aparelho com tela curva ou gesto de borda.
+
+.fab-bottom-start {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 1040;
+}
+
+// ---- Complementos ---------------------------------------------------------
+
+.mw-xs {
+  max-width: 20rem;
+}
+.mw-5xl {
+  max-width: 64rem;
+}
+
+// Compensa o cabeçalho fixo quando um link de âncora salta para uma seção.
+.scroll-offset {
+  scroll-margin-top: 6rem;
+}
+
+.text-prewrap {
+  white-space: pre-wrap;
+}
+
+// Véu escuro sobre a foto de capa, para o texto por cima manter contraste.
+.overlay-gradient {
+  background-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.75) 0%,
+    rgba(0, 0, 0, 0.35) 45%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+// ---- Espaçamento entre irmãos em contêiner flex ---------------------------
+//
+// `.space-y-*` usa `margin-top` no irmão seguinte, o que pressupõe fluxo em
+// bloco. Quando o contêiner também é `d-flex` em coluna, a margem soma com o
+// `gap` e o espaçamento dobra. Aqui ela é neutralizada: em flex, quem manda é
+// o `gap`.
+.d-flex.flex-column[class*='space-y-'] > * + * {
+  margin-top: 0;
+}
+
+// -----------------------------------------------------------------------------
+// 18. Política de links
+//
+// O Reboot do Bootstrap dá a TODO `<a>` cor de link e sublinhado permanente.
+// O Tailwind não fazia isso, então a migração deixou o site inteiro sublinhado
+// e colorido — inclusive cartões de notícia, menu, rodapé e o título dentro de
+// um cartão clicável, que passou a herdar verde do link que o envolve.
+//
+// A vitrine usa link em DOIS papéis, e o Bootstrap só prevê um:
+//
+// • ESTRUTURAL — cartão, menu, rodapé, migalha. É superfície navegável, não
+//   texto. Herda a cor do contexto e não sublinha; ganha sublinhado no hover e
+//   no foco, para o alvo continuar evidente.
+//
+// • TEXTO CORRIDO — link dentro do corpo de uma notícia ou de página
+//   institucional. Aí o sublinhado é PERMANENTE, e não só no hover: sem ele a
+//   única marca do link seria a cor, o que viola o critério 1.4.1 do WCAG.
+// -----------------------------------------------------------------------------
+
+a {
+  color: inherit;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}
+
+// Texto corrido: cor e sublinhado sempre.
+.article-body a,
+.article-lead a,
+.prose a,
+p > a,
+li > a,
+dd > a {
+  color: var(--bs-link-color);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+// Quem já declara a decoração no JSX continua mandando.
+a.text-decoration-none {
+  text-decoration: none !important;
+}
+
+// Rodapé é link ESTRUTURAL, mas suas listas são `li > a` e cairiam na regra
+// de texto corrido acima: cor primária sobre o fundo primário, ou seja,
+// invisível. O seletor com classe vence `li > a` e devolve a cor do rodapé.
+.site-footer {
+  a {
+    color: inherit;
+    text-decoration: none;
+    transition: opacity 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+      opacity: 1 !important;
+      text-decoration: underline;
+    }
+  }
+
+  // Sem isto, o Reboot soma 1rem abaixo de cada parágrafo ao `.space-y-*` e
+  // desalinha a linha de copyright.
+  p {
+    margin-bottom: 0;
+  }
+
+  // Equivalem a `bg-current/10` e `border-current/10` da versão Tailwind:
+  // acompanham a cor de texto escolhida para o rodapé.
+  .footer-social {
+    background-color: color-mix(in srgb, currentColor 10%, transparent);
+  }
+
+  .footer-rule {
+    border-color: color-mix(in srgb, currentColor 20%, transparent) !important;
+  }
+}
+
+// Proporção 16:10, usada nos cartões de iniciativa e nas miniaturas do painel.
+// O Bootstrap só traz 1x1, 4x3, 16x9 e 21x9.
+.ratio-16x10 {
+  --bs-aspect-ratio: 62.5%;
+}
+
+
+// -----------------------------------------------------------------------------
+// 19. Últimos blocos da migração
+// -----------------------------------------------------------------------------
+
+// Círculos decorativos que sangram fora do hero. Eram valores arbitrários do
+// Tailwind (`sm:size-[26rem]`, `sm:-top-44`); nomeá-los também diz o que são.
+.hero-blob {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hero-blob-1 {
+  top: 0;
+  right: 0;
+  width: 20rem;
+  height: 20rem;
+}
+
+.hero-blob-2 {
+  top: -0.5rem;
+  right: -0.5rem;
+  width: 24rem;
+  height: 24rem;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+@include media-breakpoint-up(sm) {
+  .hero-blob-1 {
+    top: -2rem;
+    right: -2rem;
+    width: 26rem;
+    height: 26rem;
+  }
+  .hero-blob-2 {
+    top: -11rem;
+    right: -11rem;
+    width: 34rem;
+    height: 34rem;
+  }
+}
+
+// Entrada escalonada do conteúdo do hero e respiração lenta dos anéis. Só
+// existe com movimento liberado: a regra global de movimento reduzido zera a
+// duração, mas não o `animation-delay`, e o texto piscaria invisível no atraso.
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion='reduced']) {
+    .hero-reveal > * {
+      animation: vitrine-hero-rise 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @for $i from 2 through 5 {
+      .hero-reveal > :nth-child(#{$i}) {
+        animation-delay: #{($i - 1) * 90}ms;
+      }
+    }
+
+    .hero-blob-1 {
+      animation: vitrine-hero-breathe 9s ease-in-out infinite alternate;
+    }
+
+    .hero-blob-2 {
+      animation: vitrine-hero-breathe 12s ease-in-out -4s infinite alternate;
+    }
+  }
+}
+
+@keyframes vitrine-hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+}
+
+@keyframes vitrine-hero-breathe {
+  to {
+    opacity: 0.6;
+    transform: scale(1.06);
+  }
+}
+
+// Cartão que reage ao mouse e ao foco de um filho. O Bootstrap não tem
+// utilitário de estado, e o realce no FOCO é o que mantém o cartão perceptível
+// para quem navega por teclado — não é espelho do hover.
+.card-interactive {
+  transition: box-shadow 0.15s ease-in-out, border-color 0.15s ease-in-out;
+
+  &:hover,
+  &:focus-within {
+    box-shadow: var(--bs-box-shadow);
+    border-color: var(--bs-primary);
+  }
+}
+
+// Último filtro do painel não precisa de divisória.
+.filter-section:last-child {
+  border-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+@include media-breakpoint-up(lg) {
+  // Coluna lateral que acompanha a rolagem na página de detalhes.
+  .sticky-lg {
+    position: sticky;
+    top: 1rem;
+    align-self: flex-start;
+  }
+}
+
+@include media-breakpoint-up(md) {
+  // Conteúdo principal mais largo que a coluna de apoio.
+  .grid-main-aside {
+    grid-template-columns: 1.4fr 1fr;
+  }
+}
+
+// Larguras fixas por faixa de tela — miniatura de lista, que em telas largas
+// ganha tamanho previsível em vez de acompanhar a coluna.
+@each $nome, $largura in $grid-breakpoints {
+  @if $largura != 0 {
+    @media (min-width: #{$largura}) {
+      @each $passo in (14, 16, 20, 24, 28, 32) {
+        .w-#{$nome}-fx-#{$passo} {
+          width: #{$passo * 0.25}rem;
+        }
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 20. Listas
+//
+// O Reboot do Bootstrap mantém o marcador do navegador e aplica
+// `padding-left: 2rem` em toda `<ul>`/`<ol>`. Ele presume que lista é texto
+// corrido, e que quem a usa como estrutura pede `.list-unstyled` caso a caso.
+//
+// Neste projeto a maioria é ESTRUTURA — tags de cartão, menu, rodapé, canais de
+// contato, grade de recursos — e o reset anterior zerava tudo. Sem esta seção,
+// 38 listas ganharam bolinha e recuo de uma vez: as tags dos cartões apareciam
+// com marcador ao lado de cada pílula e a fileira inteira empurrada para a
+// direita.
+//
+// A inversão é deliberada: estrutura por padrão, marcador por opt-in. Marcar 38
+// listas à mão com `.list-unstyled` funcionaria igual, mas a próxima lista que
+// alguém escrevesse nasceria com bolinha de novo.
+// -----------------------------------------------------------------------------
+
+ul,
+ol {
+  padding-left: 0;
+  margin-bottom: 0;
+  list-style: none;
+}
+
+// Texto corrido volta ao comportamento de documento: aí o marcador é o que
+// comunica que são itens de uma enumeração, e não parágrafos soltos.
+.article-body ul,
+.article-body ol,
+.prose ul,
+.prose ol,
+ul.list-disc,
+ol.list-decimal {
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+  list-style: disc;
+}
+
+.article-body ol,
+.prose ol,
+ol.list-decimal {
+  list-style: decimal;
+}
+
+// -----------------------------------------------------------------------------
+// 21. Botões sem classe de botão
+//
+// O Preflight do Tailwind deixava todo `<button>` transparente e sem borda. O
+// Reboot do Bootstrap só zera o raio: fundo, borda e cor continuam sendo os
+// nativos do sistema operacional, porque ele presume que todo botão recebe
+// `.btn`. Onde o botão é uma superfície com estilo próprio — as fileiras de
+// liga/desliga do painel de acessibilidade, a área de soltar arquivo, o gatilho
+// do menu — ele voltou a aparecer como botão cinza do Windows.
+//
+// `:where()` é escolhido de propósito: ele NÃO soma especificidade. Um seletor
+// como `button:not([class*='btn'])` valeria (0,1,1) e passaria à frente de
+// `.check-box` e `.switch`, apagando a borda e o fundo que essas classes
+// definem. Com `:where(button)` a regra tem peso zero, então qualquer classe
+// aplicada no elemento vence — que é exatamente o comportamento de um reset.
+// -----------------------------------------------------------------------------
+
+:where(button) {
+  background-color: transparent;
+  border: 0;
+  color: inherit;
+  text-align: inherit;
+}
+
+// -----------------------------------------------------------------------------
+// 22. Editor de notícia (painel)
+//
+// A notícia é escrita numa folha com a coluna e a tipografia da página pública
+// (seção 8): o que se vê ao escrever é o que vai ao ar. Os campos não têm
+// moldura — como no Notion, que é a referência de quem escreve aqui, o cursor
+// e o texto de exemplo bastam para dizer onde se digita.
+//
+// A folha tem recuo lateral maior a partir de `sm` porque as alças de cada
+// bloco (+ e ⋮⋮) moram na margem esquerda, fora da coluna de texto. Abaixo
+// disso não há hover nem espaço para elas, e o `/` cobre o que elas fazem.
+// -----------------------------------------------------------------------------
+
+.article-sheet {
+  padding: 2rem 1rem;
+}
+
+@include media-breakpoint-up(sm) {
+  .article-sheet {
+    padding: 3rem 4rem;
+  }
+}
+
+// `:where()` pelo mesmo motivo da seção 21: peso zero, para que o tamanho de
+// `.article-title`, `.article-lead` e `.fs-8` no mesmo elemento vença o
+// `font: inherit` daqui.
+:where(.block-input) {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  resize: none;
+  overflow: hidden;
+}
+
+.block-input {
+  // Num campo de texto o cursor piscando já é o indicador de foco; o contorno
+  // desenharia a caixa que a folha existe para esconder.
+  &:focus-visible {
+    outline: none;
+  }
+
+  &::placeholder {
+    color: var(--bs-secondary-color);
+    opacity: 0.65;
+  }
+
+  &:disabled {
+    color: var(--bs-secondary-color);
+  }
+}
+
+// Espaçamento entre blocos igual ao da página pública. É recuo, e não margem,
+// para que o vão também seja do bloco: as alças se alinham pela mesma medida.
+.block {
+  --block-gap: 1rem;
+  position: relative;
+  padding-top: var(--block-gap);
+
+  &:first-child {
+    --block-gap: 0px;
+  }
+
+  &[data-type='bullet'] + &[data-type='bullet'],
+  &[data-type='numbered'] + &[data-type='numbered'] {
+    --block-gap: 0.5rem;
+  }
+
+  & + &[data-type='heading'] {
+    --block-gap: 2.5rem;
+  }
+
+  & + &[data-type='subheading'] {
+    --block-gap: 1.75rem;
+  }
+
+  & + &[data-type='quote'],
+  & + &[data-type='image'],
+  & + &[data-type='video'] {
+    --block-gap: 1.5rem;
+  }
+
+  &[data-type='heading'] .block-input {
+    font-size: calc(1.5rem * var(--a11y-text-scale));
+    line-height: 1.3;
+  }
+
+  &[data-type='subheading'] .block-input {
+    font-size: calc(1.25rem * var(--a11y-text-scale));
+    line-height: 1.3;
+  }
+
+  // Mesmo fio verde e mesmo corpo da citação publicada (`.blockquote`).
+  &[data-type='quote'] .block-body {
+    padding-left: 1rem;
+    border-left: 3px solid var(--bs-primary);
+  }
+
+  &[data-type='quote'] .block-body > .block-input {
+    font-size: calc(#{$blockquote-font-size} * var(--a11y-text-scale));
+    line-height: 1.5;
+  }
+
+  // Linha de destino do arrasto.
+  &[data-drop]::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    border-radius: 1px;
+    background-color: var(--bs-primary);
+  }
+
+  &[data-drop='before']::before {
+    top: -1px;
+  }
+
+  &[data-drop='after']::before {
+    bottom: -1px;
+  }
+}
+
+// Parágrafo vazio só mostra a dica onde está o cursor — senão cada linha em
+// branco da notícia repetiria a mesma frase. A exceção é a folha em branco.
+.block-editor:not([data-empty]) .block[data-type='paragraph'] .block-input:not(:focus)::placeholder {
+  color: transparent;
+}
+
+.block-body {
+  position: relative;
+}
+
+// Marcador e número no mesmo recuo de 1,5rem que a lista publicada tem.
+.block[data-type='bullet'] .block-body,
+.block[data-type='numbered'] .block-body {
+  padding-left: 1.5rem;
+}
+
+.block-marker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1.125rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.block-cite {
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+// O autor é opcional: vazio e fora de foco, o campo nem aparece.
+.block[data-type='quote']:not(:focus-within) .block-cite:has(input:placeholder-shown) {
+  display: none;
+}
+
+// Divisor, imagem e vídeo recebem foco no quadro inteiro — é assim que se
+// seleciona um deles para apagar ou mover pelo teclado.
+.block-media {
+  border-radius: var(--bs-border-radius);
+
+  &:focus {
+    background-color: rgba(var(--bs-primary-rgb), 0.08);
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.08);
+  }
+}
+
+// Enquanto um bloco é arrastado, o player do vídeo não pode engolir o arrasto.
+.block-editor[data-dragging] iframe {
+  pointer-events: none;
+}
+
+.block-upload {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  border: 2px dashed var(--bs-border-color);
+  border-radius: var(--bs-border-radius-lg);
+  color: var(--bs-secondary-color);
+  font-size: 0.875rem;
+  line-height: 1.4;
+
+  &:hover:not(:disabled) {
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-body-color);
+  }
+}
+
+.block-handles {
+  position: absolute;
+  top: var(--block-gap);
+  right: 100%;
+  display: none;
+  align-items: center;
+  gap: 0.125rem;
+  height: 1lh;
+  padding-right: 0.375rem;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+}
+
+@include media-breakpoint-up(sm) {
+  .block-handles {
+    display: flex;
+  }
+}
+
+.block:hover > .block-handles,
+.block-handles:focus-within,
+.block-handles:has([data-state='open']) {
+  opacity: 1;
+}
+
+.block-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.5rem;
+  border-radius: var(--bs-border-radius-sm);
+  color: var(--bs-secondary-color);
+
+  &:hover,
+  &[data-state='open'] {
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-body-color);
+  }
+}
+
+.block-grip {
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.block-slash {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 20rem;
+  max-width: 100%;
+  max-height: 22rem;
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
+// Área abaixo do último bloco: um clique ali continua o texto.
+.block-editor-tail {
+  height: 3rem;
+  cursor: text;
+}
+
+// -----------------------------------------------------------------------------
+// 23. Compartilhamento da notícia
+//
+// Faixa de botões de mesma largura, só com o logotipo, no formato que os
+// portais de notícia consolidaram. A grade reparte a linha inteira pelo número
+// de botões, então incluir ou tirar uma rede em `ShareBar` não pede CSS novo.
+//
+// O fundo sai de uma mistura do texto sobre o fundo da página, e não de um
+// cinza fixo: assim ele acompanha o alto contraste sem regra extra.
+//
+// As cores de marca foram conferidas contra esse fundo pelo piso de 3:1 para
+// ícones (critério 1.4.11), inclusive no hover. O verde oficial do WhatsApp
+// (#25D366) fica em 1,8:1; o tom usado aqui é o mesmo verde, escurecido até
+// passar.
+// -----------------------------------------------------------------------------
+
+.share-bar {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 0.5rem;
+}
+
+.share-btn {
+  --share-btn-bg: color-mix(in srgb, var(--bs-body-color) 5%, var(--bs-body-bg));
+  --share-btn-hover-bg: color-mix(in srgb, var(--bs-body-color) 10%, var(--bs-body-bg));
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 3rem;
+  border-radius: 0.75rem;
+  background-color: var(--share-btn-bg);
+  color: var(--bs-secondary-color);
+  transition: background-color 0.15s ease-in-out;
+
+  &:hover {
+    background-color: var(--share-btn-hover-bg);
+    color: var(--bs-secondary-color);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
+  }
+
+  > svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    flex-shrink: 0;
+  }
+}
+
+.share-btn-facebook,
+.share-btn-facebook:hover {
+  color: #0866ff;
+}
+.share-btn-whatsapp,
+.share-btn-whatsapp:hover {
+  color: #1b8f4a;
+}
+.share-btn-linkedin,
+.share-btn-linkedin:hover {
+  color: #0a66c2;
+}
+
+// No alto contraste a cor de marca cede ao branco do tema (a escolha do leitor
+// vem antes da identidade das redes), e a borda devolve o contorno que a
+// diferença sutil de fundo não dá sobre o preto.
+html[data-contrast='high'] .share-btn {
+  border: 1px solid var(--bs-border-color);
+  color: var(--bs-body-color);
+}
+
+// -----------------------------------------------------------------------------
+// 24. Leitura em voz alta
+//
+// Formato de player de áudio: botão de tocar, barra de progresso e botão de
+// velocidade, na mesma altura dos botões de compartilhar logo acima.
+//
+// A barra é um `<input type="range">` nativo, só repintado. É o controle que
+// leitor de tela e teclado já sabem operar — um trilho de `<div>` exigiria
+// reescrever os dois. O preenchimento até o marcador vem de `--tts-progress`,
+// gravada pelo componente: o WebKit não tem pseudo-elemento para a parte já
+// percorrida, e o Firefox tem (`::-moz-range-progress`).
+// -----------------------------------------------------------------------------
+
+.tts-player {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tts-btn {
+  --bs-btn-padding-x: 0;
+  --bs-btn-padding-y: 0;
+  --bs-btn-border-radius: 0.5rem;
+  --bs-btn-font-size: 0.8125rem;
+  --bs-btn-font-weight: #{$font-weight-bold};
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+
+  > svg {
+    width: 1.375rem;
+    height: 1.375rem;
+  }
+}
+
+.tts-track {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
+  height: 2.5rem;
+  padding-inline: 0.875rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 50rem;
+
+  // O foco fica no contêiner inteiro: um anel só no marcador de 18 px some
+  // no meio do trilho.
+  &:has(.tts-range:focus-visible) {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
+  }
+}
+
+.tts-range {
+  --tts-fill: var(--bs-primary);
+  --tts-rail: var(--bs-border-color);
+  --tts-thumb: 1.125rem;
+  --tts-rail-height: 0.375rem;
+
+  width: 100%;
+  height: var(--tts-thumb);
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+
+  &:focus-visible {
+    outline: 0;
+  }
+
+  &::-webkit-slider-runnable-track {
+    height: var(--tts-rail-height);
+    border-radius: 50rem;
+    background: linear-gradient(
+      to right,
+      var(--tts-fill) var(--tts-progress, 0%),
+      var(--tts-rail) var(--tts-progress, 0%)
+    );
+  }
+
+  &::-webkit-slider-thumb {
+    width: var(--tts-thumb);
+    height: var(--tts-thumb);
+    margin-top: calc((var(--tts-rail-height) - var(--tts-thumb)) / 2);
+    border: 2px solid var(--bs-body-bg);
+    border-radius: 50%;
+    background: var(--tts-fill);
+    box-shadow: 0 0 0 1px var(--tts-fill);
+    appearance: none;
+  }
+
+  &::-moz-range-track {
+    height: var(--tts-rail-height);
+    border-radius: 50rem;
+    background: var(--tts-rail);
+  }
+
+  &::-moz-range-progress {
+    height: var(--tts-rail-height);
+    border-radius: 50rem;
+    background: var(--tts-fill);
+  }
+
+  &::-moz-range-thumb {
+    width: var(--tts-thumb);
+    height: var(--tts-thumb);
+    box-sizing: border-box;
+    border: 2px solid var(--bs-body-bg);
+    border-radius: 50%;
+    background: var(--tts-fill);
+    box-shadow: 0 0 0 1px var(--tts-fill);
+  }
+}
+
+// No alto contraste o branco do tema viraria trilho e marcador da mesma cor.
+// O amarelo de destaque marca o que já foi lido; o cinza, o que falta.
+html[data-contrast='high'] .tts-range {
+  --tts-fill: #{$hc-accent};
+  --tts-rail: #8a8a8a;
+}
+
+// -----------------------------------------------------------------------------
+// 25. Painel administrativo
+//
+// Peças do dashboard e dos formulários do painel que a migração deixou sem
+// equivalente: a seção que ocupa a linha inteira da grade, a linha do tempo de
+// atividade e a linha de lista que é inteira clicável.
+// -----------------------------------------------------------------------------
+
+// Ocupa a linha inteira, qualquer que seja o número de colunas da grade. Um
+// `span 2` fixo criaria uma segunda coluna implícita nas faixas em que a grade
+// tem uma só.
+.col-full {
+  grid-column: 1 / -1;
+}
+
+// Linha do tempo: fio vertical à esquerda e um marcador por evento, centrado
+// sobre o fio. O marcador é pseudo-elemento porque é pura decoração — o
+// horário e o texto já dizem tudo ao leitor de tela.
+.timeline {
+  --timeline-dot: 0.625rem;
+  --timeline-indent: 1.25rem;
+
+  margin-left: calc(var(--timeline-dot) / 2);
+  padding-left: var(--timeline-indent);
+  border-left: var(--bs-border-width) solid var(--bs-border-color);
+
+  > li {
+    position: relative;
+  }
+
+  > li + li {
+    margin-top: 0.875rem;
+  }
+
+  > li::before {
+    content: '';
+    position: absolute;
+    top: 0.35em;
+    left: calc(-1 * var(--timeline-indent) - var(--timeline-dot) / 2 - var(--bs-border-width) / 2);
+    width: var(--timeline-dot);
+    height: var(--timeline-dot);
+    border: 2px solid var(--bs-secondary-color);
+    border-radius: 50%;
+    background-color: var(--bs-body-bg);
+  }
+}
+
+// Linha de lista clicável por inteiro (miniatura + título + status). É link
+// ESTRUTURAL (seção 18): sem sublinhado no repouso, e o realce de fundo no
+// hover e no foco mostra o alvo inteiro, não só o texto.
+.list-link {
+  color: var(--bs-body-color);
+  text-decoration: none;
+  transition: background-color 0.15s ease-in-out;
+
+  &:hover,
+  &:focus-visible {
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-body-color);
+    text-decoration: none;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 26. Audiência (painel)
+//
+// Série de colunas em SVG. As cores saem dos tokens do tema: a coluna é a
+// primária, a grade é a borda, e os rótulos usam a cor de texto secundário —
+// texto nunca veste a cor do dado.
+// -----------------------------------------------------------------------------
+
+.audience-chart {
+  border-radius: var(--bs-border-radius);
+
+  &:focus-visible {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 4px;
+  }
+}
+
+.audience-chart-grid {
+  stroke: var(--bs-border-color);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.audience-chart-tick {
+  fill: var(--bs-secondary-color);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.audience-chart-peak {
+  fill: var(--bs-body-color);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.audience-chart-bar {
+  fill: var(--bs-primary);
+  transition: opacity 0.12s ease-out;
+
+  &.is-muted {
+    opacity: 0.45;
+  }
+}
+
+// Faixa da coluna sob o ponteiro: o alvo do hover é a faixa inteira, não só a
+// coluna, e a lavagem mostra isso.
+.audience-chart-hover {
+  fill: var(--bs-primary);
+  opacity: 0.07;
+}
+
+.audience-chart-tooltip {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, -100%);
+  padding: 0.5rem 0.75rem;
+  border: var(--bs-border-width) solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  background-color: var(--bs-body-bg);
+  box-shadow: var(--bs-box-shadow-sm);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .audience-chart-bar {
+    transition: none;
+  }
+}

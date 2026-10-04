@@ -6,11 +6,11 @@ import {
   Outlet,
   Route,
   RouterProvider,
-  useLocation,
 } from 'react-router-dom'
 import { PublicLayout } from '@/components/layout/PublicLayout'
 import { GuestRoute, ProtectedRoute, FullScreenLoader } from '@/routes/ProtectedRoute'
-import { isSupabaseConfigured } from '@/lib/supabase'
+import { LocaleProvider } from '@/contexts/LocaleContext'
+import { newsListPath } from '@/i18n/config'
 
 import { HomePage } from '@/pages/public/HomePage'
 import { SearchPage } from '@/pages/public/SearchPage'
@@ -20,8 +20,12 @@ import { InitiativeDetailPage } from '@/pages/public/InitiativeDetailPage'
 import { NewsPage } from '@/pages/public/NewsPage'
 import { NewsDetailPage } from '@/pages/public/NewsDetailPage'
 import { AboutPage } from '@/pages/public/AboutPage'
+import { AuthorPage } from '@/pages/public/AuthorPage'
+import { AccessibilityPage } from '@/pages/public/AccessibilityPage'
+import { MastheadPage } from '@/pages/public/MastheadPage'
+import { EditorialPolicyPage } from '@/pages/public/EditorialPolicyPage'
+import { ContactPage } from '@/pages/public/ContactPage'
 import { NotFoundPage } from '@/pages/public/NotFoundPage'
-import { SetupPage } from '@/pages/SetupPage'
 
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { SignUpPage } from '@/pages/auth/SignUpPage'
@@ -56,6 +60,9 @@ const PeopleAdminPage = lazy(() =>
 const UsersAdminPage = lazy(() =>
   import('@/pages/admin/UsersAdminPage').then((m) => ({ default: m.UsersAdminPage })),
 )
+const ActivityLogPage = lazy(() =>
+  import('@/pages/admin/ActivityLogPage').then((m) => ({ default: m.ActivityLogPage })),
+)
 const SettingsPage = lazy(() =>
   import('@/pages/admin/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 )
@@ -68,25 +75,25 @@ const NewsAdminPage = lazy(() =>
 const NewsFormPage = lazy(() =>
   import('@/pages/admin/NewsFormPage').then((m) => ({ default: m.NewsFormPage })),
 )
+const AudiencePage = lazy(() =>
+  import('@/pages/admin/AudiencePage').then((m) => ({ default: m.AudiencePage })),
+)
+const NewsTranslationFormPage = lazy(() =>
+  import('@/pages/admin/NewsTranslationFormPage').then((m) => ({
+    default: m.NewsTranslationFormPage,
+  })),
+)
 
-/**
- * Fronteira de Suspense única para as rotas carregadas sob demanda.
- *
- * Também intercepta o caso "sem credenciais": as consultas ficam desabilitadas
- * quando o Supabase não está configurado e, sem este desvio, as telas ficariam
- * em esqueleto para sempre. Melhor mandar direto para as instruções de setup.
- */
+/** Fronteira de Suspense única para as rotas carregadas sob demanda. */
 function RouterShell() {
-  const { pathname } = useLocation()
-
-  if (!isSupabaseConfigured && pathname !== '/configuracao') {
-    return <Navigate to="/configuracao" replace />
-  }
-
+  // O idioma fica aqui, dentro do roteador, porque o endereço é parte da
+  // decisão: `/en/news/...` é inglês, e o painel é sempre português.
   return (
-    <Suspense fallback={<FullScreenLoader />}>
-      <Outlet />
-    </Suspense>
+    <LocaleProvider>
+      <Suspense fallback={<FullScreenLoader />}>
+        <Outlet />
+      </Suspense>
+    </LocaleProvider>
   )
 }
 
@@ -105,9 +112,28 @@ const router = createBrowserRouter(
         <Route path="categorias" element={<CategoriesPage />} />
         <Route path="categoria/:slug" element={<CategoryPage />} />
         <Route path="iniciativa/:slug" element={<InitiativeDetailPage />} />
-        <Route path="noticias" element={<NewsPage />} />
-        <Route path="noticia/:slug" element={<NewsDetailPage />} />
+        {/* Notícias: o único conteúdo com endereço por idioma. O português
+            mantém as URLs que já estavam no ar. */}
+        <Route path="noticias" element={<NewsPage locale="pt-BR" />} />
+        <Route path="noticia/:slug" element={<NewsDetailPage locale="pt-BR" />} />
+        <Route path="en/news" element={<NewsPage locale="en" />} />
+        <Route path="en/news/:slug" element={<NewsDetailPage locale="en" />} />
+        <Route path="es/noticias" element={<NewsPage locale="es" />} />
+        <Route path="es/noticia/:slug" element={<NewsDetailPage locale="es" />} />
+        {/* `/en` e `/es` sozinhos levam à seção que existe nesses idiomas. */}
+        <Route path="en" element={<Navigate to={newsListPath('en')} replace />} />
+        <Route path="es" element={<Navigate to={newsListPath('es')} replace />} />
+        <Route path="autor/:slug" element={<AuthorPage />} />
         <Route path="sobre" element={<AboutPage />} />
+
+        {/* Transparência editorial. São as páginas que identificam o
+            veículo, os critérios e o canal de contato — critérios que o
+            Google avalia em quem publica notícia, e que o dado estruturado
+            do publisher referencia por URL. */}
+        <Route path="expediente" element={<MastheadPage />} />
+        <Route path="politica-editorial" element={<EditorialPolicyPage />} />
+        <Route path="contato" element={<ContactPage />} />
+        <Route path="acessibilidade" element={<AccessibilityPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
 
@@ -117,9 +143,8 @@ const router = createBrowserRouter(
         <Route path="criar-conta" element={<SignUpPage />} />
         <Route path="recuperar-senha" element={<ForgotPasswordPage />} />
       </Route>
-      {/* Fora do GuestRoute: o link do e-mail já cria uma sessão temporária. */}
+      {/* Fora do GuestRoute: quem já está logado também pode abrir o link do e-mail. */}
       <Route path="redefinir-senha" element={<ResetPasswordPage />} />
-      <Route path="configuracao" element={<SetupPage />} />
 
       {/* Área administrativa -------------------------------------------- */}
       <Route element={<ProtectedRoute />}>
@@ -131,8 +156,10 @@ const router = createBrowserRouter(
           <Route path="noticias" element={<NewsAdminPage />} />
           <Route path="noticias/nova" element={<NewsFormPage />} />
           <Route path="noticias/:id" element={<NewsFormPage />} />
+          <Route path="noticias/:id/traducoes/:locale" element={<NewsTranslationFormPage />} />
           <Route path="pessoas" element={<PeopleAdminPage />} />
           <Route path="configuracoes" element={<SettingsPage />} />
+          <Route path="audiencia" element={<AudiencePage />} />
 
           <Route element={<ProtectedRoute requires="review" />}>
             <Route path="revisao" element={<ReviewQueuePage />} />
@@ -141,6 +168,7 @@ const router = createBrowserRouter(
           <Route element={<ProtectedRoute requires="admin" />}>
             <Route path="categorias" element={<CategoriesAdminPage />} />
             <Route path="usuarios" element={<UsersAdminPage />} />
+            <Route path="atividade" element={<ActivityLogPage />} />
             <Route path="aparencia" element={<AppearancePage />} />
           </Route>
 

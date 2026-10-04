@@ -1,6 +1,6 @@
 /**
  * Vocabulário compartilhado entre banco, admin e vitrine pública.
- * Os valores precisam espelhar os enums definidos em supabase/migrations.
+ * Os valores precisam espelhar os enums definidos em db/migrations.
  */
 
 export const STATUS = {
@@ -15,37 +15,37 @@ export const STATUS_META = {
   [STATUS.DRAFT]: {
     label: 'Rascunho',
     description: 'Ainda em elaboração, visível apenas para a equipe.',
-    className: 'bg-status-draft-bg text-status-draft-ink ring-status-draft/20',
-    dot: 'bg-status-draft',
-    fill: 'var(--color-status-draft)',
+    className: 'badge-status-draft',
+    dot: 'dot-status-draft',
+    fill: 'var(--status-draft)',
   },
   [STATUS.PENDING_REVIEW]: {
     label: 'Em revisão',
     description: 'Aguardando avaliação de um revisor.',
-    className: 'bg-status-review-bg text-status-review-ink ring-status-review/30',
-    dot: 'bg-status-review',
-    fill: 'var(--color-status-review)',
+    className: 'badge-status-review',
+    dot: 'dot-status-review',
+    fill: 'var(--status-review)',
   },
   [STATUS.PUBLISHED]: {
     label: 'Publicado',
     description: 'Visível na vitrine pública.',
-    className: 'bg-status-published-bg text-status-published-ink ring-status-published/25',
-    dot: 'bg-status-published',
-    fill: 'var(--color-status-published)',
+    className: 'badge-status-published',
+    dot: 'dot-status-published',
+    fill: 'var(--status-published)',
   },
   [STATUS.REJECTED]: {
     label: 'Rejeitado',
     description: 'Devolvido com observações do revisor.',
-    className: 'bg-status-rejected-bg text-status-rejected-ink ring-status-rejected/25',
-    dot: 'bg-status-rejected',
-    fill: 'var(--color-status-rejected)',
+    className: 'badge-status-rejected',
+    dot: 'dot-status-rejected',
+    fill: 'var(--status-rejected)',
   },
   [STATUS.ARCHIVED]: {
     label: 'Arquivado',
     description: 'Removido da vitrine, mantido no histórico.',
-    className: 'bg-status-archived-bg text-status-archived-ink ring-status-archived/25',
-    dot: 'bg-status-archived',
-    fill: 'var(--color-status-archived)',
+    className: 'badge-status-archived',
+    dot: 'dot-status-archived',
+    fill: 'var(--status-archived)',
   },
 }
 
@@ -98,6 +98,25 @@ export const ROLE_META = {
 /** Ações do workflow que exigem papel de revisor ou administrador. */
 export const REVIEW_STATUSES = [STATUS.PUBLISHED, STATUS.REJECTED]
 
+/**
+ * Vocabulário do `activity_log`. As chaves espelham o que o trigger
+ * `log_activity()` grava: `action` é a operação, `entity_type` é o nome da
+ * tabela (`tg_table_name`). `verb` e `article` montam a frase da timeline do
+ * dashboard; `label` é a coluna da tela de atividade e da planilha exportada.
+ */
+export const ACTIVITY_ACTION_META = {
+  created: { label: 'Criação', verb: 'criou' },
+  updated: { label: 'Edição', verb: 'editou' },
+  status_changed: { label: 'Mudança de status', verb: 'alterou o status de' },
+  deleted: { label: 'Exclusão', verb: 'excluiu' },
+}
+
+export const ACTIVITY_ENTITY_META = {
+  initiatives: { label: 'Iniciativa', article: 'a iniciativa', adminPath: '/admin/iniciativas' },
+  news: { label: 'Notícia', article: 'a notícia', adminPath: '/admin/noticias' },
+  categories: { label: 'Categoria', article: 'a categoria' },
+}
+
 export const AREAS = [
   'Tecnologia',
   'Engenharia',
@@ -129,6 +148,7 @@ export const BUCKETS = {
 
 export const PAGE_SIZE = 12
 export const ADMIN_PAGE_SIZE = 20
+export const ACTIVITY_PAGE_SIZE = 25
 
 export const SORT_OPTIONS = [
   { value: 'recent', label: 'Mais recentes' },

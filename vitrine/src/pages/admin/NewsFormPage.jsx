@@ -1,19 +1,27 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ExternalLink, History, Lock } from 'lucide-react'
+import { ExternalLink, History, Languages, Lock } from 'lucide-react'
 import { PageHeader } from '@/components/admin/PageHeader'
+import { ArticleEditor } from '@/components/admin/ArticleEditor'
 import { ImageUploader } from '@/components/admin/ImageUploader'
 import { NewsGalleryEditor } from '@/components/admin/NewsGalleryEditor'
 import { StatusActions } from '@/components/admin/StatusActions'
+import { LanguageFlag } from '@/components/layout/LanguageSwitcher'
 import { Button } from '@/components/ui/button'
-import { Input, Textarea } from '@/components/ui/input'
+import { AutosizeTextarea, Input } from '@/components/ui/input'
 import { Field } from '@/components/ui/label'
 import { StatusBadge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/ui/empty-state'
 import { toast } from '@/components/ui/toast'
-import { useNewsItem, useNewsReviewHistory, useSaveNews } from '@/hooks/use-queries'
+import {
+  useNewsItem,
+  useNewsReviewHistory,
+  useNewsTranslations,
+  useSaveNews,
+} from '@/hooks/use-queries'
 import { useAuth } from '@/contexts/AuthContext'
+import { LOCALES, TRANSLATION_LOCALES } from '@/i18n/config'
 import { BUCKETS, STATUS, STATUS_META } from '@/lib/constants'
 import { normalizeGallery } from '@/lib/news-content'
 import { formatDate, formatTime } from '@/lib/utils'
@@ -24,9 +32,19 @@ const EMPTY = {
   excerpt: '',
   content: '',
   cover_image: null,
+  cover_alt: '',
   cover_caption: '',
   cover_credit: '',
   gallery: [],
+}
+
+/** Enter num campo de uma linha só leva ao próximo, como do título ao corpo no Notion. */
+function focusNextOnEnter(event, nextId) {
+  if (event.key !== 'Enter' || event.nativeEvent.isComposing) return
+  event.preventDefault()
+  const next = document.getElementById(nextId)
+  // O corpo é um grupo de blocos; o foco vai para o primeiro deles.
+  ;(next?.matches('textarea, input') ? next : next?.querySelector('textarea'))?.focus()
 }
 
 function ReviewHistory({ newsId }) {
@@ -34,33 +52,98 @@ function ReviewHistory({ newsId }) {
   if (!data?.length) return null
 
   return (
-    <section className="border-border bg-card rounded-lg border p-5">
-      <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold">
-        <History className="size-4" aria-hidden="true" />
+    <section className="border bg-body rounded-3 p-3">
+      <h2 className="mb-3 d-flex align-items-center gap-2 fs-7 fw-semibold">
+        <History className="icon" aria-hidden="true" />
         Histórico de revisão
       </h2>
-      <ol className="space-y-4">
+      <ol className="space-y-3">
         {data.map((entry) => (
-          <li key={entry.id} className="border-border border-l-2 pl-4 text-sm">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-muted-foreground">
+          <li key={entry.id} className="border border-start border-2 ps-3 fs-7">
+            <div className="d-flex flex-wrap align-items-center gap-2">
+              <span className="text-body-secondary">
                 {STATUS_META[entry.from_status]?.label ?? '—'}
               </span>
-              <span className="text-muted-foreground" aria-hidden="true">
+              <span className="text-body-secondary" aria-hidden="true">
                 →
               </span>
               <StatusBadge status={entry.to_status} size="sm" />
             </div>
-            <p className="text-muted-foreground mt-1 text-xs">
+            <p className="text-body-secondary mt-1 fs-8">
               {entry.reviewer?.name ?? 'Sistema'} · {formatDate(entry.created_at)} às{' '}
               {formatTime(entry.created_at)}
             </p>
             {entry.notes ? (
-              <p className="bg-muted mt-2 rounded-md p-3 text-sm text-pretty">{entry.notes}</p>
+              <p className="bg-body-secondary mt-2 rounded-2 p-2 fs-7 text-pretty">{entry.notes}</p>
             ) : null}
           </li>
         ))}
       </ol>
+    </section>
+  )
+}
+
+/**
+ * As versões em outros idiomas. Cada uma é editada na própria tela
+ * (`NewsTranslationFormPage`) e vai ao ar junto com a notícia — daqui só se vê
+ * o que existe e se chega até ela.
+ *
+ * Com a migration 0014 pendente, a consulta falha e o painel diz isso em vez
+ * de sumir: quem opera precisa saber que falta um passo.
+ */
+function TranslationsPanel({ newsId }) {
+  const { data, isPending, isError, error } = useNewsTranslations(newsId)
+  const missingMigration = isError && /news_translations/i.test(error?.message ?? '')
+
+  return (
+    <section className="border bg-body space-y-3 rounded-3 p-3">
+      <div className="space-y-1">
+        <h2 className="d-flex align-items-center gap-2 fs-7 fw-semibold">
+          <Languages className="icon" aria-hidden="true" />
+          Traduções
+        </h2>
+        <p className="text-body-secondary fs-7 text-pretty">
+          Cada tradução tem endereço próprio e é publicada junto com esta notícia.
+        </p>
+      </div>
+
+      {isError ? (
+        <p className="text-danger fs-8 text-pretty">
+          {missingMigration
+            ? 'Aplique a migration 20250101000014_news_translations.sql para habilitar as traduções.'
+            : error?.message}
+        </p>
+      ) : isPending ? (
+        <Skeleton className="h-fx-12 w-100" />
+      ) : (
+        <ul className="space-y-2">
+          {TRANSLATION_LOCALES.map((code) => {
+            const translation = data.find((row) => row.locale === code)
+            return (
+              <li key={code} className="d-flex align-items-center justify-content-between gap-2">
+                <span className="d-flex align-items-center gap-2 fs-7">
+                  <LanguageFlag code={LOCALES[code].flag} />
+                  <span>
+                    <span className="d-block fw-medium" lang={code}>
+                      {LOCALES[code].label}
+                    </span>
+                    <span className="text-body-secondary d-block fs-8">
+                      {translation
+                        ? `Atualizada em ${formatDate(translation.updated_at)}`
+                        : 'Ainda não traduzida'}
+                    </span>
+                  </span>
+                </span>
+                <Button variant="outline" size="sm" asChild>
+                  <Link to={`/admin/noticias/${newsId}/traducoes/${code}`}>
+                    {translation ? 'Editar' : 'Traduzir'}
+                  </Link>
+                </Button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
     </section>
   )
 }
@@ -83,6 +166,7 @@ function NewsForm({ item }) {
           excerpt: item.excerpt ?? '',
           content: item.content ?? '',
           cover_image: item.cover_image ?? null,
+          cover_alt: item.cover_alt ?? '',
           cover_caption: item.cover_caption ?? '',
           cover_credit: item.cover_credit ?? '',
           gallery: normalizeGallery(item.gallery),
@@ -143,80 +227,100 @@ function NewsForm({ item }) {
         }
       />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start">
-        <div className="space-y-6">
+      <div className="d-grid gap-4 grid-detail align-items-xl-start">
+        <div className="space-y-4">
           {locked ? (
-            <p className="border-border bg-muted text-muted-foreground flex items-start gap-2 rounded-lg border p-4 text-sm text-pretty">
-              <Lock className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <p className="border bg-body-secondary text-body-secondary d-flex align-items-start gap-2 rounded-3 p-3 fs-7 text-pretty">
+              <Lock className="mt-1 icon flex-shrink-0" aria-hidden="true" />
               Esta notícia está na fila de revisão e não pode ser editada. Devolva-a para rascunho
               para voltar a alterar o conteúdo.
             </p>
           ) : null}
 
-          <section className="border-border bg-card space-y-6 rounded-lg border p-5 sm:p-6">
-            <Field
-              id="news-kicker"
-              label="Chapéu"
-              hint="Rótulo curto acima do título, como a editoria de um jornal: “Eleições 2026”, “Pesquisa”, “Extensão”. Opcional."
-            >
-              {(props) => (
-                <Input
-                  {...props}
-                  value={values.kicker}
-                  onChange={(event) => set('kicker', event.target.value)}
-                  maxLength={60}
-                  placeholder="Ex.: Pesquisa"
-                  disabled={locked}
-                />
-              )}
-            </Field>
+          {/*
+            A notícia é escrita numa folha com a coluna e a tipografia da página
+            pública: chapéu, título, linha fina e corpo aparecem como vão ficar.
+            Os campos não têm moldura nem rótulo visível — como no Notion, o
+            texto de exemplo diz o que vai em cada lugar. Os rótulos e as dicas
+            continuam no DOM para o leitor de tela.
+          */}
+          <section className="border bg-body rounded-3 article-sheet">
+            <div className="article-column">
+              <label htmlFor="news-kicker" className="visually-hidden">
+                Chapéu
+              </label>
+              <p id="news-kicker-hint" className="visually-hidden">
+                Rótulo curto acima do título, como a editoria de um jornal. Opcional.
+              </p>
+              <input
+                id="news-kicker"
+                aria-describedby="news-kicker-hint"
+                className="block-input text-primary fs-8 fw-bold text-uppercase"
+                value={values.kicker}
+                onChange={(event) => set('kicker', event.target.value)}
+                onKeyDown={(event) => focusNextOnEnter(event, 'news-name')}
+                maxLength={60}
+                placeholder="Chapéu — ex.: Pesquisa"
+                disabled={locked}
+              />
 
-            <Field id="news-name" label="Título" required>
-              {(props) => (
-                <Input
-                  {...props}
-                  value={values.name}
-                  onChange={(event) => set('name', event.target.value)}
-                  maxLength={160}
-                  disabled={locked}
-                  required
-                  autoFocus={!isEditing}
-                />
-              )}
-            </Field>
+              <label htmlFor="news-name" className="visually-hidden">
+                Título
+              </label>
+              <AutosizeTextarea
+                id="news-name"
+                className="block-input article-title fw-bold mt-2"
+                value={values.name}
+                // O título é uma linha só; o Enter passa para o resumo.
+                onChange={(event) => set('name', event.target.value.replace(/\s*\n\s*/g, ' '))}
+                onKeyDown={(event) => focusNextOnEnter(event, 'news-excerpt')}
+                maxLength={160}
+                placeholder="Título da notícia"
+                disabled={locked}
+                required
+                autoFocus={!isEditing}
+              />
 
-            <Field
-              id="news-excerpt"
-              label="Resumo"
-              hint="Uma ou duas frases. Aparece no cartão da listagem e na prévia ao compartilhar o link."
-            >
-              {(props) => (
-                <Textarea
-                  {...props}
-                  rows={3}
-                  value={values.excerpt}
-                  onChange={(event) => set('excerpt', event.target.value)}
-                  maxLength={300}
-                  disabled={locked}
-                />
-              )}
-            </Field>
+              <label htmlFor="news-excerpt" className="visually-hidden">
+                Resumo
+              </label>
+              <AutosizeTextarea
+                id="news-excerpt"
+                className="block-input article-lead text-body-secondary mt-3"
+                value={values.excerpt}
+                onChange={(event) => set('excerpt', event.target.value.replace(/\s*\n\s*/g, ' '))}
+                onKeyDown={(event) => focusNextOnEnter(event, 'news-content')}
+                maxLength={300}
+                placeholder="Resumo: uma ou duas frases que aparecem no cartão da listagem e na prévia do link"
+                disabled={locked}
+              />
+            </div>
 
-            <Field
-              id="news-content"
-              label="Texto"
-              hint="Separe os parágrafos com uma linha em branco. Uma linha começando com ## vira intertítulo, e linhas começando com - viram lista."
-            >
-              {(props) => (
-                <Textarea
-                  {...props}
-                  rows={16}
-                  value={values.content}
-                  onChange={(event) => set('content', event.target.value)}
-                  disabled={locked}
-                />
-              )}
-            </Field>
+            <hr className="article-column my-4" />
+
+            <div className="article-column">
+              <p id="news-content-label" className="visually-hidden">
+                Texto da notícia
+              </p>
+              <ArticleEditor
+                id="news-content"
+                labelledBy="news-content-label"
+                describedBy="news-content-hint"
+                value={values.content}
+                onChange={(content) => set('content', content)}
+                disabled={locked}
+              />
+              <p id="news-content-hint" className="text-body-secondary mt-3 fs-8 text-pretty">
+                Digite <kbd>/</kbd> para ver os blocos: intertítulos, listas, citação,
+                divisor, imagem e vídeo do YouTube. No começo da linha, <kbd>##</kbd>,{' '}
+                <kbd>-</kbd>, <kbd>1.</kbd> e <kbd>&gt;</kbd> seguidos de espaço viram
+                intertítulo, lista, lista numerada e citação, e <kbd>---</kbd> vira divisor.
+                Colar um link do YouTube numa linha vazia já incorpora o vídeo.{' '}
+                <kbd>Shift</kbd>+<kbd>Enter</kbd> quebra a linha, e{' '}
+                <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> move o bloco — ou
+                arraste pela alça ao lado dele.
+              </p>
+            </div>
           </section>
 
           {/*
@@ -224,7 +328,7 @@ function NewsForm({ item }) {
             capa: cada item tem miniatura mais dois campos de texto ao lado, o
             que não cabe nos 20rem da lateral.
           */}
-          <section className="border-border bg-card rounded-lg border p-5 sm:p-6">
+          <section className="border bg-body rounded-3 p-3 p-sm-4">
             <NewsGalleryEditor
               value={values.gallery}
               onChange={(gallery) => set('gallery', gallery)}
@@ -233,12 +337,12 @@ function NewsForm({ item }) {
           </section>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {isEditing ? (
-            <section className="border-border bg-card space-y-4 rounded-lg border p-5">
+            <section className="border bg-body space-y-3 rounded-3 p-3">
               <div className="space-y-1">
-                <h2 className="text-sm font-semibold">Situação</h2>
-                <p className="text-muted-foreground text-sm">
+                <h2 className="fs-7 fw-semibold">Situação</h2>
+                <p className="text-body-secondary fs-7">
                   {STATUS_META[item.status]?.description}
                 </p>
               </div>
@@ -247,14 +351,14 @@ function NewsForm({ item }) {
             </section>
           ) : null}
 
-          <section className="border-border bg-card space-y-4 rounded-lg border p-5">
+          <section className="border bg-body space-y-3 rounded-3 p-3">
             <ImageUploader
               value={values.cover_image}
               onChange={(url) => set('cover_image', url)}
               bucket={BUCKETS.NEWS}
               label="Imagem de capa"
               hint="Aparece no cartão e no topo da notícia. Proporção 16:9."
-              ratio="aspect-[16/9]"
+              ratio="ratio-16x9"
             />
 
             {/*
@@ -262,6 +366,27 @@ function NewsForm({ item }) {
               foto costuma chegar depois do texto, e escondê-los faria o campo
               sumir justo de quem já sabe o que vai escrever ali.
             */}
+            {/*
+              Texto alternativo antes da legenda porque é o campo que decide se
+              a foto existe ou não para quem usa leitor de tela. Deixá-lo por
+              último o transformaria no primeiro a ser esquecido.
+            */}
+            <Field
+              id="news-cover-alt"
+              label="Texto alternativo da capa"
+              hint="Descreve a foto para quem não a enxerga. Não repita a legenda: ela contextualiza a cena, o texto alternativo diz o que aparece na imagem."
+            >
+              {(props) => (
+                <Input
+                  {...props}
+                  value={values.cover_alt}
+                  onChange={(event) => set('cover_alt', event.target.value)}
+                  maxLength={200}
+                  disabled={locked}
+                />
+              )}
+            </Field>
+
             <Field
               id="news-cover-caption"
               label="Legenda da capa"
@@ -295,6 +420,8 @@ function NewsForm({ item }) {
             </Field>
           </section>
 
+          {isEditing ? <TranslationsPanel newsId={item.id} /> : null}
+
           {isEditing ? <ReviewHistory newsId={item.id} /> : null}
         </div>
       </div>
@@ -310,7 +437,7 @@ export function NewsFormPage() {
     return (
       <>
         <PageHeader title="Notícia" />
-        <Skeleton className="h-[36rem]" />
+        <Skeleton />
       </>
     )
   }

@@ -6,12 +6,12 @@ import { Button } from '@/components/ui/button'
 function FullScreenLoader({ label = 'Carregando…' }) {
   return (
     <div
-      className="flex min-h-dvh flex-col items-center justify-center gap-3"
+      className="d-flex min-vh-100 flex-column align-items-center justify-content-center gap-2"
       role="status"
       aria-live="polite"
     >
-      <Loader2 className="text-muted-foreground size-6 animate-spin" aria-hidden="true" />
-      <p className="text-muted-foreground text-sm">{label}</p>
+      <Loader2 className="text-body-secondary icon-xl spinner-border spinner-border-sm" aria-hidden="true" />
+      <p className="text-body-secondary fs-7">{label}</p>
     </div>
   )
 }
@@ -19,16 +19,16 @@ function FullScreenLoader({ label = 'Carregando…' }) {
 function AccessDenied({ title, description }) {
   const { signOut } = useAuth()
   return (
-    <div className="flex min-h-dvh items-center justify-center p-6">
-      <div className="surface max-w-md space-y-4 p-8 text-center">
-        <div className="bg-destructive/10 text-destructive mx-auto flex size-12 items-center justify-center rounded-full">
-          <ShieldAlert className="size-6" aria-hidden="true" />
+    <div className="d-flex min-vh-100 align-items-center justify-content-center p-4">
+      <div className="card mw-md space-y-3 p-5 text-center">
+        <div className="bg-danger-subtle text-danger mx-auto d-flex h-fx-12 w-fx-12 align-items-center justify-content-center rounded-pill">
+          <ShieldAlert className="icon-xl" aria-hidden="true" />
         </div>
-        <div className="space-y-1.5">
-          <h1 className="text-lg font-semibold">{title}</h1>
-          <p className="text-muted-foreground text-sm text-pretty">{description}</p>
+        <div className="space-y-1">
+          <h1 className="fs-5 fw-semibold">{title}</h1>
+          <p className="text-body-secondary fs-7 text-pretty">{description}</p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+        <div className="d-flex flex-column gap-2 flex-sm-row justify-content-sm-center">
           <Button variant="outline" asChild>
             <Link to="/">Ir para a vitrine</Link>
           </Button>
@@ -44,15 +44,14 @@ function AccessDenied({ title, description }) {
 /**
  * Guarda das rotas administrativas.
  *
- * É apenas conveniência de interface: a autorização real está no RLS do
- * Postgres. Mesmo que alguém force a rota, nenhuma consulta retorna dados
+ * É apenas conveniência de interface: a autorização real está na API e no
+ * RLS do Postgres. Mesmo que alguém force a rota, nenhuma consulta retorna dados
  * além do que o papel permite.
  */
 export function ProtectedRoute({ requires }) {
-  const { configured, loading, isAuthenticated, isStaff, isAdmin, canReview } = useAuth()
+  const { loading, isAuthenticated, isStaff, isAdmin, canReview } = useAuth()
   const location = useLocation()
 
-  if (!configured) return <Navigate to="/configuracao" replace />
   if (loading) return <FullScreenLoader label="Verificando sua sessão…" />
 
   if (!isAuthenticated) {
@@ -91,10 +90,9 @@ export function ProtectedRoute({ requires }) {
 
 /** Impede que quem já está autenticado volte para a tela de login. */
 export function GuestRoute() {
-  const { configured, loading, isAuthenticated } = useAuth()
+  const { loading, isAuthenticated } = useAuth()
   const location = useLocation()
 
-  if (!configured) return <Navigate to="/configuracao" replace />
   if (loading) return <FullScreenLoader />
   if (isAuthenticated) {
     return <Navigate to={location.state?.from ?? '/admin'} replace />

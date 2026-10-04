@@ -14,13 +14,14 @@ dist-ssr
 
 # Variáveis de ambiente.
 # `*.local` acima já pegava .env.local, mas não .env nem .env.production —
-# justamente os nomes onde uma chave privada costuma acabar. A regra abaixo
-# ignora tudo e reabre só os dois arquivos que devem mesmo ser versionados:
-# o modelo com placeholders e as credenciais fictícias do teste de fumaça.
+# justamente os nomes onde uma senha costuma acabar. A regra abaixo ignora
+# tudo (inclusive server/.env) e reabre só o modelo com placeholders.
 .env
 .env.*
 !.env.example
-!.env.smoke
+
+# Imagens enviadas pelo painel quando a API roda fora do Docker.
+.uploads
 
 # Editor directories and files
 .vscode/*
@@ -36,11 +37,5 @@ dist-ssr
 # Saída do teste de fumaça de renderização (npm run smoke)
 .smoke
 
-# Vinculação local com o projeto na Vercel (criada por `vercel link`).
-#
-# O `vercel link` também acrescenta aqui um `.env*` genérico. Ele foi removido
-# de propósito: como a última regra que casa é a que vale, esse padrão no fim do
-# arquivo anulava os `!.env.example` e `!.env.smoke` acima, e os dois só
-# continuavam no repositório por já estarem versionados. O bloco de variáveis de
-# ambiente lá em cima já cobre tudo que o `.env*` cobriria.
+# Resto da hospedagem anterior na Vercel, se ainda existir na sua máquina.
 .vercel

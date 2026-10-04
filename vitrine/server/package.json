@@ -1,0 +1,23 @@
+{
+  "name": "vitrine-api",
+  "private": true,
+  "version": "1.0.0",
+  "description": "API da Vitrine: sessão, dados, arquivos, SEO renderizado no servidor e audiência.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "migrate": "node src/migrate.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "express": "^5.2.1",
+    "maxmind": "^5.0.7",
+    "multer": "^2.4.0",
+    "nodemailer": "^10.0.14",
+    "pg": "^8.23.1"
+  }
+}
