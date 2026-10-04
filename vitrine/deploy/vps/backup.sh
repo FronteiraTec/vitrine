@@ -50,7 +50,8 @@ fi
 # Retenção, por tipo: os mais novos ficam.
 manter() {
   local padrao=$1 quantos=$2
-  ls -1t $BACKUPS/$padrao 2>/dev/null | tail -n +$((quantos + 1)) | xargs -r rm -f
+  # `|| true`: sem nenhum arquivo do tipo, o ls sai com erro — e não é erro.
+  { ls -1t $BACKUPS/$padrao 2>/dev/null || true; } | tail -n +$((quantos + 1)) | xargs -r rm -f
 }
 manter '*-diario.dump' 14
 manter '*-antes-de-*.dump' 10

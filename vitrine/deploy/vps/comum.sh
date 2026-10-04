@@ -55,6 +55,11 @@ log() { printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*"; }
 aviso() { printf '[%s] AVISO: %s\n' "$(date '+%H:%M:%S')" "$*" >&2; }
 falha() { printf '[%s] ERRO: %s\n' "$(date '+%H:%M:%S')" "$*" >&2; exit 1; }
 
+# Nenhuma falha é silenciosa: qualquer comando que derrube o script diz qual
+# foi e em que linha, antes de sair.
+trap 'printf "[%s] ERRO: falhou (%s, linha %s): %s
+" "$(date "+%H:%M:%S")" "$(basename "$0")" "$LINENO" "$BASH_COMMAND" >&2' ERR
+
 curto() { printf '%s' "${1:0:7}"; }
 commit_atual() { cat "$ESTADO/atual" 2>/dev/null || true; }
 commit_anterior() { cat "$ESTADO/anterior" 2>/dev/null || true; }
