@@ -86,8 +86,8 @@ de identificar:
 |---|---|
 | Pasta | `/opt/vitrine` — clone (`app/`), `.env`, `estado/`, `backups/`, `deploys.log` |
 | Usuário | `vitrine` — sem senha, sem sudo, no grupo `docker` |
-| Containers | `vitrine-db-1`, `vitrine-api-1`, `vitrine-web-1` (+ `vitrine-geoipupdate-1` com MaxMind) |
-| Volumes | `vitrine_db-data` (banco), `vitrine_arquivos` (imagens enviadas), `vitrine_geoip` |
+| Containers | `vitrine-db-1`, `vitrine-api-1`, `vitrine-web-1` (+ `vitrine-geoipupdate-1` com MaxMind, `vitrine-translate-1` com `TRADUCAO_AUTOMATICA=sim`) |
+| Volumes | `vitrine_db-data` (banco), `vitrine_arquivos` (imagens enviadas), `vitrine_geoip`, `vitrine_translate-models` |
 | Rede própria | `vitrine_default` |
 | Imagens | `ghcr.io/fronteiratec/vitrine-api` e `-web` — só a versão no ar e a anterior |
 | Agendamento | `/etc/cron.d/vitrine-backup` |

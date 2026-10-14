@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { toast } from '@/components/ui/toast'
+import { avisarErro, avisarSucesso } from '@/lib/mascote-global'
 import { useCreatePerson, usePeople } from '@/hooks/use-queries'
 import { useDebouncedValue } from '@/hooks/use-utils'
 
@@ -42,12 +42,12 @@ function NewPersonDialog({ open, onOpenChange, onCreated }) {
         role: values.role.trim() || null,
         email: values.email.trim() || null,
       })
-      toast.success('Pessoa cadastrada.')
+      avisarSucesso('Pessoa cadastrada.')
       onCreated(person)
       setValues({ name: '', role: '', email: '' })
       onOpenChange(false)
     } catch (error) {
-      toast.error(error.message)
+      avisarErro(error)
     }
   }
 

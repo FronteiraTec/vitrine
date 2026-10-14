@@ -26,8 +26,13 @@ export function DialogContent({ className, children, size = 'md', ...props }) {
   )
 }
 
+// O espaçamento vem de utilitários, não das variáveis `--bs-modal-*`: o Bootstrap
+// só as define dentro de `.modal`, que o painel do Radix não usa — sem isto,
+// cabeçalho, corpo e rodapé ficam colados na borda.
 export function DialogHeader({ className, ...props }) {
-  return <div className={cn('modal-header border-0 pb-2 pe-5 d-block', className)} {...props} />
+  return (
+    <div className={cn('modal-header border-0 p-4 pb-2 pe-5 d-block', className)} {...props} />
+  )
 }
 
 export function DialogTitle({ className, ...props }) {
@@ -44,14 +49,16 @@ export function DialogDescription({ className, ...props }) {
 }
 
 export function DialogBody({ className, ...props }) {
-  return <div className={cn('modal-body flex-grow-1 overflow-auto pt-0', className)} {...props} />
+  return (
+    <div className={cn('modal-body flex-grow-1 overflow-auto p-4 pt-0', className)} {...props} />
+  )
 }
 
 export function DialogFooter({ className, ...props }) {
   return (
     <div
       className={cn(
-        'modal-footer bg-body-tertiary d-flex flex-column-reverse flex-sm-row justify-content-sm-end gap-2',
+        'modal-footer bg-body-tertiary px-4 py-3 d-flex flex-column-reverse flex-sm-row justify-content-sm-end gap-2',
         className,
       )}
       {...props}

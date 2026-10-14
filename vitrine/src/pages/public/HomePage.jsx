@@ -54,7 +54,7 @@ function Hero() {
             {t('home.hero.description')}
           </p>
 
-          <form onSubmit={handleSubmit} className="mt-5 mw-xl" role="search">
+          <form onSubmit={handleSubmit} className="mt-5 mw-xl" role="search" data-tour="busca-home">
             <label htmlFor="hero-search" className="visually-hidden">
               {t('home.hero.searchLabel')}
             </label>
@@ -126,7 +126,7 @@ function CategoriesSection() {
   const { t } = useLocale()
 
   return (
-    <section className="container py-5 py-sm-5">
+    <section className="container py-5 py-sm-5" data-tour="categorias-home">
       <SectionHeading
         eyebrow={t('home.categories.eyebrow')}
         title={t('home.categories.title')}
@@ -177,7 +177,7 @@ function FeaturedSection() {
   const { t } = useLocale()
 
   return (
-    <section className="bg-body-tertiary border border-top border-bottom">
+    <section className="bg-body-tertiary border border-top border-bottom" data-tour="destaques-home">
       <div className="container py-5 py-sm-5">
         <SectionHeading
           eyebrow={t('home.featured.eyebrow')}
@@ -222,7 +222,7 @@ function NewsSection() {
   if (isError || (!isPending && !data?.length)) return null
 
   return (
-    <section className="container py-5 py-sm-5">
+    <section className="container py-5 py-sm-5" data-tour="noticias-home">
       <SectionHeading
         eyebrow={t('home.news.eyebrow')}
         title={t('home.news.title')}

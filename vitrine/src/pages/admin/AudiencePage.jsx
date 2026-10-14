@@ -9,6 +9,7 @@ import { EmptyState, ErrorState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
+import { avisarErro } from '@/lib/mascote-global'
 import {
   Select,
   SelectContent,
@@ -476,7 +477,7 @@ export function AudiencePage() {
         toast.success('Planilha de audiência exportada.')
       }
     } catch (exportError) {
-      toast.error(exportError.message)
+      avisarErro(exportError)
     } finally {
       setExporting(false)
     }

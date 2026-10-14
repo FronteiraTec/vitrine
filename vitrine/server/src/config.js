@@ -88,6 +88,17 @@ export const config = {
     from: env.MAIL_FROM ?? '',
   },
 
+  /**
+   * LibreTranslate, que rascunha as traduções das notícias. Vazio desliga a
+   * tradução automática; fora do ar, o painel avisa e o resto segue normal.
+   */
+  translate: {
+    url: (env.TRANSLATE_URL ?? '').trim().replace(/\/+$/, ''),
+    apiKey: env.TRANSLATE_API_KEY ?? '',
+    /** Por lote. Na VPS (1 vCPU) um parágrafo longo leva alguns segundos. */
+    timeoutMs: number(env.TRANSLATE_TIMEOUT_MS, 45_000),
+  },
+
   geoipDb: env.GEOIP_DB ?? '',
   analyticsTimezone: env.ANALYTICS_TIMEZONE ?? 'America/Sao_Paulo',
 

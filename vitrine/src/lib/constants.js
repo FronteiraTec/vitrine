@@ -159,3 +159,9 @@ export const SORT_OPTIONS = [
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
+
+/**
+ * Código-fonte público da vitrine. A licença (AGPL-3.0) pede que quem usa o
+ * site pela rede tenha acesso a ele; o rodapé leva até aqui.
+ */
+export const SOURCE_CODE_URL = 'https://github.com/FronteiraTec/vitrine'

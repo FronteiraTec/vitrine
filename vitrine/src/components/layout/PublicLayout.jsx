@@ -9,11 +9,13 @@ import { Sheet, SheetClose, SheetContent, SheetTrigger } from '@/components/ui/s
 import { CategoryIcon } from '@/components/common/CategoryIcon'
 import { LinkIcon } from '@/components/initiatives/LinkIcon'
 import { AccessibilityWidget } from '@/components/accessibility/AccessibilityWidget'
+import { BotaoAjuda } from '@/components/tutorial/BotaoAjuda'
 import { useCategories, useSiteSettings } from '@/hooks/use-queries'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { DEFAULT_LOCALE, newsListPath } from '@/i18n/config'
 import { withAlpha } from '@/lib/site-settings'
+import { SOURCE_CODE_URL } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
 /**
@@ -107,7 +109,11 @@ function DesktopNav({ links, tinted }) {
   const { t } = useLocale()
 
   return (
-    <nav className="d-none align-items-center gap-1 d-lg-flex" aria-label={t('header.mainNav')}>
+    <nav
+      className="d-none align-items-center gap-1 d-lg-flex"
+      aria-label={t('header.mainNav')}
+      data-tour="menu-principal"
+    >
       {links.map((link) => (
         <NavLink
           key={link.to}
@@ -139,6 +145,7 @@ function MobileNav({ links }) {
           size="icon"
           className="text-current d-lg-none"
           aria-label={t('header.openMenu')}
+          data-tour="menu-principal"
         >
           <Menu />
         </Button>
@@ -426,6 +433,18 @@ function Footer({ settings }) {
                   {t('footer.admin')}
                 </Link>
               </li>
+              {/* A vitrine é AGPL-3.0: quem a usa pela rede tem direito ao
+                  código. O link fica fixo, fora do menu configurável. */}
+              <li>
+                <a
+                  href={SOURCE_CODE_URL}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="opacity-75"
+                >
+                  {t('footer.sourceCode')}
+                </a>
+              </li>
             </ul>
 
             <div className="mt-4">
@@ -494,6 +513,7 @@ export function PublicLayout() {
           trabalho: inverter as cores ali deixaria ilegível o próprio
           formulário usado para corrigir o problema. */}
       <AccessibilityWidget />
+      <BotaoAjuda />
     </div>
   )
 }

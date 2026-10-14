@@ -13,7 +13,9 @@ import { Field } from '@/components/ui/label'
 import { StatusBadge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/ui/empty-state'
+import { NaoEncontrado } from '@/components/common/NaoEncontrado'
 import { toast } from '@/components/ui/toast'
+import { avisarErro, avisarFaltando, avisarSucesso } from '@/lib/mascote-global'
 import {
   useNewsItem,
   useNewsReviewHistory,
@@ -186,16 +188,17 @@ function NewsForm({ item }) {
   async function handleSubmit(event) {
     event.preventDefault()
     if (!values.name.trim()) {
-      toast.error('Informe o título da notícia.')
+      avisarFaltando('Informe o título da notícia.')
       return
     }
 
     try {
       const saved = await save.mutateAsync({ id: item?.id, values })
-      toast.success(isEditing ? 'Notícia salva.' : 'Notícia criada como rascunho.')
+      if (isEditing) toast.success('Notícia salva.')
+      else avisarSucesso('Notícia criada como rascunho.')
       if (!isEditing) navigate(`/admin/noticias/${saved.id}`, { replace: true })
     } catch (error) {
-      toast.error(error.message)
+      avisarErro(error)
     }
   }
 
@@ -220,14 +223,19 @@ function NewsForm({ item }) {
                 </Link>
               </Button>
             ) : null}
-            <Button type="submit" loading={save.isPending} disabled={locked}>
+            <Button
+              type="submit"
+              loading={save.isPending}
+              disabled={locked}
+              data-tour="noticia-salvar"
+            >
               Salvar
             </Button>
           </>
         }
       />
 
-      <div className="d-grid gap-4 grid-detail align-items-xl-start">
+      <div className="d-grid gap-4 grid-editor align-items-xl-start">
         <div className="space-y-4">
           {locked ? (
             <p className="border bg-body-secondary text-body-secondary d-flex align-items-start gap-2 rounded-3 p-3 fs-7 text-pretty">
@@ -269,6 +277,7 @@ function NewsForm({ item }) {
               </label>
               <AutosizeTextarea
                 id="news-name"
+                data-tour="noticia-folha"
                 className="block-input article-title fw-bold mt-2"
                 value={values.name}
                 // O título é uma linha só; o Enter passa para o resumo.
@@ -310,15 +319,10 @@ function NewsForm({ item }) {
                 onChange={(content) => set('content', content)}
                 disabled={locked}
               />
-              <p id="news-content-hint" className="text-body-secondary mt-3 fs-8 text-pretty">
-                Digite <kbd>/</kbd> para ver os blocos: intertítulos, listas, citação,
-                divisor, imagem e vídeo do YouTube. No começo da linha, <kbd>##</kbd>,{' '}
-                <kbd>-</kbd>, <kbd>1.</kbd> e <kbd>&gt;</kbd> seguidos de espaço viram
-                intertítulo, lista, lista numerada e citação, e <kbd>---</kbd> vira divisor.
-                Colar um link do YouTube numa linha vazia já incorpora o vídeo.{' '}
-                <kbd>Shift</kbd>+<kbd>Enter</kbd> quebra a linha, e{' '}
-                <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> move o bloco — ou
-                arraste pela alça ao lado dele.
+              {/* Na tela a dica atrapalhava a escrita; fica só para o leitor de tela. */}
+              <p id="news-content-hint" className="visually-hidden">
+                Digite barra para inserir intertítulo, lista, citação, divisor, imagem ou vídeo.
+                Ctrl+Shift+seta para cima ou para baixo move o bloco.
               </p>
             </div>
           </section>
@@ -328,7 +332,7 @@ function NewsForm({ item }) {
             capa: cada item tem miniatura mais dois campos de texto ao lado, o
             que não cabe nos 20rem da lateral.
           */}
-          <section className="border bg-body rounded-3 p-3 p-sm-4">
+          <section className="border bg-body rounded-3 p-3 p-sm-4" data-tour="noticia-galeria">
             <NewsGalleryEditor
               value={values.gallery}
               onChange={(gallery) => set('gallery', gallery)}
@@ -351,7 +355,7 @@ function NewsForm({ item }) {
             </section>
           ) : null}
 
-          <section className="border bg-body space-y-3 rounded-3 p-3">
+          <section className="border bg-body space-y-3 rounded-3 p-3" data-tour="noticia-capa">
             <ImageUploader
               value={values.cover_image}
               onChange={(url) => set('cover_image', url)}
@@ -448,6 +452,21 @@ export function NewsFormPage() {
         <PageHeader title="Notícia" backTo="/admin/noticias" backLabel="Notícias" />
         <ErrorState description={error?.message} onRetry={() => refetch()} />
       </>
+    )
+  }
+
+  // Endereço de uma notícia que não existe (ou que a pessoa não pode ver):
+  // sem isto, o formulário abriria vazio, como se fosse uma notícia nova.
+  if (id && !data) {
+    return (
+      <NaoEncontrado
+        title="Notícia não encontrada"
+        description="Ela pode ter sido removida ou você não tem permissão para vê-la."
+      >
+        <Button variant="outline" asChild>
+          <Link to="/admin/noticias">Voltar para notícias</Link>
+        </Button>
+      </NaoEncontrado>
     )
   }
 

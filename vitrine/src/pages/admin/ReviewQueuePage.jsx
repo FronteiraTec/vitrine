@@ -58,17 +58,19 @@ export function ReviewQueuePage() {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <EmptyState
-          icon={ClipboardCheck}
-          title="Fila vazia"
-          description="Nada aguardando revisão. Assim que uma equipe enviar conteúdo, ele aparece aqui."
-          action={
-            <Button variant="outline" asChild>
-              <Link to="/admin/iniciativas">Ver todas as iniciativas</Link>
-            </Button>
-          }
-          className="bg-body"
-        />
+        <div data-tour="revisao-vazia">
+          <EmptyState
+            icon={ClipboardCheck}
+            title="Fila vazia"
+            description="Nada aguardando revisão. Assim que uma equipe enviar conteúdo, ele aparece aqui."
+            action={
+              <Button variant="outline" asChild>
+                <Link to="/admin/iniciativas">Ver todas as iniciativas</Link>
+              </Button>
+            }
+            className="bg-body"
+          />
+        </div>
       ) : (
         <ul className="space-y-3">
           {items.map((item) => {
@@ -79,6 +81,7 @@ export function ReviewQueuePage() {
               <li
                 key={`${item.kind}-${item.id}`}
                 className="border bg-body rounded-3 p-3 p-sm-3"
+                data-tour="revisao-item"
               >
                 <div className="d-flex flex-column gap-3 flex-sm-row">
                   <Image
@@ -109,13 +112,17 @@ export function ReviewQueuePage() {
                     </div>
 
                     <div className="d-flex flex-wrap align-items-center gap-2 pt-1">
-                      <Button variant="outline" size="sm" asChild>
+                      <Button variant="outline" size="sm" asChild data-tour="revisao-abrir">
                         <Link to={editPath}>
                           <Eye aria-hidden="true" />
                           Revisar conteúdo
                         </Link>
                       </Button>
-                      <StatusActions record={item} kind={item.kind} size="sm" />
+                      {/* Embrulho só para o tutorial apontar; sem ações
+                          permitidas ele fica vazio e o passo é pulado. */}
+                      <div data-tour="revisao-acoes">
+                        <StatusActions record={item} kind={item.kind} size="sm" />
+                      </div>
                     </div>
                   </div>
                 </div>

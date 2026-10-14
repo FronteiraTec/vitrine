@@ -20,6 +20,7 @@ import { EmptyState, ErrorState } from '@/components/ui/empty-state'
 import { TableRowsSkeleton, Skeleton } from '@/components/ui/skeleton'
 import { ConfirmDialog } from '@/components/ui/alert-dialog'
 import { toast } from '@/components/ui/toast'
+import { avisarErro } from '@/lib/mascote-global'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -125,7 +126,7 @@ export function InitiativesAdminPage() {
       toast.success('Iniciativa excluída.')
       setToDelete(null)
     } catch (deleteError) {
-      toast.error(deleteError.message)
+      avisarErro(deleteError)
     }
   }
 
@@ -135,7 +136,7 @@ export function InitiativesAdminPage() {
         title="Iniciativas"
         description="Todo o catálogo, em qualquer estágio do fluxo editorial."
         actions={
-          <Button asChild>
+          <Button asChild data-tour="nova-iniciativa">
             <Link to="/admin/iniciativas/nova">
               <Plus aria-hidden="true" />
               Nova iniciativa

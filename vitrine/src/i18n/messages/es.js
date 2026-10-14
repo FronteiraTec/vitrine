@@ -71,6 +71,7 @@ export default {
     contact: 'Contacto',
     accessibility: 'Accesibilidad',
     admin: 'Área administrativa',
+    sourceCode: 'Código fuente',
   },
 
   siteDefaults: {
@@ -292,6 +293,32 @@ export default {
     failed: 'No se pudo iniciar la lectura. Inténtalo de nuevo.',
     unsupported:
       'La lectura en voz alta depende de una función de síntesis de voz que este navegador no ofrece. Funciona en las versiones actuales de Chrome, Edge, Safari y Firefox.',
+  },
+
+  mascot: {
+    greeting: {
+      morning: '¡Buenos días! Qué bueno tenerte por aquí.',
+      afternoon: '¡Buenas tardes! Qué bueno tenerte por aquí.',
+      evening: '¡Buenas noches! Qué bueno tenerte por aquí.',
+    },
+    greetingNamed: {
+      morning: '¡Buenos días, {name}! Qué bueno verte por aquí.',
+      afternoon: '¡Buenas tardes, {name}! Qué bueno verte por aquí.',
+      evening: '¡Buenas noches, {name}! Qué bueno verte por aquí.',
+    },
+    loading: 'Buscando la información…',
+    saving: 'Un momento, estoy guardando…',
+    error: 'Algo salió mal de nuestro lado. Inténtalo de nuevo en unos instantes.',
+  },
+
+  tutorial: {
+    open: 'Ayuda y tutoriales',
+    title: 'Tutoriales de esta página',
+    description: 'Un recorrido rápido, guiado por la mascota de la vitrina.',
+    start: 'Empezar',
+    again: 'Ver de nuevo',
+    inPortuguese: 'En portugués',
+    empty: 'Todavía no hay tutoriales para esta página.',
   },
 
   a11yPanel: {
@@ -563,6 +590,7 @@ export default {
     description: 'La dirección no existe, cambió de lugar o el contenido ya no está disponible.',
     home: 'Volver al inicio',
     explore: 'Explorar iniciativas',
+    mascot: 'Ups… me distraje con una mariposa y no encontré esta página.',
   },
 
   errorBoundary: {

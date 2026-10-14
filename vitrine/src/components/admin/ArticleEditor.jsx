@@ -291,7 +291,16 @@ function SlashMenu({ id, options, active, onPick }) {
  * cada tecla apagaria os blocos vazios em que a pessoa ainda vai escrever. O
  * formulário já remonta o editor quando troca de notícia.
  */
-export function ArticleEditor({ id, value, onChange, disabled = false, labelledBy, describedBy }) {
+export function ArticleEditor({
+  id,
+  value,
+  onChange,
+  disabled = false,
+  labelledBy,
+  describedBy,
+  // Onde as fotos do texto são gravadas: o mesmo bucket da capa de quem usa o editor.
+  bucket,
+}) {
   const uid = useId()
   const [blocks, setBlocks] = useState(() => toEditorBlocks(value))
   const [slash, setSlash] = useState(null)
@@ -1020,6 +1029,7 @@ export function ArticleEditor({ id, value, onChange, disabled = false, labelledB
                 {block.type === 'image' ? (
                   <ImageBlock
                     block={block}
+                    bucket={bucket}
                     disabled={disabled}
                     onPatch={(patch) => patchMedia(block.id, patch)}
                     onEnter={() => insertParagraphAfter(block.id)}

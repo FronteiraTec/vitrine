@@ -47,6 +47,7 @@ Tudo roda em containers, orquestrado pelo `docker-compose.yml`:
 | `api` | Node 22 + Express | Sessão, dados, uploads, páginas com `<head>` no servidor, sitemaps, RSS e audiência |
 | `web` | Nginx 1.28 | Entrega o React construído e as imagens enviadas; repassa o resto à API |
 | `geoipupdate` | MaxMind (opcional) | Mantém atualizada a base que estima país, estado e cidade da audiência |
+| `translate` | LibreTranslate 1.9 (opcional) | Rascunha as traduções das notícias para inglês e espanhol ([seção 15.11](#1511-tradução-automática-libretranslate)) |
 
 | Camada | Tecnologia |
 |---|---|
@@ -114,6 +115,12 @@ Com a base de localização da audiência (conta gratuita na MaxMind, [seção 1
 
 ```bash
 docker compose --profile geoip up -d
+```
+
+Com a tradução automática das notícias ([seção 15.11](#1511-tradução-automática-libretranslate)):
+
+```bash
+docker compose --profile traducao up -d
 ```
 
 ---
@@ -502,7 +509,10 @@ vitrine/
     │   ├── ui/                 primitivas (button, dialog, popover, select, …)
     │   ├── layout/             PublicLayout, AdminLayout, Logo, SiteTheme, LanguageSwitcher
     │   ├── admin/              formulários, upload, workflow, gráficos, audiência
+    │   ├── mascote/            o mascote da vitrine (arquivo entregue pronto, não editar)
+    │   ├── tutorial/           motor do Shepherd, balão do passo, botão de ajuda
     │   └── …
+    ├── tutoriais/              um arquivo por tutorial guiado (ver o README da pasta)
     ├── pages/                  public/, admin/, auth/
     ├── services/               chamadas à API, por domínio
     ├── hooks/                  TanStack Query, SEO, audiência, preferências de acesso
@@ -512,7 +522,7 @@ vitrine/
     │   ├── news-translations.js notícia montada num idioma — cliente E servidor
     │   ├── audience.js         registro de acessos e rótulos do relatório
     │   └── xlsx.js             planilha .xlsx sem dependência (várias abas)
-    ├── contexts/               AuthContext, LocaleContext
+    ├── contexts/               AuthContext, LocaleContext, TutorialContext
     └── styles/main.scss
 ```
 
@@ -913,6 +923,53 @@ manchete, sem informação nenhuma.
 **Preencher é responsabilidade humana.** O sistema oferece o campo; o alt bom
 depende de quem publica.
 
+### 14.8 Tutoriais guiados
+
+Tours passo a passo com [Shepherd.js](https://shepherdjs.dev), apresentados
+pelo mascote da vitrine. O botão de ajuda no canto inferior direito, na vitrine
+e no painel, lista os tutoriais da tela atual. O de boas-vindas da vitrine abre
+sozinho na primeira visita à home, e o do painel no primeiro acesso de cada
+pessoa da equipe. Os textos são só em português.
+
+- **Teclado:** Tab circula dentro do balão, Enter aciona, ← → avançam e voltam,
+  `Esc` fecha. O foco vai para o balão a cada passo e volta, no fim, para quem
+  abriu o tour.
+- **Leitor de tela:** o balão é um `<dialog>` com o nome do tutorial; o texto do
+  passo é a descrição e está inteiro desde o início, mesmo enquanto as letras
+  aparecem na tela. O mascote é decorativo (`aria-hidden`).
+- **Movimento reduzido** (do sistema ou do painel do leitor): o texto aparece
+  de uma vez e as animações param.
+
+O mascote do botão também reage à página (`src/lib/mascote-global.js`), com a
+fala num balão acima dele (anunciado ao leitor de tela):
+
+| Situação | Estado | Quem dispara |
+|---|---|---|
+| Algo foi criado | `sucesso` | `avisarSucesso(mensagem)` nos formulários de criação |
+| Faltou informação | `faltando` | `avisarFaltando(mensagem)` na validação dos formulários |
+| Erro inesperado | `erro` | `avisarErro(erro)` nas ações que falham; `ErrorState` ao aparecer |
+| Carregamento demorado (> 2 s) | `carregando` | o próprio botão, pelas consultas e gravações pendentes |
+| 2 min sem interação | `dormindo` | o próprio botão; acorda no primeiro movimento |
+| Chegada (visita ou login) | `falando` | "Bom dia/Boa tarde/Boa noite", com o nome de quem entrou; uma vez por entrada |
+
+O erro da API escolhe o estado pelo status (4xx de dado recusado vira
+`faltando`, 404 vira `naoEncontrado`). Sem mascote na tela, durante um
+tutorial, na tela de 404 ou com um diálogo aberto, os `avisar*` saem como
+toast. A cada entrada há 25% de chance de o mascote estar de astronauta; a
+roupa sorteada vale para todos os mascotes até a aba fechar.
+
+Endereço, iniciativa, notícia, categoria, autor ou registro do painel que não
+existe mostram a mesma tela de 404 (`src/components/common/NaoEncontrado.jsx`),
+com o mascote no lugar do 0. A tela de falha geral do app mostra o mascote em
+`erro`.
+
+Concluído ou pulado fica gravado no navegador por tutorial e versão;
+recarregar a página no meio retoma do mesmo passo. Como criar ou editar um
+tutorial: [`src/tutoriais/README.md`](./src/tutoriais/README.md).
+
+O Shepherd é licenciado como AGPL-3.0, a mesma licença do projeto (ver
+`LICENSE` na raiz do repositório). O motor só é baixado quando um tour começa.
+
 ---
 
 ## 15. Idiomas — português, inglês e espanhol
@@ -1104,6 +1161,54 @@ das traduções.
   é a do fato), só no acervo.
 - Iniciativas, categorias e textos do painel não têm tradução; o feed RSS é só
   em português.
+
+### 15.11 Tradução automática (LibreTranslate)
+
+O serviço `translate` do `docker-compose.yml` roda o
+[LibreTranslate](https://docs.libretranslate.com/) com os modelos de
+português, inglês e espanhol. Tudo acontece no próprio servidor: nenhum texto
+vai para serviço de terceiros, e não há chave nem custo por uso.
+
+```bash
+docker compose --profile traducao up -d
+```
+
+Na primeira subida ele baixa os modelos (~1 GB) para o volume
+`translate-models`, o que leva alguns minutos; nas seguintes, sobe em
+segundos. Ele não publica porta: só a API fala com ele, pela rede interna.
+
+**No painel**, a tela de tradução de uma notícia ganha o quadro **Tradução
+automática**. "Traduzir automaticamente" preenche chapéu, título, resumo,
+corpo, textos da capa e da galeria a partir do original — e **não salva**:
+quem traduz revisa e clica em Salvar, como numa tradução feita à mão. Se já
+houver texto escrito, a tela pergunta antes de substituir. Sem o serviço no
+ar, o quadro simplesmente não aparece.
+
+**O que não é traduzido:** a marcação do corpo. O painel quebra o corpo em
+blocos (`src/lib/machine-translation.js`) e manda ao tradutor só o texto de
+cada um — intertítulos, itens, parágrafos linha a linha, citações, legendas e
+textos alternativos. URLs de imagens e vídeos, `Legenda:`/`Crédito:`, créditos
+de foto e autores de citação ficam como estão. Mandar o corpo inteiro fazia o
+tradutor trocar `Legenda:` por "Subtitles:", e a legenda virava parágrafo.
+
+**Como passa pela API:** `POST /api/translate` (`server/src/routes/translate.js`)
+recebe `{ target, texts }`, exige sessão, limita o tamanho dos lotes e as
+requisições por pessoa, e repassa ao LibreTranslate. O painel envia a notícia
+em lotes pequenos, um de cada vez, e mostra o progresso — assim nenhum pedido
+chega perto do tempo limite do Nginx, mesmo na VPS de 1 vCPU.
+
+| Variável (`.env`) | Padrão | Para quê |
+|---|---|---|
+| `TRANSLATE_URL` | `http://translate:5000` | Onde a API encontra o tradutor. Vazio desliga |
+| `TRANSLATE_API_KEY` | vazio | Só para um LibreTranslate externo que exija chave |
+| `TRANSLATE_MEM_LIMIT` | `1500m` | Teto de memória do container |
+| `TRANSLATE_THREADS` | `2` | Threads do tradutor |
+| `TRADUCAO_AUTOMATICA` | vazio | `sim` faz o `deploy.sh` da VPS subir o serviço |
+
+**Memória.** Ocioso, o serviço usa ~400 MB; traduzindo, perto de 1 GB. Numa
+VPS de 2 GB compartilhada, confira a folga (`docker stats`) antes de ligar.
+A qualidade é a de um tradutor automático aberto: boa para rascunho, não para
+publicar sem revisão.
 
 ---
 

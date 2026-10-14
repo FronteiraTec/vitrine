@@ -41,6 +41,22 @@ export default defineConfig([
     },
   },
   {
+    /*
+     * O mascote é um componente entregue pronto e mantido como arquivo de
+     * terceiro: fica idêntico ao que veio da equipe de design, para que uma
+     * versão nova possa simplesmente substituí-lo. Ele exporta hooks e
+     * constantes junto do componente (Fast Refresh) e usa dois padrões que as
+     * regras do React Compiler desaconselham — o compilador apenas deixa de
+     * otimizar esse componente, sem mudar o comportamento.
+     */
+    files: ['src/components/mascote/Mascote.jsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+      'react-hooks/refs': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+    },
+  },
+  {
     // Scripts de build e a API rodam no Node, não no navegador.
     files: ['scripts/**/*.{js,jsx,mjs}', 'server/**/*.js', '*.config.js'],
     languageOptions: { globals: { ...globals.node } },

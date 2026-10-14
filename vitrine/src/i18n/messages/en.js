@@ -71,6 +71,7 @@ export default {
     contact: 'Contact',
     accessibility: 'Accessibility',
     admin: 'Staff area',
+    sourceCode: 'Source code',
   },
 
   siteDefaults: {
@@ -290,6 +291,32 @@ export default {
     failed: 'Could not start reading. Please try again.',
     unsupported:
       'Reading aloud relies on a speech synthesis feature this browser does not offer. It works in current versions of Chrome, Edge, Safari and Firefox.',
+  },
+
+  mascot: {
+    greeting: {
+      morning: 'Good morning! Great to have you here.',
+      afternoon: 'Good afternoon! Great to have you here.',
+      evening: 'Good evening! Great to have you here.',
+    },
+    greetingNamed: {
+      morning: 'Good morning, {name}! Great to see you.',
+      afternoon: 'Good afternoon, {name}! Great to see you.',
+      evening: 'Good evening, {name}! Great to see you.',
+    },
+    loading: 'Fetching the information…',
+    saving: 'Just a moment, saving…',
+    error: 'Something went wrong on our side. Please try again in a moment.',
+  },
+
+  tutorial: {
+    open: 'Help and tutorials',
+    title: 'Tutorials for this page',
+    description: 'A quick tour, guided by the showcase mascot.',
+    start: 'Start',
+    again: 'Watch again',
+    inPortuguese: 'In Portuguese',
+    empty: 'There are no tutorials for this page yet.',
   },
 
   a11yPanel: {
@@ -561,6 +588,7 @@ export default {
     description: 'The address does not exist, has moved or the content is no longer available.',
     home: 'Back to home',
     explore: 'Explore initiatives',
+    mascot: 'Oops… a butterfly distracted me and I couldn’t find this page.',
   },
 
   errorBoundary: {

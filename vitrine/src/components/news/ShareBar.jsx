@@ -45,7 +45,7 @@ function LinkedInGlyph(props) {
   )
 }
 
-export function ShareBar({ title, className }) {
+export function ShareBar({ title, className, ...props }) {
   const [copied, setCopied] = useState(false)
   const { t } = useLocale()
 
@@ -114,6 +114,7 @@ export function ShareBar({ title, className }) {
       role="group"
       aria-label={t('share.group')}
       className={cn('share-bar', className)}
+      {...props}
     >
       {targets.map(({ label, icon: Icon, tone, href }) => (
         <a

@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/empty-state'
 import { ConfirmDialog } from '@/components/ui/alert-dialog'
 import { toast } from '@/components/ui/toast'
+import { avisarErro, avisarSucesso } from '@/lib/mascote-global'
 import {
   Dialog,
   DialogBody,
@@ -67,7 +68,7 @@ function CategoryForm({ category, onOpenChange }) {
         toast.success('Categoria atualizada.')
       } else {
         await createCategory.mutateAsync(payload)
-        toast.success('Categoria criada.')
+        avisarSucesso('Categoria criada.')
       }
       onOpenChange(false)
     } catch (submitError) {
@@ -215,7 +216,7 @@ export function CategoriesAdminPage() {
     try {
       await reorder.mutateAsync(next.map((category) => category.id))
     } catch (reorderError) {
-      toast.error(reorderError.message)
+      avisarErro(reorderError)
     }
   }
 
@@ -225,7 +226,7 @@ export function CategoriesAdminPage() {
       toast.success('Categoria excluída.')
       setToDelete(null)
     } catch (deleteError) {
-      toast.error(deleteError.message)
+      avisarErro(deleteError)
     }
   }
 

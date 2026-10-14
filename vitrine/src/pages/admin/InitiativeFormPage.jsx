@@ -7,16 +7,28 @@ import {
   FileText,
   ImageIcon,
   MapPin,
+  PenLine,
   Rocket,
   Save,
   Users,
 } from 'lucide-react'
+import { ArticleEditor } from '@/components/admin/ArticleEditor'
 import { PageHeader } from '@/components/admin/PageHeader'
 import { StatusActions } from '@/components/admin/StatusActions'
 import { TagInput } from '@/components/admin/TagInput'
 import { TeamEditor, LinksEditor } from '@/components/admin/TeamEditor'
 import { ImageUploader, GalleryUploader } from '@/components/admin/ImageUploader'
+import { ArticleBody } from '@/components/news/ArticleBody'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input, Textarea } from '@/components/ui/input'
 import { Field } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -24,8 +36,10 @@ import { StatusBadge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/ui/empty-state'
+import { NaoEncontrado } from '@/components/common/NaoEncontrado'
 import { ConfirmDialog } from '@/components/ui/alert-dialog'
 import { toast } from '@/components/ui/toast'
+import { avisarErro, avisarFaltando, avisarSucesso } from '@/lib/mascote-global'
 import {
   Select,
   SelectContent,
@@ -37,6 +51,7 @@ import { useCategories, useInitiative, useReviewHistory, useSaveInitiative } fro
 import { resolveTagIds } from '@/services/taxonomy'
 import { useAuth } from '@/contexts/AuthContext'
 import { AREAS, BUCKETS, STATUS, STATUS_META } from '@/lib/constants'
+import { parseArticleBody } from '@/lib/news-content'
 import { formatDate, formatTime } from '@/lib/utils'
 
 const EMPTY_FORM = {
@@ -120,6 +135,102 @@ function ReviewHistory({ initiativeId }) {
         </li>
       ))}
     </ol>
+  )
+}
+
+/**
+ * Descrição completa: escrita no mesmo editor em blocos do corpo da notícia e
+ * gravada no mesmo formato de texto, que a página pública lê com
+ * `parseArticleBody`. Descrições antigas, só com parágrafos, já são esse
+ * formato.
+ *
+ * O editor abre numa tela própria: dentro da aba, ao lado de categoria e tags,
+ * ele ficaria espremido na coluna do formulário. Aqui fica só a prévia de como
+ * o texto vai aparecer.
+ */
+function DescriptionField({ value, onChange, disabled, initiativeName }) {
+  const [open, setOpen] = useState(false)
+  const blocks = useMemo(() => parseArticleBody(value), [value])
+
+  return (
+    <div className="mb-3 space-y-2">
+      <div className="d-flex flex-wrap align-items-end justify-content-between gap-2">
+        <div>
+          <p id="description-label" className="fs-7 fw-medium">
+            Descrição completa
+          </p>
+          <p id="description-hint" className="text-body-secondary fs-8">
+            Texto exibido na página da iniciativa, com intertítulos, listas, citações, fotos e
+            vídeos.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setOpen(true)}
+          aria-describedby="description-hint"
+        >
+          <PenLine aria-hidden="true" />
+          {blocks.length ? 'Editar descrição' : 'Escrever descrição'}
+        </Button>
+      </div>
+
+      {blocks.length ? (
+        // Clicar na prévia também abre o editor; o botão acima é o caminho pelo teclado.
+        <div
+          className="border bg-body rounded-3 p-3 description-preview block-text-flush"
+          onClick={disabled ? undefined : () => setOpen(true)}
+        >
+          <ArticleBody blocks={blocks} />
+        </div>
+      ) : (
+        <p className="border bg-body-tertiary text-body-secondary rounded-3 p-3 fs-7 text-pretty">
+          Nenhuma descrição ainda. Apresente objetivos, linhas de atuação, resultados e como
+          participar.
+        </p>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent
+          size="full"
+          // Com o menu de `/` aberto, o Esc fecha o menu, e não a tela.
+          onEscapeKeyDown={(event) => {
+            if (event.target?.getAttribute?.('aria-controls')) event.preventDefault()
+          }}
+        >
+          <DialogHeader className="border-bottom pb-3">
+            <DialogTitle>Descrição completa</DialogTitle>
+            <DialogDescription>
+              {initiativeName || 'Nova iniciativa'} · Digite / para inserir intertítulo, lista,
+              citação, divisor, imagem ou vídeo. As alterações entram no formulário; salve a
+              iniciativa para gravá-las.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogBody className="bg-body-tertiary py-4">
+            <section className="border bg-body rounded-3 article-sheet mx-auto mw-5xl">
+              <div className="article-column">
+                <ArticleEditor
+                  id="initiative-description"
+                  labelledBy="description-label"
+                  value={value}
+                  onChange={onChange}
+                  bucket={BUCKETS.INITIATIVES}
+                  disabled={disabled}
+                />
+              </div>
+            </section>
+          </DialogBody>
+
+          <DialogFooter>
+            <Button type="button" onClick={() => setOpen(false)}>
+              Concluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }
 
@@ -233,7 +344,7 @@ export function InitiativeFormPage() {
     setErrors(validationErrors)
 
     if (Object.keys(validationErrors).length > 0) {
-      toast.error('Revise os campos destacados antes de salvar.')
+      avisarFaltando()
       // Leva o usuário à primeira aba com erro.
       if (validationErrors.name || validationErrors.category_id || validationErrors.short_description) {
         setTab('basico')
@@ -255,10 +366,11 @@ export function InitiativeFormPage() {
         links,
       })
       markDirty(false)
-      toast.success(isEditing ? 'Alterações salvas.' : 'Iniciativa criada como rascunho.')
+      if (isEditing) toast.success('Alterações salvas.')
+      else avisarSucesso('Iniciativa criada como rascunho.')
       if (!isEditing) navigate(`/admin/iniciativas/${saved.id}`, { replace: true })
     } catch (submitError) {
-      toast.error(submitError.message)
+      avisarErro(submitError)
     }
   }
 
@@ -278,10 +390,14 @@ export function InitiativeFormPage() {
 
   if (isEditing && !initiative) {
     return (
-      <ErrorState
+      <NaoEncontrado
         title="Iniciativa não encontrada"
         description="Ela pode ter sido removida ou você não tem permissão para vê-la."
-      />
+      >
+        <Button variant="outline" asChild>
+          <Link to="/admin/iniciativas">Voltar para iniciativas</Link>
+        </Button>
+      </NaoEncontrado>
     )
   }
 
@@ -308,7 +424,12 @@ export function InitiativeFormPage() {
                 </Link>
               </Button>
             ) : null}
-            <Button type="submit" loading={saveInitiative.isPending} disabled={disabled}>
+            <Button
+              type="submit"
+              loading={saveInitiative.isPending}
+              disabled={disabled}
+              data-tour="iniciativa-salvar"
+            >
               <Save aria-hidden="true" />
               {isEditing ? 'Salvar alterações' : 'Criar iniciativa'}
             </Button>
@@ -343,7 +464,7 @@ export function InitiativeFormPage() {
       ) : null}
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
+        <TabsList data-tour="iniciativa-abas">
           {TABS.map(({ value, label, icon: Icon }) => (
             <TabsTrigger key={value} value={value} disabled={value === 'publicacao' && !isEditing}>
               <Icon aria-hidden="true" />
@@ -362,6 +483,7 @@ export function InitiativeFormPage() {
               {(props) => (
                 <Input
                   {...props}
+                  data-tour="iniciativa-nome"
                   value={form.name}
                   onChange={(event) => update({ name: event.target.value })}
                   placeholder="Ex.: Laboratório de Inteligência Artificial"
@@ -412,21 +534,12 @@ export function InitiativeFormPage() {
               )}
             </Field>
 
-            <Field
-              id="description"
-              label="Descrição completa"
-              hint="Texto exibido na página da iniciativa. Separe parágrafos com uma linha em branco."
-            >
-              {(props) => (
-                <Textarea
-                  {...props}
-                  rows={12}
-                  value={form.description}
-                  onChange={(event) => update({ description: event.target.value })}
-                  placeholder="Apresente objetivos, linhas de atuação, resultados e como participar."
-                />
-              )}
-            </Field>
+            <DescriptionField
+              value={form.description}
+              onChange={(description) => update({ description })}
+              disabled={disabled}
+              initiativeName={form.name}
+            />
 
             <Field
               id="tags"

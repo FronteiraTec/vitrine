@@ -84,6 +84,7 @@ export default {
     contact: 'Contato',
     accessibility: 'Acessibilidade',
     admin: 'Área administrativa',
+    sourceCode: 'Código-fonte',
   },
 
   // Recuo de `site_settings` quando o administrador não personalizou o campo.
@@ -309,6 +310,35 @@ export default {
     failed: 'Não foi possível iniciar a leitura. Tente novamente.',
     unsupported:
       'A leitura em voz alta depende de um recurso de síntese de fala que este navegador não oferece. Ela funciona nas versões atuais de Chrome, Edge, Safari e Firefox.',
+  },
+
+  // Falas do mascote do canto da tela (src/components/tutorial/BotaoAjuda.jsx).
+  mascot: {
+    greeting: {
+      morning: 'Bom dia! Que bom ter você por aqui.',
+      afternoon: 'Boa tarde! Que bom ter você por aqui.',
+      evening: 'Boa noite! Que bom ter você por aqui.',
+    },
+    greetingNamed: {
+      morning: 'Bom dia, {name}! Que bom te ver por aqui.',
+      afternoon: 'Boa tarde, {name}! Que bom te ver por aqui.',
+      evening: 'Boa noite, {name}! Que bom te ver por aqui.',
+    },
+    loading: 'Buscando as informações…',
+    saving: 'Só um instante, estou salvando…',
+    error: 'Algo deu errado do nosso lado. Tente de novo em instantes.',
+  },
+
+  // Botão de ajuda. Os tutoriais em si são escritos só em português
+  // (src/tutoriais/), e o menu avisa quando a interface está em outro idioma.
+  tutorial: {
+    open: 'Ajuda e tutoriais',
+    title: 'Tutoriais desta página',
+    description: 'Um tour rápido, guiado pelo mascote da vitrine.',
+    start: 'Começar',
+    again: 'Ver de novo',
+    inPortuguese: 'Em português',
+    empty: 'Ainda não há tutoriais para esta página.',
   },
 
   a11yPanel: {
@@ -580,6 +610,7 @@ export default {
     description: 'O endereço acessado não existe, mudou de lugar ou o conteúdo saiu do ar.',
     home: 'Voltar ao início',
     explore: 'Explorar iniciativas',
+    mascot: 'Ops… me distraí com uma borboleta e não achei essa página.',
   },
 
   errorBoundary: {

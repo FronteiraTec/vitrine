@@ -8,6 +8,7 @@ import * as settingsService from '@/services/settings'
 import * as newsService from '@/services/news'
 import * as authorsService from '@/services/authors'
 import * as analyticsService from '@/services/analytics'
+import * as translateService from '@/services/translate'
 import { useLocale } from '@/contexts/LocaleContext'
 import { DEFAULT_LOCALE } from '@/i18n/config'
 import { resolveSiteSettings } from '@/lib/site-settings'
@@ -47,6 +48,7 @@ export const keys = {
   newsAdminList: (filters) => ['news', 'admin', filters],
   newsItem: (id) => ['news', 'id', id],
   newsTranslations: (id) => ['news', 'translations', id],
+  translateStatus: ['translate', 'status'],
   newsReviewHistory: (id) => ['news', 'reviews', id],
   pendingNews: ['news', 'pending'],
   audience: (filters) => ['audience', filters],
@@ -368,6 +370,15 @@ export function useDeleteNewsTranslation() {
   return useMutation({ mutationFn: newsService.deleteNewsTranslation, onSuccess: invalidate })
 }
 
+/** O tradutor automático está no ar? Consulta leve; serve para oferecer o botão. */
+export function useTranslateStatus() {
+  return useQuery({
+    queryKey: keys.translateStatus,
+    queryFn: translateService.getTranslateStatus,
+    staleTime: 60_000,
+  })
+}
+
 /* -------------------------------- admin ----------------------------------- */
 
 export function useAdminInitiatives(filters) {
@@ -551,6 +562,11 @@ export function useCreateUser() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: adminService.createUser,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.profiles }),
+    // A conta nova também vira pessoa (ver `createUserByAdmin`).
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: keys.profiles }),
+        queryClient.invalidateQueries({ queryKey: ['people'] }),
+      ]),
   })
 }

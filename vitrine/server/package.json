@@ -2,6 +2,7 @@
   "name": "vitrine-api",
   "private": true,
   "version": "1.0.0",
+  "license": "AGPL-3.0-or-later",
   "description": "API da Vitrine: sessão, dados, arquivos, SEO renderizado no servidor e audiência.",
   "type": "module",
   "engines": {

@@ -10,6 +10,7 @@ import {
 import { PublicLayout } from '@/components/layout/PublicLayout'
 import { GuestRoute, ProtectedRoute, FullScreenLoader } from '@/routes/ProtectedRoute'
 import { LocaleProvider } from '@/contexts/LocaleContext'
+import { TutorialProvider } from '@/contexts/TutorialContext'
 import { newsListPath } from '@/i18n/config'
 
 import { HomePage } from '@/pages/public/HomePage'
@@ -78,6 +79,9 @@ const NewsFormPage = lazy(() =>
 const AudiencePage = lazy(() =>
   import('@/pages/admin/AudiencePage').then((m) => ({ default: m.AudiencePage })),
 )
+const AdminNotFoundPage = lazy(() =>
+  import('@/pages/admin/AdminNotFoundPage').then((m) => ({ default: m.AdminNotFoundPage })),
+)
 const NewsTranslationFormPage = lazy(() =>
   import('@/pages/admin/NewsTranslationFormPage').then((m) => ({
     default: m.NewsTranslationFormPage,
@@ -88,11 +92,16 @@ const NewsTranslationFormPage = lazy(() =>
 function RouterShell() {
   // O idioma fica aqui, dentro do roteador, porque o endereço é parte da
   // decisão: `/en/news/...` é inglês, e o painel é sempre português.
+  //
+  // Os tutoriais também: um passo pode levar a outra página, e o tour
+  // sobrevive à troca de layout entre a vitrine e o painel.
   return (
     <LocaleProvider>
-      <Suspense fallback={<FullScreenLoader />}>
-        <Outlet />
-      </Suspense>
+      <TutorialProvider>
+        <Suspense fallback={<FullScreenLoader />}>
+          <Outlet />
+        </Suspense>
+      </TutorialProvider>
     </LocaleProvider>
   )
 }
@@ -172,7 +181,7 @@ const router = createBrowserRouter(
             <Route path="aparencia" element={<AppearancePage />} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/admin" replace />} />
+          <Route path="*" element={<AdminNotFoundPage />} />
         </Route>
       </Route>
     </Route>,
