@@ -36,7 +36,7 @@ const formatRate = (value, locale) => `${value.toLocaleString(locale)}x`
  * por uma voz portuguesa sairia incompreensível. Os rótulos dos botões seguem
  * o idioma da página.
  */
-export function TextToSpeech({ text, lang = 'pt-BR', label, className }) {
+export function TextToSpeech({ text, lang = 'pt-BR', label, className, ...props }) {
   const { t, locale } = useLocale()
   // Inicializador preguiçoso: `window` não existe na renderização de servidor
   // do `npm run smoke`, e ali o componente só precisa não explodir.
@@ -249,8 +249,10 @@ export function TextToSpeech({ text, lang = 'pt-BR', label, className }) {
       ? t('tts.resume')
       : (label ?? t('tts.listen'))
 
+  // Atributos extras (como o `data-tour` do tutorial) vão só no player: sem
+  // suporte a voz não há botão para apontar.
   return (
-    <div className={className}>
+    <div className={className} {...props}>
       <div className="tts-player">
         <Button
           type="button"

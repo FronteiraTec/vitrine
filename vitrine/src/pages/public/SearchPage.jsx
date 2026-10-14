@@ -224,7 +224,7 @@ export function SearchPage() {
           <p className="text-body-secondary mt-2 mw-2xl text-pretty">{t('search.description')}</p>
 
           <div className="mt-4 d-flex flex-column gap-2 flex-sm-row">
-            <div className="position-relative flex-grow-1">
+            <div className="position-relative flex-grow-1" data-tour="busca">
               <label htmlFor="busca" className="visually-hidden">
                 {t('search.inputLabel')}
               </label>
@@ -244,7 +244,7 @@ export function SearchPage() {
 
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" size="lg" className="d-lg-none">
+                <Button variant="outline" size="lg" className="d-lg-none" data-tour="filtros">
                   <SlidersHorizontal aria-hidden="true" />
                   {t('search.filters')}
                   {activeFilterCount > 0 ? (
@@ -264,7 +264,7 @@ export function SearchPage() {
 
       <div className="container py-5">
         <div className="d-flex gap-5">
-          <aside className="d-none w-fx-64 flex-shrink-0 d-lg-block">
+          <aside className="d-none w-fx-64 flex-shrink-0 d-lg-block" data-tour="filtros">
             <div className="position-sticky top-0">{panel('desktop')}</div>
           </aside>
 
@@ -289,7 +289,7 @@ export function SearchPage() {
                 )}
               </p>
 
-              <div className="d-flex align-items-center gap-2">
+              <div className="d-flex align-items-center gap-2" data-tour="ordenacao">
                 <label htmlFor="ordenacao" className="text-body-secondary flex-shrink-0 fs-7">
                   {t('search.sortLabel')}
                 </label>
@@ -341,7 +341,7 @@ export function SearchPage() {
               <>
                 {/* Opacidade sutil enquanto a próxima página carrega, sem remover o conteúdo */}
                 <div className={isFetching ? 'opacity-50' : undefined}>
-                  <InitiativeGrid initiatives={results} />
+                  <InitiativeGrid initiatives={results} data-tour="resultados" />
                 </div>
 
                 <Pagination

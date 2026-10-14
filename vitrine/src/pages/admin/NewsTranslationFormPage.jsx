@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
-import { Copy, ExternalLink, Lock, Trash2 } from 'lucide-react'
+import { Copy, ExternalLink, Languages, Lock, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/admin/PageHeader'
 import { ArticleEditor } from '@/components/admin/ArticleEditor'
 import { LanguageFlag } from '@/components/layout/LanguageSwitcher'
@@ -11,14 +11,18 @@ import { Image } from '@/components/ui/image'
 import { StatusBadge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/ui/empty-state'
+import { NaoEncontrado } from '@/components/common/NaoEncontrado'
 import { ConfirmDialog } from '@/components/ui/alert-dialog'
 import { toast } from '@/components/ui/toast'
+import { avisarErro, avisarFaltando, avisarSucesso } from '@/lib/mascote-global'
 import {
   useDeleteNewsTranslation,
   useNewsItem,
   useNewsTranslations,
   useSaveNewsTranslation,
+  useTranslateStatus,
 } from '@/hooks/use-queries'
+import { translateArticle } from '@/services/translate'
 import { useAuth } from '@/contexts/AuthContext'
 import { LOCALES, newsArticlePath, TRANSLATION_LOCALES } from '@/i18n/config'
 import { STATUS } from '@/lib/constants'
@@ -27,6 +31,42 @@ import { formatDate, formatTime } from '@/lib/utils'
 
 /** "para o inglês", "para o espanhol" — o painel é só em português. */
 const TARGET_NAME = { en: 'inglês', es: 'espanhol' }
+
+/** Já há algo escrito na tradução? A automática substituiria tudo. */
+function hasText(values) {
+  return (
+    ['kicker', 'name', 'excerpt', 'content', 'cover_alt', 'cover_caption'].some((key) => values[key].trim()) ||
+    values.gallery.some((photo) => photo.caption.trim() || photo.alt.trim())
+  )
+}
+
+/**
+ * Tradução automática (LibreTranslate, no próprio servidor). Só aparece com o
+ * tradutor no ar. Preenche o formulário inteiro a partir do ORIGINAL e não
+ * grava: quem traduz revisa e salva, como numa tradução feita à mão.
+ */
+function AutoTranslatePanel({ target, progress, disabled, onTranslate }) {
+  const running = Boolean(progress)
+  return (
+    <section className="border bg-body d-flex flex-wrap align-items-center gap-3 rounded-3 p-3">
+      <div className="flex-grow-1 space-y-1" style={{ minWidth: '14rem' }}>
+        <h2 className="fs-7 fw-semibold">Tradução automática</h2>
+        <p className="text-body-secondary fs-8 text-pretty">
+          Preenche título, resumo, corpo e descrições das imagens em {target} a partir do original.
+          É um rascunho: revise antes de salvar. Imagens, vídeos e créditos ficam como estão.
+        </p>
+      </div>
+      <Button type="button" variant="outline" onClick={onTranslate} loading={running} disabled={disabled}>
+        {running ? null : <Languages aria-hidden="true" />}
+        {running && progress.total
+          ? `Traduzindo… ${progress.done} de ${progress.total}`
+          : running
+            ? 'Traduzindo…'
+            : 'Traduzir automaticamente'}
+      </Button>
+    </section>
+  )
+}
 
 /** Enter num campo de uma linha só leva ao próximo — mesmo gesto do formulário da notícia. */
 function focusNextOnEnter(event, nextId) {
@@ -100,6 +140,10 @@ function TranslationForm({ news, locale, translation }) {
   // troca a chave para ele remontar com o texto novo.
   const [editorKey, setEditorKey] = useState(0)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [confirmAuto, setConfirmAuto] = useState(false)
+  const [autoProgress, setAutoProgress] = useState(null)
+  const translator = useTranslateStatus()
+  const canAutoTranslate = Boolean(translator.data?.available && translator.data.targets?.includes(locale))
 
   // Espelha a trava do banco (`enforce_news_translation_rules`): com a notícia
   // na fila, as traduções congelam para quem não revisa.
@@ -127,26 +171,47 @@ function TranslationForm({ news, locale, translation }) {
     setEditorKey((key) => key + 1)
   }
 
+  async function runAutoTranslate() {
+    setConfirmAuto(false)
+    setAutoProgress({ done: 0, total: 0 })
+    try {
+      const translated = await translateArticle(news, locale, { onProgress: setAutoProgress })
+      setValues(translated)
+      setEditorKey((key) => key + 1)
+      avisarSucesso(`Rascunho em ${target} pronto. Revise o texto e salve.`)
+    } catch (error) {
+      avisarErro(error)
+    } finally {
+      setAutoProgress(null)
+    }
+  }
+
+  function requestAutoTranslate() {
+    if (hasText(values)) setConfirmAuto(true)
+    else runAutoTranslate()
+  }
+
   async function handleSubmit(event) {
     event.preventDefault()
     if (!values.name.trim()) {
-      toast.error(`Informe o título em ${target}.`)
+      avisarFaltando(`Informe o título em ${target}.`)
       return
     }
     if (!values.content.trim()) {
-      toast.error(`Escreva o texto da notícia em ${target}.`)
+      avisarFaltando(`Escreva o texto da notícia em ${target}.`)
       return
     }
 
     try {
       await save.mutateAsync({ id: translation?.id, newsId: news.id, locale, values })
-      toast.success(
-        published
-          ? 'Tradução salva. Ela já está no ar, com a notícia.'
-          : 'Tradução salva. Ela vai ao ar junto com a notícia.',
-      )
+      const mensagem = published
+        ? 'Tradução salva. Ela já está no ar, com a notícia.'
+        : 'Tradução salva. Ela vai ao ar junto com a notícia.'
+      // A primeira vez que a tradução é salva, ela é criada.
+      if (translation?.id) toast.success(mensagem)
+      else avisarSucesso(mensagem)
     } catch (error) {
-      toast.error(error.message)
+      avisarErro(error)
     }
   }
 
@@ -156,7 +221,7 @@ function TranslationForm({ news, locale, translation }) {
       toast.success('Tradução excluída.')
       navigate(`/admin/noticias/${news.id}`, { replace: true })
     } catch (error) {
-      toast.error(error.message)
+      avisarErro(error)
       setConfirmDelete(false)
     }
   }
@@ -189,14 +254,14 @@ function TranslationForm({ news, locale, translation }) {
                 Excluir
               </Button>
             ) : null}
-            <Button type="submit" loading={save.isPending} disabled={locked}>
+            <Button type="submit" loading={save.isPending} disabled={locked || Boolean(autoProgress)}>
               Salvar
             </Button>
           </>
         }
       />
 
-      <div className="d-grid gap-4 grid-detail align-items-xl-start">
+      <div className="d-grid gap-4 grid-editor align-items-xl-start">
         <div className="space-y-4">
           {locked ? (
             <p className="border bg-body-secondary text-body-secondary d-flex align-items-start gap-2 rounded-3 p-3 fs-7 text-pretty">
@@ -204,6 +269,15 @@ function TranslationForm({ news, locale, translation }) {
               Esta notícia está na fila de revisão, e as traduções dela ficam congeladas. Devolva-a
               para rascunho para voltar a editar.
             </p>
+          ) : null}
+
+          {canAutoTranslate ? (
+            <AutoTranslatePanel
+              target={target}
+              progress={autoProgress}
+              disabled={locked || !news.name}
+              onTranslate={requestAutoTranslate}
+            />
           ) : null}
 
           <OriginalPanel news={news} />
@@ -423,6 +497,15 @@ function TranslationForm({ news, locale, translation }) {
       </div>
 
       <ConfirmDialog
+        open={confirmAuto}
+        onOpenChange={setConfirmAuto}
+        title={`Substituir o que já está escrito em ${target}?`}
+        description="A tradução automática reescreve todos os campos a partir do original. Nada é salvo até você clicar em Salvar — se não gostar, saia da página sem salvar."
+        confirmLabel="Traduzir automaticamente"
+        onConfirm={runAutoTranslate}
+      />
+
+      <ConfirmDialog
         open={confirmDelete}
         onOpenChange={setConfirmDelete}
         destructive
@@ -464,7 +547,20 @@ export function NewsTranslationFormPage() {
     )
   }
 
-  if (news.isError || translations.isError || !news.data) {
+  if (!news.isError && !translations.isError && !news.data) {
+    return (
+      <NaoEncontrado
+        title="Notícia não encontrada"
+        description="Ela pode ter sido removida ou você não tem permissão para vê-la."
+      >
+        <Button variant="outline" asChild>
+          <Link to="/admin/noticias">Voltar para notícias</Link>
+        </Button>
+      </NaoEncontrado>
+    )
+  }
+
+  if (news.isError || translations.isError) {
     const error = news.error ?? translations.error
     const missingMigration = /news_translations/i.test(error?.message ?? '')
     return (

@@ -8,6 +8,7 @@ import { Field } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
+import { avisarErro, avisarFaltando } from '@/lib/mascote-global'
 import { useAuth } from '@/contexts/AuthContext'
 import { updateOwnProfile } from '@/services/admin'
 import { BUCKETS, ROLE_META } from '@/lib/constants'
@@ -36,7 +37,7 @@ function ProfileForm({ profile, userId, refreshProfile }) {
   async function handleSubmit(event) {
     event.preventDefault()
     if (!name.trim()) {
-      toast.error('Informe seu nome.')
+      avisarFaltando('Informe seu nome.')
       return
     }
     setSaving(true)
@@ -45,7 +46,7 @@ function ProfileForm({ profile, userId, refreshProfile }) {
       await refreshProfile()
       toast.success('Perfil atualizado.')
     } catch (error) {
-      toast.error(error.message)
+      avisarErro(error)
     } finally {
       setSaving(false)
     }
@@ -115,11 +116,11 @@ function PasswordForm() {
   async function handleSubmit(event) {
     event.preventDefault()
     if (values.password.length < MIN_PASSWORD) {
-      toast.error(`A nova senha deve ter no mínimo ${MIN_PASSWORD} caracteres.`)
+      avisarFaltando(`A nova senha deve ter no mínimo ${MIN_PASSWORD} caracteres.`)
       return
     }
     if (values.password !== values.confirmation) {
-      toast.error('A confirmação não confere com a nova senha.')
+      avisarFaltando('A confirmação não confere com a nova senha.')
       return
     }
     setSaving(true)
@@ -128,7 +129,7 @@ function PasswordForm() {
       setValues({ current: '', password: '', confirmation: '' })
       toast.success('Senha alterada. As outras sessões da sua conta foram encerradas.')
     } catch (error) {
-      toast.error(error.message)
+      avisarErro(error)
     } finally {
       setSaving(false)
     }

@@ -24,6 +24,7 @@ import { catalogRouter } from './routes/catalog.js'
 import { initiativesRouter } from './routes/initiatives.js'
 import { newsRouter } from './routes/news.js'
 import { storageRouter } from './routes/storage.js'
+import { translateRouter } from './routes/translate.js'
 import articleHandler from './seo/article.js'
 import feedHandler from './seo/feed.js'
 import sitemapHandler from './seo/sitemap.js'
@@ -133,6 +134,7 @@ export function createApp() {
 
   api.use('/auth', authRouter)
   api.use('/admin', adminRouter)
+  api.use('/translate', translateRouter)
   api.use(initiativesRouter)
   api.use(newsRouter)
   api.use(catalogRouter)

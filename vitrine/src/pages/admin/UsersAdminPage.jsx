@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/checkbox'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/empty-state'
 import { toast } from '@/components/ui/toast'
+import { avisarErro, avisarFaltando, avisarSucesso } from '@/lib/mascote-global'
 import {
   Dialog,
   DialogBody,
@@ -58,10 +59,10 @@ function NewUserDialog({ open, onOpenChange }) {
   async function handleSubmit(event) {
     event.preventDefault()
 
-    if (!values.name.trim()) return toast.error('Informe o nome.')
-    if (!values.email.trim()) return toast.error('Informe o e-mail.')
+    if (!values.name.trim()) return avisarFaltando('Informe o nome.')
+    if (!values.email.trim()) return avisarFaltando('Informe o e-mail.')
     if (values.password.length < MIN_PASSWORD) {
-      return toast.error(`A senha deve ter no mínimo ${MIN_PASSWORD} caracteres.`)
+      return avisarFaltando(`A senha deve ter no mínimo ${MIN_PASSWORD} caracteres.`)
     }
 
     try {
@@ -71,11 +72,11 @@ function NewUserDialog({ open, onOpenChange }) {
         password: values.password,
         role: values.role,
       })
-      toast.success(`Conta de ${values.name.trim()} criada. Envie a senha inicial à pessoa.`)
+      avisarSucesso(`Conta de ${values.name.trim()} criada. Envie a senha inicial à pessoa.`)
       reset()
       onOpenChange(false)
     } catch (submitError) {
-      toast.error(submitError.message)
+      avisarErro(submitError)
     }
   }
 
@@ -92,8 +93,8 @@ function NewUserDialog({ open, onOpenChange }) {
           <DialogHeader>
             <DialogTitle>Nova conta</DialogTitle>
             <DialogDescription>
-              A conta já entra ativa e com o papel escolhido. A pessoa pode trocar a senha depois,
-              em Configurações.
+              A conta já entra ativa e com o papel escolhido, e o nome passa a constar em Pessoas.
+              A pessoa pode trocar a senha depois, em Configurações.
             </DialogDescription>
           </DialogHeader>
 
@@ -199,7 +200,7 @@ function PasswordDialog({ user, onOpenChange }) {
   async function handleSubmit(event) {
     event.preventDefault()
     if (password.length < MIN_PASSWORD) {
-      toast.error(`A senha deve ter no mínimo ${MIN_PASSWORD} caracteres.`)
+      avisarFaltando(`A senha deve ter no mínimo ${MIN_PASSWORD} caracteres.`)
       return
     }
     setSaving(true)
@@ -209,7 +210,7 @@ function PasswordDialog({ user, onOpenChange }) {
       setPassword('')
       onOpenChange(false)
     } catch (submitError) {
-      toast.error(submitError.message)
+      avisarErro(submitError)
     } finally {
       setSaving(false)
     }
@@ -292,7 +293,7 @@ export function UsersAdminPage() {
       await updateProfile.mutateAsync({ id: user.id, values: { role } })
       toast.success(`${user.name} agora é ${ROLE_META[role].label.toLowerCase()}.`)
     } catch (changeError) {
-      toast.error(changeError.message)
+      avisarErro(changeError)
     }
   }
 
@@ -301,7 +302,7 @@ export function UsersAdminPage() {
       await updateProfile.mutateAsync({ id: user.id, values: { is_active: isActive } })
       toast.success(isActive ? `${user.name} reativado.` : `${user.name} desativado.`)
     } catch (toggleError) {
-      toast.error(toggleError.message)
+      avisarErro(toggleError)
     }
   }
 

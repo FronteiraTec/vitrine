@@ -356,6 +356,20 @@ export async function createUserByAdmin(request, response) {
       [id, name, role],
     )
     if (!rows[0]) throw forbidden('Não foi possível definir o papel. Nenhuma conta foi criada.')
+
+    // Quem ganha conta também entra em Pessoas, pronto para ser escolhido como
+    // responsável de uma iniciativa — a menos que já esteja lá, pelo nome ou
+    // pelo e-mail. Grava só o nome: `people.email` é lido por visitantes
+    // anônimos, e o e-mail de login não pode vazar por ali (ver migration 0013).
+    await client.query(
+      `insert into public.people (name)
+       select $1::text
+        where not exists (
+          select 1 from public.people
+           where lower(btrim(name)) = lower($1::text) or lower(btrim(email)) = $2::text
+        )`,
+      [name, email],
+    )
     return rows[0]
   })
 

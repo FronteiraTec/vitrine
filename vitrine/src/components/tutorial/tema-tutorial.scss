@@ -1,0 +1,221 @@
+// =============================================================================
+// Tema dos balões do tutorial
+//
+// Vem junto com o Shepherd, no trecho carregado sob demanda (ver `motor.js`),
+// e por isso fica fora do `main.scss`: quem nunca abre um tour não baixa nada
+// disto. As cores são as variáveis do Bootstrap, então o balão acompanha o
+// tema escuro e o alto contraste sem regra própria para cada um.
+// `--tutorial-borda` mora no `main.scss`, junto do botão de ajuda.
+//
+// Os seletores repetem `.shepherd-element.tour-vitrine` de propósito: o CSS do
+// Shepherd chega DEPOIS do nosso, e é a especificidade maior que garante que o
+// tema vença sem `!important`.
+// =============================================================================
+
+.shepherd-element.tour-vitrine {
+  max-width: 26rem;
+  border: 1.5px solid var(--tutorial-borda);
+  border-radius: 1rem;
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  box-shadow: 0 0.75rem 2rem rgba(30, 50, 38, 0.18);
+  font-family: var(--bs-body-font-family);
+}
+
+// Afastamento do alvo. O Floating UI posiciona por `top`/`left`; a margem
+// desloca o balão a partir dali, e a seta vai junto.
+.shepherd-element.tour-vitrine[data-popper-placement^='top'] {
+  margin-top: -14px;
+}
+.shepherd-element.tour-vitrine[data-popper-placement^='bottom'] {
+  margin-top: 14px;
+}
+.shepherd-element.tour-vitrine[data-popper-placement^='left'] {
+  margin-left: -14px;
+}
+.shepherd-element.tour-vitrine[data-popper-placement^='right'] {
+  margin-left: 14px;
+}
+.shepherd-element.tour-vitrine.shepherd-centered {
+  margin: 0;
+}
+
+// Seta com a mesma borda do balão. O quadrado girado só mostra a borda dos
+// dois lados que ficam para fora; os de dentro somem sob o fundo.
+.shepherd-element.tour-vitrine > .shepherd-arrow::before,
+.shepherd-element.tour-vitrine.shepherd-has-title[data-popper-placement^='bottom'] > .shepherd-arrow::before {
+  border: 0 solid var(--tutorial-borda);
+  background: var(--bs-body-bg);
+}
+.shepherd-element.tour-vitrine[data-popper-placement^='top'] > .shepherd-arrow::before {
+  border-right-width: 1.5px;
+  border-bottom-width: 1.5px;
+}
+.shepherd-element.tour-vitrine[data-popper-placement^='bottom'] > .shepherd-arrow::before {
+  border-top-width: 1.5px;
+  border-left-width: 1.5px;
+}
+.shepherd-element.tour-vitrine[data-popper-placement^='left'] > .shepherd-arrow::before {
+  border-top-width: 1.5px;
+  border-right-width: 1.5px;
+}
+.shepherd-element.tour-vitrine[data-popper-placement^='right'] > .shepherd-arrow::before {
+  border-bottom-width: 1.5px;
+  border-left-width: 1.5px;
+}
+
+.shepherd-element.tour-vitrine .shepherd-content {
+  border-radius: inherit;
+}
+
+// O título começa na coluna do texto, e não em cima do mascote: no pulo de
+// `sucesso` o mascote sobe uns 20 px e passaria por cima das letras.
+.shepherd-element.tour-vitrine.shepherd-has-title .shepherd-content .shepherd-header {
+  padding: 0.75rem 0.75rem 0 7.25rem;
+  border-radius: inherit;
+  background: transparent;
+}
+
+.shepherd-element.tour-vitrine .shepherd-title {
+  color: var(--bs-primary-text-emphasis);
+  font-size: calc(0.75rem * var(--a11y-text-scale, 1));
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.shepherd-element.tour-vitrine.shepherd-has-title .shepherd-content .shepherd-cancel-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--bs-border-radius);
+  color: var(--bs-secondary-color);
+  font-size: 1.5rem;
+  line-height: 1;
+  transition:
+    color 0.15s ease-in-out,
+    background-color 0.15s ease-in-out;
+}
+.shepherd-element.tour-vitrine.shepherd-has-title .shepherd-content .shepherd-cancel-icon:hover {
+  background: var(--bs-tertiary-bg);
+  color: var(--bs-emphasis-color);
+}
+
+.shepherd-element.tour-vitrine .shepherd-text {
+  padding: 0.5rem 1rem 0.75rem;
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.shepherd-element.tour-vitrine .shepherd-footer {
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 1rem 1rem;
+}
+
+// Os botões levam as classes `.btn` do projeto; aqui só se desfaz o visual de
+// fábrica do Shepherd, que de outro modo pintaria todos de azul.
+.shepherd-element.tour-vitrine .shepherd-button {
+  margin: 0;
+  padding: var(--bs-btn-padding-y) var(--bs-btn-padding-x);
+  border: var(--bs-btn-border-width) solid var(--bs-btn-border-color);
+  border-radius: var(--bs-btn-border-radius);
+  background: var(--bs-btn-bg);
+  color: var(--bs-btn-color);
+  transition:
+    color 0.15s ease-in-out,
+    background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
+}
+.shepherd-element.tour-vitrine .shepherd-button:not(:disabled):hover {
+  border-color: var(--bs-btn-hover-border-color);
+  background: var(--bs-btn-hover-bg);
+  color: var(--bs-btn-hover-color);
+}
+.shepherd-element.tour-vitrine .shepherd-footer .shepherd-button.tutorial-pular {
+  margin-right: auto;
+  padding-inline: 0;
+}
+
+// -----------------------------------------------------------------------------
+// Conteúdo do passo (ConteudoPasso.jsx): mascote ao lado do texto
+// -----------------------------------------------------------------------------
+
+.tutorial-passo {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.tutorial-passo-mascote {
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: center;
+  width: 5.5rem;
+}
+
+.tutorial-passo-corpo {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-top: 0.25rem;
+}
+
+.tutorial-passo-texto {
+  margin: 0;
+  font-size: calc(0.9375rem * var(--a11y-text-scale, 1));
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+// O resto do texto ainda não "digitado" ocupa o lugar desde o início: o balão
+// já nasce com o tamanho final e não pula enquanto as letras aparecem.
+.tutorial-passo-resto {
+  visibility: hidden;
+}
+
+.tutorial-passo-progresso {
+  margin: 0.5rem 0 0;
+  color: var(--bs-secondary-color);
+  font-size: calc(0.75rem * var(--a11y-text-scale, 1));
+  font-variant-numeric: tabular-nums;
+}
+
+// Celular: o balão ocupa a largura com 16 px de margem, e o mascote, menor,
+// vai para cima do texto.
+@media (max-width: 479.98px) {
+  .shepherd-element.tour-vitrine {
+    width: calc(100vw - 2rem);
+    max-width: none;
+  }
+
+  .tutorial-passo {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+  }
+
+  .shepherd-element.tour-vitrine.shepherd-has-title .shepherd-content .shepherd-header {
+    padding-left: 1rem;
+  }
+
+  // Aqui o título fica em cima do mascote: o recuo é a altura do pulo.
+  .tutorial-passo-mascote {
+    align-self: center;
+    width: auto;
+    padding-top: 1.25rem;
+  }
+
+  // O componente grava o tamanho em `style`; só o `!important` passa por cima.
+  .tutorial-passo-mascote .msc {
+    --msc-tam: 64px !important;
+  }
+
+  .tutorial-passo-mascote .msc-svg {
+    width: 64px;
+    height: 64px;
+  }
+}

@@ -141,7 +141,16 @@ for (const caminho of fontes) {
 
 console.log('Classes órfãs (o JSX pede, o CSS não define)')
 
-const orfas = [...usadas].filter(([classe]) => !definidas.has(classe))
+/*
+ * As classes `msc-*` do mascote são definidas pelo próprio componente, que
+ * injeta o CSS dele no `<head>` em tempo de execução
+ * (src/components/mascote/Mascote.jsx) — nunca aparecem no CSS compilado.
+ */
+const DEFINIDAS_EM_TEMPO_DE_EXECUCAO = /^msc-/
+
+const orfas = [...usadas].filter(
+  ([classe]) => !definidas.has(classe) && !DEFINIDAS_EM_TEMPO_DE_EXECUCAO.test(classe),
+)
 exige(
   orfas.length === 0,
   `nenhuma classe órfã (${usadas.size} classes distintas conferidas)`,

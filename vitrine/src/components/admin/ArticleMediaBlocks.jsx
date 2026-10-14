@@ -48,7 +48,7 @@ function MediaField({ label, onEnter, ...props }) {
  * para ele até a próxima gravação, e uma foto quebrada na página publicada é
  * pior que um arquivo sobrando no storage.
  */
-export function ImageBlock({ block, disabled, onPatch, onEnter }) {
+export function ImageBlock({ block, bucket = BUCKETS.NEWS, disabled, onPatch, onEnter }) {
   const errorId = useId()
   const fileRef = useRef(null)
   const [uploading, setUploading] = useState(false)
@@ -65,7 +65,7 @@ export function ImageBlock({ block, disabled, onPatch, onEnter }) {
     setError(null)
     setUploading(true)
     try {
-      const { url } = await uploadImage({ bucket: BUCKETS.NEWS, folder: 'corpo', file })
+      const { url } = await uploadImage({ bucket, folder: 'corpo', file })
       onPatch({ url })
     } catch (uploadError) {
       setError(uploadError.message)

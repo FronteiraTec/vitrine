@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/ui/pagination'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/empty-state'
+import { NaoEncontrado } from '@/components/common/NaoEncontrado'
 import { NewsGrid } from '@/components/news/NewsCard'
 import { useAuthor, useAuthorNews } from '@/hooks/use-queries'
 import { useDocumentMeta, useSite, useStructuredData } from '@/hooks/use-seo'
@@ -92,18 +93,15 @@ export function AuthorPage() {
 
   if (!author) {
     return (
-      <div className="container py-5">
-        <EmptyState
-          icon={UserRound}
-          title={t('author.notFoundTitle')}
-          description={t('author.notFoundDescription')}
-          action={
-            <Button variant="outline" asChild>
-              <Link to={newsListPath(locale)}>{t('news.detail.seeAll')}</Link>
-            </Button>
-          }
-        />
-      </div>
+      <NaoEncontrado
+        title={t('author.notFoundTitle')}
+        description={t('author.notFoundDescription')}
+        mensagem={t('notFound.mascot')}
+      >
+        <Button variant="outline" asChild>
+          <Link to={newsListPath(locale)}>{t('news.detail.seeAll')}</Link>
+        </Button>
+      </NaoEncontrado>
     )
   }
 

@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import { AlertCircle, Inbox, RefreshCw } from 'lucide-react'
 import { useLocale } from '@/contexts/LocaleContext'
+import { reagir } from '@/lib/mascote-global'
 import { cn } from '@/lib/utils'
 import { Button } from './button'
 
@@ -44,9 +46,19 @@ export function EmptyState({
   )
 }
 
-/** Estado de erro com ação de nova tentativa. */
+/**
+ * Estado de erro com ação de nova tentativa.
+ *
+ * Ao aparecer, o mascote do canto também reage (estado `erro`). Não há
+ * toast de reserva: o erro já está escrito aqui, na tela.
+ */
 export function ErrorState({ title, description, onRetry, className }) {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
+  const fala = t('mascot.error')
+
+  useEffect(() => {
+    reagir('erro', fala, { duracao: 6000, lang: locale })
+  }, [fala, locale])
 
   return (
     <div

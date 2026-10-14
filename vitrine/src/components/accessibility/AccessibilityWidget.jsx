@@ -182,6 +182,7 @@ export function AccessibilityWidget() {
               size="icon"
               className="shadow h-fx-12 w-fx-12 rounded-pill"
               aria-label={t('a11yPanel.open')}
+              data-tour="acessibilidade"
             >
               <Accessibility aria-hidden="true" className="icon-xl" />
             </Button>

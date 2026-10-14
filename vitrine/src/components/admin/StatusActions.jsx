@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { toast } from '@/components/ui/toast'
+import { avisarErro } from '@/lib/mascote-global'
 import { useChangeNewsStatus, useChangeStatus } from '@/hooks/use-queries'
 import { useAuth } from '@/contexts/AuthContext'
 import { STATUS, STATUS_META, STATUS_TRANSITIONS } from '@/lib/constants'
@@ -146,7 +147,7 @@ export function StatusActions({ record, kind = 'initiative', onDone, size = 'md'
       setNotes('')
       onDone?.(pendingStatus)
     } catch (error) {
-      toast.error(error.message)
+      avisarErro(error)
     }
   }
 

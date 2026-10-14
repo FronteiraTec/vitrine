@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/empty-state'
 import { ConfirmDialog } from '@/components/ui/alert-dialog'
 import { toast } from '@/components/ui/toast'
+import { avisarErro, avisarSucesso } from '@/lib/mascote-global'
 import {
   Dialog,
   DialogBody,
@@ -69,7 +70,8 @@ function PersonForm({ person, onOpenChange, onSaved }) {
     try {
       if (isEditing) await updatePerson(person.id, payload)
       else await createPerson(payload)
-      toast.success(isEditing ? 'Pessoa atualizada.' : 'Pessoa cadastrada.')
+      if (isEditing) toast.success('Pessoa atualizada.')
+      else avisarSucesso('Pessoa cadastrada.')
       onSaved()
       onOpenChange(false)
     } catch (submitError) {
@@ -184,7 +186,7 @@ export function PeopleAdminPage() {
       invalidate()
       setToDelete(null)
     } catch (deleteError) {
-      toast.error(deleteError.message)
+      avisarErro(deleteError)
     } finally {
       setDeleting(false)
     }

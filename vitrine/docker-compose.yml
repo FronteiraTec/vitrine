@@ -6,6 +6,8 @@
 #   api          Node: sessão, dados, uploads, SEO no servidor, audiência
 #   web          Nginx: o React construído, os arquivos enviados e o repasse
 #   geoipupdate  (opcional, perfil "geoip") base de localização da audiência
+#   translate    (opcional, perfil "traducao") LibreTranslate: rascunho das
+#                traduções para inglês e espanhol
 #
 # O MESMO arquivo serve aos três lugares onde a Vitrine roda:
 #
@@ -95,6 +97,9 @@ services:
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       MAIL_FROM: ${MAIL_FROM:-}
+      # Serviço `translate` (perfil "traducao"). Fora do ar, o painel só avisa.
+      TRANSLATE_URL: ${TRANSLATE_URL:-http://translate:5000}
+      TRANSLATE_API_KEY: ${TRANSLATE_API_KEY:-}
       TZ: ${TZ:-America/Sao_Paulo}
     volumes:
       - arquivos:/data/arquivos
@@ -150,7 +155,43 @@ services:
     logging: *logs
     labels: *labels
 
+  # Tradução automática (LibreTranslate, modelos Argos rodando aqui mesmo —
+  # nenhum texto sai do servidor). Preenche o rascunho das traduções para o
+  # inglês e o espanhol na tela de tradução do painel; quem traduz revisa e
+  # salva. Opcional porque pesa: ~1 GB de memória com os três idiomas.
+  #   docker compose --profile traducao up -d
+  # Na primeira subida baixa os modelos (~1 GB, alguns minutos) para o volume.
+  # Sem ele, o painel avisa que a tradução automática está desligada.
+  translate:
+    image: libretranslate/libretranslate:v1.9.6
+    profiles: ["traducao"]
+    restart: unless-stopped
+    environment:
+      # Só os idiomas da vitrine: cada par carregado custa memória.
+      LT_LOAD_ONLY: pt,en,es
+      LT_DISABLE_WEB_UI: "true"
+      LT_UPDATE_MODELS: "true"
+      # Só a API da Vitrine chega aqui (rede interna, sem porta publicada):
+      # o limite de requisições fica com ela.
+      LT_REQ_LIMIT: 0
+      LT_CHAR_LIMIT: 20000
+      # 1 vCPU na VPS: mais threads só disputariam o mesmo núcleo.
+      LT_THREADS: ${TRANSLATE_THREADS:-2}
+    volumes:
+      - translate-models:/home/libretranslate/.local
+    healthcheck:
+      test: ["CMD-SHELL", "./venv/bin/python scripts/healthcheck.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      # Baixar os modelos na primeira subida leva minutos.
+      start_period: 10m
+    mem_limit: ${TRANSLATE_MEM_LIMIT:-1500m}
+    logging: *logs
+    labels: *labels
+
 volumes:
   db-data:
   arquivos:
   geoip:
+  translate-models:

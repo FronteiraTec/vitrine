@@ -78,9 +78,9 @@ function MetricCard({ label, value, hint, icon: Icon, to, loading, accent }) {
  * Cartão de seção do dashboard. O cabeçalho tem altura mínima de botão, para
  * que cartões lado a lado — um com ação, outro sem — alinhem a primeira linha.
  */
-function DashboardSection({ title, action, className, children }) {
+function DashboardSection({ title, action, className, children, ...props }) {
   return (
-    <section className={cn('border bg-body rounded-3 p-3 p-sm-4', className)}>
+    <section className={cn('border bg-body rounded-3 p-3 p-sm-4', className)} {...props}>
       <div className="mb-3 d-flex min-h-fx-8 align-items-center justify-content-between gap-2">
         <h2 className="mb-0 fs-6 fw-semibold">{title}</h2>
         {action}
@@ -308,7 +308,7 @@ export function DashboardPage() {
                 </Link>
               </Button>
             ) : null}
-            <Button asChild>
+            <Button asChild data-tour="nova-iniciativa">
               <Link to="/admin/iniciativas/nova">
                 <Plus aria-hidden="true" />
                 Nova iniciativa
@@ -319,7 +319,7 @@ export function DashboardPage() {
       />
 
       {/* Métricas -------------------------------------------------------- */}
-      <div className="d-grid grid-cols-2 gap-3 gap-sm-4 grid-cols-lg-4">
+      <div className="d-grid grid-cols-2 gap-3 gap-sm-4 grid-cols-lg-4" data-tour="admin-metricas">
         <MetricCard
           label="Iniciativas"
           value={stats?.total ?? 0}
@@ -377,6 +377,7 @@ export function DashboardPage() {
       <div className="mt-4 d-grid align-items-start gap-4 grid-cols-1 grid-cols-lg-2">
         <DashboardSection
           title="Aguardando aprovação"
+          data-tour="admin-pendencias"
           action={
             canReview && pending?.length ? (
               <Button variant="ghost" size="sm" asChild>

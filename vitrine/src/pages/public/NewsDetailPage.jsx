@@ -1,13 +1,14 @@
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Languages, Newspaper } from 'lucide-react'
+import { ArrowLeft, Languages } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Image } from '@/components/ui/image'
 import { Avatar } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyState, ErrorState } from '@/components/ui/empty-state'
+import { ErrorState } from '@/components/ui/empty-state'
+import { NaoEncontrado } from '@/components/common/NaoEncontrado'
 import { NewsCard } from '@/components/news/NewsCard'
 import { ShareBar } from '@/components/news/ShareBar'
-import { VideoEmbed } from '@/components/news/VideoEmbed'
+import { ArticleBody, ImageCaption } from '@/components/news/ArticleBody'
 import { TextToSpeech } from '@/components/accessibility/TextToSpeech'
 import { buildArticleSpeech } from '@/lib/speech'
 import { usePublishedNews, useRelatedNews } from '@/hooks/use-queries'
@@ -46,123 +47,6 @@ import { cn } from '@/lib/utils'
 const COLUMN = 'mx-auto w-100'
 
 /**
- * Corpo da notícia.
- *
- * Nada de `dangerouslySetInnerHTML`: `parseArticleBody` devolve blocos de texto
- * puro e o React escapa tudo, então uma tag colada no formulário aparece como
- * texto na página, e não como marcação executável. Vale igual para as
- * traduções, que passam pelo mesmo analisador.
- */
-function ArticleBody({ blocks }) {
-  if (!blocks.length) return null
-
-  return (
-    <div className="article-body">
-      {blocks.map((block, index) => {
-        if (block.type === 'heading') {
-          if (block.level === 3) {
-            return (
-              <h3 key={index} className="fw-bold mt-4 mb-2 fs-6 lh-sm fs-sm-5">
-                {block.text}
-              </h3>
-            )
-          }
-
-          return (
-            <h2
-              key={index}
-              className="fw-bold mt-5 mb-2 fs-5 lh-sm fs-sm-4"
-            >
-              {block.text}
-            </h2>
-          )
-        }
-
-        if (block.type === 'list') {
-          const List = block.ordered ? 'ol' : 'ul'
-          return (
-            <List
-              key={index}
-              className={cn('mt-3 space-y-2 ps-4', block.ordered ? 'list-decimal' : 'list-disc')}
-            >
-              {block.items.map((entry, position) => (
-                <li key={position} className="text-pretty">
-                  {entry}
-                </li>
-              ))}
-            </List>
-          )
-        }
-
-        if (block.type === 'quote') {
-          return (
-            <figure key={index} className="mt-4 border-start border-3 border-primary ps-3 ps-sm-4">
-              <blockquote className="blockquote mb-0">
-                <p className="m-0 text-pretty">{block.text}</p>
-              </blockquote>
-              {block.cite ? (
-                <figcaption className="blockquote-footer mt-2 mb-0">{block.cite}</figcaption>
-              ) : null}
-            </figure>
-          )
-        }
-
-        if (block.type === 'divider') {
-          return <hr key={index} className="my-5" />
-        }
-
-        // Foto do corpo: mesmo quadro, legenda e cadeia de texto alternativo
-        // das fotos da galeria.
-        if (block.type === 'image') {
-          return (
-            <figure key={index} className="mt-4">
-              <Image
-                src={block.url}
-                alt={block.alt || block.caption || ''}
-                ratio="ratio-16x9"
-                wrapperClassName="rounded-3"
-              />
-              <ImageCaption caption={block.caption} credit={block.credit} />
-            </figure>
-          )
-        }
-
-        if (block.type === 'video') {
-          return (
-            <figure key={index} className="mt-4">
-              <VideoEmbed videoId={block.videoId} title={block.caption} />
-              <ImageCaption caption={block.caption} />
-            </figure>
-          )
-        }
-
-        return (
-          <p key={index} className="mt-3 text-pretty text-prewrap">
-            {block.text}
-          </p>
-        )
-      })}
-    </div>
-  )
-}
-
-/** Legenda + crédito. Some inteira quando a foto não tem nem um nem outro. */
-function ImageCaption({ caption, credit, className }) {
-  if (!caption && !credit) return null
-
-  return (
-    <figcaption className={cn('text-body-secondary mt-2 fs-7 lh-sm', className)}>
-      {caption}
-      {credit ? (
-        <span className={cn('text-body-secondary opacity-75 fs-8', caption && 'ms-1')}>
-          {credit}
-        </span>
-      ) : null}
-    </figcaption>
-  )
-}
-
-/**
  * As outras versões desta notícia, como links de verdade.
  *
  * O seletor do cabeçalho já leva de uma versão à outra, mas ele só existe
@@ -176,7 +60,11 @@ function OtherVersions({ item }) {
   if (!others.length) return null
 
   return (
-    <nav aria-label={t('news.detail.versionsLabel')} className="text-body-secondary fs-7">
+    <nav
+      aria-label={t('news.detail.versionsLabel')}
+      className="text-body-secondary fs-7"
+      data-tour="noticia-idiomas"
+    >
       <Languages className="me-1 icon" aria-hidden="true" />
       {t('news.detail.alsoAvailable')}:{' '}
       {others.map((version, index) => (
@@ -225,18 +113,15 @@ function NewsArticleView({ locale, query, blocks, related, notice }) {
 
   if (!item) {
     return (
-      <div className="container py-5">
-        <EmptyState
-          icon={Newspaper}
-          title={t('news.detail.notFoundTitle')}
-          description={t('news.detail.notFoundDescription')}
-          action={
-            <Button variant="outline" asChild>
-              <Link to={newsListPath(locale)}>{t('news.detail.seeAll')}</Link>
-            </Button>
-          }
-        />
-      </div>
+      <NaoEncontrado
+        title={t('news.detail.notFoundTitle')}
+        description={t('news.detail.notFoundDescription')}
+        mensagem={t('notFound.mascot')}
+      >
+        <Button variant="outline" asChild>
+          <Link to={newsListPath(locale)}>{t('news.detail.seeAll')}</Link>
+        </Button>
+      </NaoEncontrado>
     )
   }
 
@@ -340,13 +225,13 @@ function NewsArticleView({ locale, query, blocks, related, notice }) {
 
           <OtherVersions item={item} />
 
-          <ShareBar title={item.name} />
+          <ShareBar title={item.name} data-tour="noticia-compartilhar" />
 
           {/* Lê exatamente o texto editorial — chapéu, título, linha fina e
               corpo —, nunca o DOM da página. Fica aqui, e não no painel
               flutuante, porque o recurso é da notícia: no topo dela é onde
               quem quer ouvir procura. A voz é a do idioma do texto. */}
-          <TextToSpeech text={speech} lang={item.locale} />
+          <TextToSpeech text={speech} lang={item.locale} data-tour="noticia-ouvir" />
         </div>
       </header>
 
@@ -399,7 +284,7 @@ function NewsArticleView({ locale, query, blocks, related, notice }) {
       ) : null}
 
       {related?.length ? (
-        <section className="border mt-5 border-top pt-5">
+        <section className="border mt-5 border-top pt-5" data-tour="noticia-relacionadas">
           <h2 className="fw-bold mb-4 fs-4">{t('news.detail.related')}</h2>
           <div className="d-grid grid-cols-1 gap-3 grid-cols-sm-2 grid-cols-lg-3">
             {related.map((other) => (

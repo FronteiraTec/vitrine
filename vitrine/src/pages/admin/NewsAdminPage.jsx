@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/empty-state'
 import { ConfirmDialog } from '@/components/ui/alert-dialog'
 import { toast } from '@/components/ui/toast'
+import { avisarErro } from '@/lib/mascote-global'
 import {
   Select,
   SelectContent,
@@ -61,7 +62,7 @@ export function NewsAdminPage() {
       toast.success('Notícia excluída.')
       setToDelete(null)
     } catch (deleteError) {
-      toast.error(deleteError.message)
+      avisarErro(deleteError)
     }
   }
 

@@ -174,6 +174,12 @@ concluir() {
     dc --profile geoip up -d geoipupdate >/dev/null || aviso "geoipupdate não subiu."
   fi
 
+  # O tradutor automático sobe junto quando ligado no .env. Imagem de
+  # terceiros com tag fixa: o compose baixa só na primeira vez.
+  if [ "$(env_var TRADUCAO_AUTOMATICA)" = "sim" ]; then
+    dc --profile traducao up -d translate >/dev/null || aviso "translate não subiu."
+  fi
+
   limpar_imagens "$sha" "$(commit_anterior)"
   log "deploy de $(curto "$sha") concluído."
 }

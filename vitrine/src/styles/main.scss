@@ -776,8 +776,17 @@ $status-colors: (
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--bs-border-color);
-  border-radius: var(--bs-border-radius-lg);
   box-shadow: var(--bs-box-shadow-lg);
+
+  // Formulário entre o painel e o corpo/rodapé: repassa a coluna flexível. Sem
+  // isso o `<form>` cresce até o tamanho do conteúdo, o corpo não rola e o
+  // rodapé — com o botão de salvar — fica cortado em telas mais baixas.
+  > form {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
 
   &.dialog-sm {
     max-width: 28rem;
@@ -790,6 +799,18 @@ $status-colors: (
   }
   &.dialog-xl {
     max-width: 58rem;
+  }
+  // Tela inteira, para escrever texto longo sem o resto do formulário em volta.
+  &.dialog-full {
+    top: 0;
+    left: 0;
+    transform: none;
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: 100dvh;
+    border: 0;
+    border-radius: 0;
   }
 }
 
@@ -1193,7 +1214,29 @@ $fixos: (8, 9, 11, 13, 16, 20, 24, 32, 40, 44, 48, 56, 64, 72, 80, 96);
   }
   // Abre espaço para a barra lateral fixa do painel.
   .ps-lg-sidebar {
-    padding-left: 16rem;
+    padding-left: var(--admin-sidebar-w);
+  }
+}
+
+// Barra lateral do painel: larga (ícone + rótulo) ou recolhida (só ícone).
+// A largura vive numa variável para o conteúdo acompanhar sem duplicar valores.
+.admin-shell {
+  --admin-sidebar-w: 16rem;
+
+  &.is-collapsed {
+    --admin-sidebar-w: 4.5rem;
+  }
+}
+
+.admin-sidebar {
+  width: var(--admin-sidebar-w);
+  overflow-x: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .admin-sidebar,
+  .admin-shell .ps-lg-sidebar {
+    transition: width 0.2s ease, padding-left 0.2s ease;
   }
 }
 
@@ -1278,6 +1321,15 @@ $fixos: (8, 9, 11, 13, 16, 20, 24, 32, 40, 44, 48, 56, 64, 72, 80, 96);
 @include media-breakpoint-up(lg) {
   // Conteúdo + coluna lateral: página de detalhes da iniciativa.
   .grid-detail {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+  }
+}
+
+// Mesma divisão, no editor de notícia. Ali a barra lateral do painel já come
+// 16rem, então em `lg` a folha ficaria espremida; as colunas só se separam em
+// `xl` e, até lá, capa e situação descem para baixo do texto.
+@include media-breakpoint-up(xl) {
+  .grid-editor {
     grid-template-columns: minmax(0, 1fr) 20rem;
   }
 }
@@ -1380,6 +1432,14 @@ $fixos: (8, 9, 11, 13, 16, 20, 24, 32, 40, 44, 48, 56, 64, 72, 80, 96);
   position: fixed;
   bottom: 1rem;
   left: 1rem;
+  z-index: 1040;
+}
+
+// O botão de ajuda dos tutoriais fica no canto oposto (seção 27).
+.fab-bottom-end {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
   z-index: 1040;
 }
 
@@ -1713,18 +1773,52 @@ ol.list-decimal {
 // moldura — como no Notion, que é a referência de quem escreve aqui, o cursor
 // e o texto de exemplo bastam para dizer onde se digita.
 //
-// A folha tem recuo lateral maior a partir de `sm` porque as alças de cada
-// bloco (+ e ⋮⋮) moram na margem esquerda, fora da coluna de texto. Abaixo
-// disso não há hover nem espaço para elas, e o `/` cobre o que elas fazem.
+// As alças de cada bloco (+ e ⋮⋮) moram na margem esquerda, fora da coluna de
+// texto, então a folha só abre esse recuo quando cabe. Recuo, alças e tamanho
+// do título seguem a largura da própria folha (container query), e não a da
+// janela: com a barra lateral do painel aberta, a janela pode ser larga e a
+// folha, estreita. Abaixo de 36rem não há espaço para as alças, e o `/` cobre
+// o que elas fazem.
 // -----------------------------------------------------------------------------
 
-.article-sheet {
-  padding: 2rem 1rem;
+// Texto em blocos fora da página da notícia (descrição da iniciativa e sua
+// prévia no painel): o primeiro bloco encosta no topo, sem o respiro que ele
+// tem quando vem depois do título. `!important` porque o respiro vem dos
+// utilitários `mt-*` do Bootstrap, que também usam.
+.block-text-flush > .article-body > :first-child {
+  margin-top: 0 !important;
 }
 
-@include media-breakpoint-up(sm) {
+.description-preview {
+  max-height: 24rem;
+  overflow-y: auto;
+  cursor: pointer;
+}
+
+.article-sheet {
+  container-type: inline-size;
+  padding-block: 2rem;
+
+  > .article-column {
+    width: calc(100% - 2rem);
+  }
+
+  // O título da página pública cresce pela janela; aqui ele fica no tamanho do
+  // celular até a folha ter largura para mais.
+  .article-title {
+    font-size: calc(1.75rem * var(--a11y-text-scale));
+  }
+}
+
+@container (min-width: 36rem) {
   .article-sheet {
-    padding: 3rem 4rem;
+    > .article-column {
+      width: calc(100% - 8rem);
+    }
+
+    .article-title {
+      font-size: calc(2.25rem * var(--a11y-text-scale));
+    }
   }
 }
 
@@ -1917,7 +2011,7 @@ ol.list-decimal {
   transition: opacity 120ms ease-out;
 }
 
-@include media-breakpoint-up(sm) {
+@container (min-width: 36rem) {
   .block-handles {
     display: flex;
   }
@@ -2297,4 +2391,111 @@ html[data-contrast='high'] .tts-range {
   .audience-chart-bar {
     transition: none;
   }
+}
+
+// -----------------------------------------------------------------------------
+// 27. Tutoriais guiados — botão de ajuda
+//
+// Só o que está sempre na tela. O balão do tour vem com o Shepherd, sob
+// demanda, em `components/tutorial/tema-tutorial.scss`, que lê a borda daqui.
+// -----------------------------------------------------------------------------
+
+:root {
+  --tutorial-borda: #cfe0d4;
+  --mascote-balao-fundo: var(--bs-body-bg);
+  --mascote-balao-texto: var(--bs-body-color);
+  --mascote-balao-borda: var(--tutorial-borda);
+}
+
+[data-bs-theme='dark'] {
+  --tutorial-borda: #3f5c49;
+}
+
+// No alto contraste a borda é a mesma de tudo: branca sobre preto.
+html[data-contrast='high'] {
+  --tutorial-borda: var(--bs-border-color);
+}
+
+// O mascote fica solto no canto, sem moldura. O botão continua do tamanho
+// dele (área de toque de sobra) e com cantos arredondados, que é o desenho
+// que o anel de foco segue.
+.tutorial-fab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 1rem;
+  background-color: transparent;
+  color: var(--bs-primary-text-emphasis);
+  transition: transform 0.15s ease-out;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+// A sombra separa o verde do mascote de qualquer fundo: o branco da página,
+// o verde-escuro do rodapé e do topo da home.
+.tutorial-fab-mascote {
+  display: flex;
+  filter: drop-shadow(0 2px 4px rgba(30, 50, 38, 0.28));
+  pointer-events: none;
+}
+
+// Durante o tour (e a despedida) o mascote dá lugar a um ícone. Sozinho, o
+// ícone sumiria sobre um fundo claro: é aqui que o círculo volta.
+.tutorial-fab-icone {
+  width: 3.5rem;
+  height: 3.5rem;
+  border: 1.5px solid var(--tutorial-borda);
+  border-radius: 50rem;
+  background-color: var(--bs-body-bg);
+  box-shadow: var(--bs-box-shadow);
+
+  &:hover {
+    border-color: var(--bs-primary);
+    transform: none;
+  }
+}
+
+// Fala do mascote: o balão do próprio componente (`.msc-balao`), ancorado
+// acima dele e com a ponta apontando para o mascote, no canto direito.
+.tutorial-fala-area {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.5rem);
+  pointer-events: none;
+}
+
+// Dois seletores: o CSS do mascote é injetado em tempo de execução, depois
+// deste arquivo, e venceria um seletor de mesmo peso.
+.msc-balao.tutorial-fala {
+  width: max-content;
+  max-width: min(17rem, calc(100vw - 2rem));
+  margin: 0;
+  font-size: calc(0.875rem * var(--a11y-text-scale));
+
+  &::after {
+    right: 29px;
+    left: auto;
+    transform: rotate(45deg);
+  }
+}
+
+// O resto da fala ainda não "digitado" ocupa o lugar desde o início: o balão
+// já nasce com o tamanho final e não pula enquanto as letras aparecem.
+.tutorial-fala-resto {
+  visibility: hidden;
+}
+
+// -----------------------------------------------------------------------------
+// 28. Tela de "não encontrado" (404)
+//
+// O mascote vira o 0 do "404" (components/common/NaoEncontrado.jsx). Os dois
+// "4" usam o verde do corpo do mascote, que segue legível no tema escuro.
+// -----------------------------------------------------------------------------
+
+.nao-encontrado {
+  min-height: 60vh;
 }

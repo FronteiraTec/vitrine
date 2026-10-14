@@ -21,11 +21,13 @@ import { toast } from '@/components/ui/toast'
 import { InitiativeCard } from '@/components/initiatives/InitiativeCard'
 import { LinkIcon } from '@/components/initiatives/LinkIcon'
 import { CategoryIcon } from '@/components/common/CategoryIcon'
+import { ArticleBody } from '@/components/news/ArticleBody'
 import { usePublishedInitiative, useRelatedInitiatives } from '@/hooks/use-queries'
 import { useTrackView } from '@/hooks/use-track-view'
 import { useDocumentMeta, useStructuredData } from '@/hooks/use-seo'
 import { useLocale } from '@/contexts/LocaleContext'
 import { DEFAULT_LOCALE } from '@/i18n/config'
+import { articlePlainText, parseArticleBody } from '@/lib/news-content'
 import { displayUrl, safeExternalUrl, truncate } from '@/lib/utils'
 import { NotFoundPage } from './NotFoundPage'
 
@@ -139,7 +141,10 @@ export function InitiativeDetailPage() {
   )
   useTrackView('initiative', initiative?.id, locale)
 
-  const description = initiative?.short_description ?? truncate(initiative?.description, 160)
+  // A descrição completa é texto em blocos, igual ao corpo da notícia.
+  const blocks = useMemo(() => parseArticleBody(initiative?.description), [initiative?.description])
+  const description =
+    initiative?.short_description ?? truncate(articlePlainText(initiative?.description), 160)
 
   useDocumentMeta({
     title: initiative?.name,
@@ -226,7 +231,7 @@ export function InitiativeDetailPage() {
         <div className="container position-relative d-flex min-h-fx-64 flex-column justify-content-end py-5 py-sm-5">
           <Breadcrumb initiative={initiative} catalogLang={catalogLang} />
 
-          <div className="mt-3 mw-3xl space-y-3" lang={catalogLang}>
+          <div className="mt-3 mw-3xl space-y-3" lang={catalogLang} data-tour="iniciativa-cabecalho">
             {initiative.category ? (
               <Link
                 to={`/categoria/${initiative.category.slug}`}
@@ -254,13 +259,15 @@ export function InitiativeDetailPage() {
       <div className="container py-5 py-sm-5">
         <div className="d-grid gap-5 grid-detail gap-lg-5">
           <div className="min-w-0 space-y-5">
-            {initiative.description ? (
+            {blocks.length ? (
               <section className="space-y-3">
-                <SectionDivider label={t('initiative.about')} />
-                <div className="space-y-3 text-pretty" lang={catalogLang}>
-                  {initiative.description.split(/\n{2,}/).map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
-                  ))}
+                {/* O tutorial aponta para o título da seção, e não para ela
+                    inteira: a descrição pode ser mais alta que a tela. */}
+                <div data-tour="iniciativa-sobre">
+                  <SectionDivider label={t('initiative.about')} />
+                </div>
+                <div className="block-text-flush" lang={catalogLang}>
+                  <ArticleBody blocks={blocks} />
                 </div>
               </section>
             ) : null}
@@ -338,7 +345,7 @@ export function InitiativeDetailPage() {
           </div>
 
           {/* Coluna lateral ------------------------------------------------ */}
-          <aside className="space-y-4 sticky-lg">
+          <aside className="space-y-4 sticky-lg" data-tour="iniciativa-contato">
             {hasContact ? (
               <section className="card p-3">
                 <h2 className="mb-3 fs-8 fw-semibold text-uppercase">
@@ -448,7 +455,7 @@ export function InitiativeDetailPage() {
 
       {/* Relacionadas ----------------------------------------------------- */}
       {relatedPending || related?.length ? (
-        <section className="bg-body-tertiary border border-top">
+        <section className="bg-body-tertiary border border-top" data-tour="iniciativa-relacionadas">
           <div className="container py-5">
             <div className="mb-5 d-flex flex-column gap-2 flex-sm-row align-items-sm-end justify-content-sm-between">
               <div className="space-y-1">

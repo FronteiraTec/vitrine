@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from '@/components/ui/toast'
+import { avisarErro, avisarFaltando } from '@/lib/mascote-global'
 import { useSiteSettingsQuery, useUpdateSiteSettings } from '@/hooks/use-queries'
 import { DEFAULT_NAV, toFormValues } from '@/lib/site-settings'
 import { BUCKETS, LINK_TYPES } from '@/lib/constants'
@@ -622,19 +623,19 @@ export function AppearanceForm({ settings }) {
     event.preventDefault()
 
     if (!values.brand_name.trim()) {
-      toast.error('Informe o nome da marca.')
+      avisarFaltando('Informe o nome da marca.')
       return
     }
 
     const incompleteNav = values.header_nav.some((item) => !item.label?.trim() || !item.to?.trim())
     if (incompleteNav) {
-      toast.error('Todo link do menu precisa de rótulo e caminho.')
+      avisarFaltando('Todo link do menu precisa de rótulo e caminho.')
       return
     }
 
     const partnerWithoutLogo = values.footer_partners.some((item) => !item.logo_url)
     if (partnerWithoutLogo) {
-      toast.error('Todo apoiador precisa de um logotipo.')
+      avisarFaltando('Todo apoiador precisa de um logotipo.')
       return
     }
 
@@ -642,7 +643,7 @@ export function AppearanceForm({ settings }) {
       await update.mutateAsync(values)
       toast.success('Aparência atualizada.')
     } catch (error) {
-      toast.error(error.message)
+      avisarErro(error)
     }
   }
 

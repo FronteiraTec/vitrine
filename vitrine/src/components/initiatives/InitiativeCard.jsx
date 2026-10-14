@@ -90,9 +90,9 @@ export function InitiativeCard({ initiative, eager = false, className }) {
 }
 
 /** Grade responsiva padrão: 1 → 2 → 3 colunas. */
-export function InitiativeGrid({ initiatives, eagerCount = 3, className }) {
+export function InitiativeGrid({ initiatives, eagerCount = 3, className, ...props }) {
   return (
-    <div className={cn('d-grid grid-cols-1 gap-5 grid-cols-sm-2 grid-cols-lg-3', className)}>
+    <div className={cn('d-grid grid-cols-1 gap-5 grid-cols-sm-2 grid-cols-lg-3', className)} {...props}>
       {initiatives.map((initiative, index) => (
         <InitiativeCard
           key={initiative.id}

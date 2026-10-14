@@ -17,3 +17,8 @@ Documentação completa:
 
 - [`vitrine/README.md`](./vitrine/README.md) — instalação, deploy, arquitetura, audiência e migração do Supabase
 - [`vitrine/db/README.md`](./vitrine/db/README.md) — banco, RLS e arquivos
+
+## Licença
+
+AGPL-3.0 — ver [`LICENSE`](./LICENSE). O código-fonte é público, e o rodapé da
+vitrine leva até ele, como a licença pede para software usado pela rede.
