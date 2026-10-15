@@ -129,6 +129,7 @@ function PersonForm({ person, onOpenChange, onSaved }) {
           folder="pessoas"
           label="Foto (opcional)"
           ratio="ratio-1x1"
+          crop={{ shape: 'round', size: 512 }}
           className="max-w-fx-48"
         />
       </DialogBody>

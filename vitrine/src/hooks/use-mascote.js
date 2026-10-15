@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { subscribe as assinarAcessibilidade } from '@/lib/a11y'
 import { entrarEmCena, roupaDaSessao } from '@/lib/mascote-global'
 import { prefereMenosMovimento } from '@/lib/tutoriais'
 
-/** Roupa do mascote nesta entrada (visitante ou conta): `'normal'` ou `'astronauta'`. */
+/** Roupa do mascote nesta entrada (visitante ou conta): uma das `ROUPAS` do componente. */
 export function useRoupaDoMascote() {
   const { user } = useAuth()
   const identidade = user?.id ?? 'visitante'
@@ -13,6 +14,29 @@ export function useRoupaDoMascote() {
 /** Tela com o próprio mascote: o do canto sai de cena enquanto ela estiver montada. */
 export function useMascoteEmCena() {
   useEffect(() => entrarEmCena(), [])
+}
+
+function assinarMovimento(aviso) {
+  const consulta = window.matchMedia('(prefers-reduced-motion: reduce)')
+  consulta.addEventListener('change', aviso)
+  const desfazer = assinarAcessibilidade(aviso)
+  return () => {
+    consulta.removeEventListener('change', aviso)
+    desfazer()
+  }
+}
+
+const semPreferenciaNoServidor = () => false
+
+/**
+ * Movimento reduzido (do sistema ou do painel do leitor), atualizado na hora
+ * em que muda. O mascote sacode a tela e voa até a Lua com a Web Animations
+ * API, que a regra de CSS do painel não alcança — e ele próprio só consulta a
+ * preferência do sistema. Quem liga as interações dele desliga esses dois
+ * efeitos com este valor.
+ */
+export function useMenosMovimento() {
+  return useSyncExternalStore(assinarMovimento, prefereMenosMovimento, semPreferenciaNoServidor)
 }
 
 const INTERVALO_LETRA_MS = 28

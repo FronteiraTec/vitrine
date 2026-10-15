@@ -307,6 +307,15 @@ export default {
     loading: 'Fetching the information…',
     saving: 'Just a moment, saving…',
     error: 'Something went wrong on our side. Please try again in a moment.',
+    reactions: {
+      cocegas: 'Hehe! That tickles!',
+      tonto: 'Whoa… everything’s spinning!',
+      carinho: 'Aww, that feels nice!',
+      susto: 'Oh! I was just resting my eyes…',
+      irritado: 'Hey! Quit poking me!!',
+      foguete: 'That’s it! I’m off to the Moon!!',
+      calmo: 'There, I’m back. All better now.',
+    },
   },
 
   tutorial: {

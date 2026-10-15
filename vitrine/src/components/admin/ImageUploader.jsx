@@ -1,7 +1,8 @@
 import { useCallback, useId, useRef, useState } from 'react'
-import { AlertCircle, ImagePlus, Loader2, Trash2, Upload } from 'lucide-react'
+import { AlertCircle, Crop, ImagePlus, Loader2, Trash2, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Image } from '@/components/ui/image'
+import { ImageCropper } from '@/components/admin/ImageCropper'
 import { removeImageByUrl, uploadImage, validateImage } from '@/services/storage'
 import { BUCKETS, MAX_IMAGE_BYTES } from '@/lib/constants'
 import { cn } from '@/lib/utils'
@@ -12,7 +13,14 @@ import { cn } from '@/lib/utils'
  *
  * A prévia usa `URL.createObjectURL` para o arquivo aparecer no instante em que
  * é escolhido, sem esperar o upload terminar.
+ *
+ * Com `crop`, o arquivo passa antes pelo enquadramento (`ImageCropper`) e só o
+ * recorte é enviado — `{ shape: 'round' }` para fotos exibidas como avatar.
+ * Como o recorte sai reduzido, o limite de tamanho do original é mais folgado.
  */
+// O original só serve de fonte para o recorte, que sai bem menor.
+const CROP_SOURCE_MAX_BYTES = 20 * 1024 * 1024
+
 export function ImageUploader({
   value,
   onChange,
@@ -22,6 +30,7 @@ export function ImageUploader({
   hint,
   ratio = 'ratio-16x10',
   maxBytes = MAX_IMAGE_BYTES,
+  crop,
   className,
 }) {
   const inputId = useId()
@@ -30,16 +39,13 @@ export function ImageUploader({
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState(null)
   const [error, setError] = useState(null)
+  // Imagem aberta no enquadramento: `{ src, name, local }`.
+  const [cropping, setCropping] = useState(null)
+  const round = crop?.shape === 'round'
+  const sourceMaxBytes = crop ? CROP_SOURCE_MAX_BYTES : maxBytes
 
-  const handleFile = useCallback(
+  const upload = useCallback(
     async (file) => {
-      setError(null)
-      const validationError = validateImage(file, { maxBytes })
-      if (validationError) {
-        setError(validationError)
-        return
-      }
-
       const localUrl = URL.createObjectURL(file)
       setPreview(localUrl)
       setUploading(true)
@@ -57,8 +63,32 @@ export function ImageUploader({
         URL.revokeObjectURL(localUrl)
       }
     },
-    [bucket, folder, maxBytes, onChange, value],
+    [bucket, folder, onChange, value],
   )
+
+  function handleFile(file) {
+    setError(null)
+    const validationError = validateImage(file, { maxBytes: sourceMaxBytes })
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+    if (crop) {
+      setCropping({ src: URL.createObjectURL(file), name: file.name, local: true })
+      return
+    }
+    upload(file)
+  }
+
+  function closeCropper() {
+    if (cropping?.local) URL.revokeObjectURL(cropping.src)
+    setCropping(null)
+  }
+
+  async function handleCropped(file) {
+    closeCropper()
+    await upload(file)
+  }
 
   async function handleRemove() {
     const current = value
@@ -83,10 +113,23 @@ export function ImageUploader({
           {label}
         </label>
         {value && !uploading ? (
-          <Button variant="subtle" size="sm" onClick={handleRemove} type="button" className="me-0">
-            <Trash2 aria-hidden="true" />
-            Remover
-          </Button>
+          <div className="d-flex gap-1">
+            {crop ? (
+              <Button
+                variant="subtle"
+                size="sm"
+                type="button"
+                onClick={() => setCropping({ src: value, name: 'foto', local: false })}
+              >
+                <Crop aria-hidden="true" />
+                Ajustar
+              </Button>
+            ) : null}
+            <Button variant="subtle" size="sm" onClick={handleRemove} type="button" className="me-0">
+              <Trash2 aria-hidden="true" />
+              Remover
+            </Button>
+          </div>
         ) : null}
       </div>
 
@@ -98,7 +141,8 @@ export function ImageUploader({
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         className={cn(
-          'border position-relative overflow-hidden rounded-3 border-2 border-dashed',
+          'border position-relative overflow-hidden border-2 border-dashed',
+          round ? 'rounded-circle' : 'rounded-3',
           dragging && 'border-primary bg-primary-subtle',
           displayed && 'border-solid',
         )}
@@ -134,10 +178,16 @@ export function ImageUploader({
             <span className="bg-body-secondary text-body-secondary d-flex h-fx-10 w-fx-10 align-items-center justify-content-center rounded-pill">
               <ImagePlus className="icon-lg" aria-hidden="true" />
             </span>
-            <span className="fs-7 fw-medium">Arraste uma imagem ou clique para escolher</span>
-            <span className="text-body-secondary fs-8">
-              JPG, PNG, WebP ou AVIF · até {Math.round(maxBytes / 1024 / 1024)} MB
-            </span>
+            {round ? (
+              <span className="fs-7 fw-medium">Escolher foto</span>
+            ) : (
+              <>
+                <span className="fs-7 fw-medium">Arraste uma imagem ou clique para escolher</span>
+                <span className="text-body-secondary fs-8">
+                  JPG, PNG, WebP ou AVIF · até {Math.round(sourceMaxBytes / 1024 / 1024)} MB
+                </span>
+              </>
+            )}
           </button>
         )}
       </div>
@@ -163,6 +213,18 @@ export function ImageUploader({
         </p>
       ) : hint ? (
         <p className="text-body-secondary fs-8">{hint}</p>
+      ) : null}
+
+      {crop ? (
+        <ImageCropper
+          open={Boolean(cropping)}
+          src={cropping?.src}
+          fileName={cropping?.name}
+          shape={crop.shape}
+          outputSize={crop.size}
+          onCancel={closeCropper}
+          onConfirm={handleCropped}
+        />
       ) : null}
     </div>
   )

@@ -671,6 +671,50 @@ $status-colors: (
   }
 }
 
+// Enquadramento de imagem (ImageCropper). A moldura é quadrada; a máscara
+// escurece o que fica de fora e, no modo redondo, mostra o círculo do avatar.
+.image-cropper {
+  position: relative;
+  width: 100%;
+  max-width: 20rem;
+  aspect-ratio: 1;
+  margin-inline: auto;
+  overflow: hidden;
+  border-radius: var(--bs-border-radius-lg);
+  background-color: #0f172a;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--bs-primary);
+    outline-offset: 2px;
+  }
+}
+
+.image-cropper-image {
+  position: absolute;
+  max-width: none;
+  pointer-events: none;
+}
+
+.image-cropper-mask {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 2px solid rgb(255 255 255 / 0.9);
+  border-radius: inherit;
+
+  .image-cropper-round & {
+    border-radius: 50%;
+    box-shadow: 0 0 0 999px rgb(15 23 42 / 0.6);
+  }
+}
+
 // Caixa de seleção e interruptor.
 //
 // O Radix renderiza um <button>, e não um <input>, então `.form-check-input`

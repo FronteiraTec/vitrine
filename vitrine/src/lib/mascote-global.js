@@ -18,15 +18,13 @@
  *     Radix esconde o resto da página do leitor de tela, então o aviso não
  *     seria lido.
  *
- * Também mora aqui a roupa do mascote: a cada entrada (visita ou login) há
- * uma chance de ele aparecer de astronauta, e a roupa sorteada vale para
- * todos os mascotes até a aba fechar.
+ * Também mora aqui a roupa do mascote: a cada entrada (visita ou login) uma
+ * roupa é sorteada, e ela vale para todos os mascotes até a aba fechar.
  */
 import { toast } from '@/components/ui/toast'
-import { estadoPorStatus, MENSAGENS, mensagemPorStatus } from '@/components/mascote/Mascote'
+import { estadoPorStatus, MENSAGENS, mensagemPorStatus, ROUPAS } from '@/components/mascote/Mascote'
 
 const DURACAO_PADRAO_MS = 5000
-const CHANCE_ASTRONAUTA = 0.25
 
 let reacao = null
 let sequencia = 0
@@ -186,6 +184,10 @@ let roupaAtual = null
  * e guardada no sessionStorage para não mudar a cada página. Quem entra com a
  * conta tem um sorteio novo — é outra entrada.
  *
+ * Todas as roupas do componente (`ROUPAS`) têm a mesma chance, como no modo
+ * `aleatoria` dele; uma roupa nova que vier numa versão futura entra no
+ * sorteio sozinha.
+ *
  * Sem `identidade`, devolve a última roupa sorteada (a tela de falha geral do
  * app fica fora do contexto de autenticação).
  */
@@ -201,8 +203,8 @@ export function roupaDaSessao(identidade) {
   } catch {
     roupa = null
   }
-  if (roupa !== 'astronauta' && roupa !== 'normal') {
-    roupa = Math.random() < CHANCE_ASTRONAUTA ? 'astronauta' : 'normal'
+  if (!ROUPAS.includes(roupa)) {
+    roupa = ROUPAS[Math.floor(Math.random() * ROUPAS.length)]
     try {
       window.sessionStorage.setItem(chave, roupa)
     } catch {
