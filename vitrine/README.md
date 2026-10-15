@@ -955,13 +955,18 @@ fala num balão acima dele (anunciado ao leitor de tela):
 O erro da API escolhe o estado pelo status (4xx de dado recusado vira
 `faltando`, 404 vira `naoEncontrado`). Sem mascote na tela, durante um
 tutorial, na tela de 404 ou com um diálogo aberto, os `avisar*` saem como
-toast. A cada entrada há 25% de chance de o mascote estar de astronauta; a
-roupa sorteada vale para todos os mascotes até a aba fechar.
+toast. A cada entrada o mascote ganha uma roupa — normal, astronauta,
+cientista ou dev, 25% de chance cada — que vale para todos os mascotes até a
+aba fechar.
 
 Endereço, iniciativa, notícia, categoria, autor ou registro do painel que não
 existe mostram a mesma tela de 404 (`src/components/common/NaoEncontrado.jsx`),
-com o mascote no lugar do 0. A tela de falha geral do app mostra o mascote em
-`erro`.
+com o mascote no lugar do 0. Lá ele é interativo: segue o cursor com os olhos,
+ri com um clique (ou Enter), fica tonto com cinco cliques seguidos, irritado
+se continuar sendo cutucado (a tela sacode, menos com movimento reduzido) e
+gosta de carinho, com o cursor indo e voltando em cima dele. As falas dessas
+reações estão no dicionário (`mascot.reactions`). A tela de falha geral do
+app mostra o mascote em `erro`.
 
 Concluído ou pulado fica gravado no navegador por tutorial e versão;
 recarregar a página no meio retoma do mesmo passo. Como criar ou editar um

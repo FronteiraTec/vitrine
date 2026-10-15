@@ -47,13 +47,16 @@ export default defineConfig([
      * versão nova possa simplesmente substituí-lo. Ele exporta hooks e
      * constantes junto do componente (Fast Refresh) e usa dois padrões que as
      * regras do React Compiler desaconselham — o compilador apenas deixa de
-     * otimizar esse componente, sem mudar o comportamento.
+     * otimizar esse componente, sem mudar o comportamento. A viagem à Lua
+     * (`ViagemLua`) roda uma vez, com a posição capturada quando começa: o
+     * efeito dela não declara dependências de propósito.
      */
     files: ['src/components/mascote/Mascote.jsx'],
     rules: {
       'react-refresh/only-export-components': 'off',
       'react-hooks/refs': 'off',
       'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/exhaustive-deps': 'off',
     },
   },
   {

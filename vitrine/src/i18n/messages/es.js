@@ -309,6 +309,15 @@ export default {
     loading: 'Buscando la información…',
     saving: 'Un momento, estoy guardando…',
     error: 'Algo salió mal de nuestro lado. Inténtalo de nuevo en unos instantes.',
+    reactions: {
+      cocegas: '¡Jiji! ¡Me hace cosquillas!',
+      tonto: 'Uy… ¡todo da vueltas!',
+      carinho: '¡Aaah, qué rico mimo!',
+      susto: '¡Ah! Solo estaba descansando los ojos…',
+      irritado: '¡Oye! ¡Deja de molestarme!',
+      foguete: '¡Basta! ¡Me voy a la Luna!',
+      calmo: 'Listo, ya volví. Ya pasó.',
+    },
   },
 
   tutorial: {

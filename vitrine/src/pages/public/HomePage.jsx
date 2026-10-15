@@ -43,7 +43,7 @@ function Hero() {
 
       <div className="container position-relative py-5">
         <div className="mw-3xl hero-reveal">
-          <p className="mb-3 d-inline-flex align-items-center gap-2 rounded-pill bg-white opacity-25 px-2 py-1 fs-8 fw-medium text-uppercase">
+          <p className="mb-3 d-inline-flex align-items-center gap-2 rounded-pill bg-white bg-opacity-10 px-2 py-1 fs-8 fw-medium text-uppercase">
             <Compass className="icon-sm" aria-hidden="true" />
             {t('home.hero.eyebrow')}
           </p>
@@ -61,7 +61,8 @@ function Hero() {
             <div className="d-flex flex-column gap-2 flex-sm-row">
               <div className="position-relative flex-grow-1">
                 <Search
-                  className="pe-none position-absolute top-50 start-0 icon translate-middle-y text-body-secondary"
+                  className="pe-none position-absolute top-50 icon translate-middle-y text-body-secondary"
+                  style={{ left: '10px' }}
                   aria-hidden="true"
                 />
                 <input

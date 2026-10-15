@@ -327,6 +327,17 @@ export default {
     loading: 'Buscando as informações…',
     saving: 'Só um instante, estou salvando…',
     error: 'Algo deu errado do nosso lado. Tente de novo em instantes.',
+    // Reações às interações com o mascote da tela de 404. As chaves são os
+    // nomes das reações no componente (`REACOES` em Mascote.jsx).
+    reactions: {
+      cocegas: 'Hihi! Faz cócegas!',
+      tonto: 'Uou… tá tudo girando!',
+      carinho: 'Aaah, que carinho bom!',
+      susto: 'Ah! Eu tava só descansando os olhos…',
+      irritado: 'Ei! Chega de cutucar!!',
+      foguete: 'Chega! Vou pra Lua!!',
+      calmo: 'Pronto, voltei. Já passou.',
+    },
   },
 
   // Botão de ajuda. Os tutoriais em si são escritos só em português
